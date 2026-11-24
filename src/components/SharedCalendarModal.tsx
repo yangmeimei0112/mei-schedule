@@ -12,6 +12,8 @@ export default function SharedCalendarModal() {
     createCalendar,
     joinSharedCalendar,
     updateCalendarMemberRole,
+    removeCalendarMember,
+    getCurrentUserRoleForCalendar,
     showToast
   } = useScheduleStore();
 
@@ -87,7 +89,7 @@ export default function SharedCalendarModal() {
             <LucideIcon name="users" size={20} className="text-violet-500" />
             <div>
               <h2 className="text-base sm:text-lg font-extrabold text-[var(--text-main)]">
-                多人共享日曆與協作（TimeTree 級）
+                多人共享日曆與協作
               </h2>
               <p className="text-xs text-[var(--text-muted)]">
                 與家人、情侶或團隊共用行事曆，在每一筆行程內即時留言討論
@@ -142,6 +144,7 @@ export default function SharedCalendarModal() {
 
           {sharedCalendars.map((cal) => {
             const palette = COLOR_TOKEN_PALETTE[cal.colorToken] || COLOR_TOKEN_PALETTE.violet;
+            const canManageMembers = getCurrentUserRoleForCalendar(cal.id) === 'owner';
             return (
               <div
                 key={cal.id}
@@ -169,37 +172,59 @@ export default function SharedCalendarModal() {
                   )}
                 </div>
 
-                {/* Members & Role Selector */}
+                {/* Members, Role Selector & Remove Member Action */}
                 <div className="space-y-1.5 pt-2 border-t border-[var(--border-subtle)]">
-                  <div className="text-[11px] font-bold text-[var(--text-muted)]">
+                  <div
+                    data-testid={`shared-member-count-${cal.id}`}
+                    className="text-[11px] font-bold text-[var(--text-muted)]"
+                  >
                     成員權限 ({cal.members?.length || 1} 人)
                   </div>
-                  {(cal.members || []).map((member) => (
-                    <div
-                      key={`${cal.id}-${member.userId}`}
-                      className="flex items-center justify-between gap-2 text-xs py-1"
-                    >
-                      <div className="flex items-center gap-2">
-                        <LucideIcon name="user" size={13} className="text-sky-500" />
-                        <span className="font-semibold text-[var(--text-main)]">
-                          {member.displayName}
-                        </span>
-                      </div>
-                      <select
-                        aria-label={`${member.displayName} 的共享權限`}
-                        value={member.role}
-                        disabled={member.role === 'owner'}
-                        onChange={(e) =>
-                          updateCalendarMemberRole(cal.id, member.userId, e.target.value as CalendarRole)
-                        }
-                        className="px-2 py-1 rounded-lg text-[11px] font-bold bg-[var(--surface-glass)] border border-[var(--border-subtle)] disabled:opacity-70"
+                  {(cal.members || []).map((member) => {
+                    const isOwnerMember = member.role === 'owner';
+                    return (
+                      <div
+                        key={`${cal.id}-${member.userId}`}
+                        data-testid={`shared-member-row-${cal.id}-${member.userId}`}
+                        className="flex items-center justify-between gap-2 text-xs py-1 flex-wrap sm:flex-nowrap"
                       >
-                        <option value="owner">擁有者 (Owner)</option>
-                        <option value="editor">可編輯與留言 (Editor)</option>
-                        <option value="viewer">僅檢視與留言 (Viewer)</option>
-                      </select>
-                    </div>
-                  ))}
+                        <div className="flex items-center gap-2 min-w-0">
+                          <LucideIcon name="user" size={13} className="text-sky-500 shrink-0" />
+                          <span className="font-semibold text-[var(--text-main)] truncate">
+                            {member.displayName}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <select
+                            aria-label={`${member.displayName} 的共享權限`}
+                            value={member.role}
+                            disabled={isOwnerMember || !canManageMembers}
+                            onChange={(e) =>
+                              updateCalendarMemberRole(cal.id, member.userId, e.target.value as CalendarRole)
+                            }
+                            className="px-2 py-1 rounded-lg text-[11px] font-bold bg-[var(--surface-glass)] border border-[var(--border-subtle)] disabled:opacity-70"
+                          >
+                            <option value="owner">擁有者 (Owner)</option>
+                            <option value="editor">可編輯與留言 (Editor)</option>
+                            <option value="viewer">僅檢視與留言 (Viewer)</option>
+                          </select>
+                          {!isOwnerMember && canManageMembers && (
+                            <button
+                              type="button"
+                              data-testid={`remove-member-${cal.id}-${member.userId}`}
+                              onClick={() => removeCalendarMember(cal.id, member.userId)}
+                              aria-label={`移除成員 ${member.displayName}`}
+                              title={`移除成員 ${member.displayName}`}
+                              className="px-2 py-1 rounded-lg text-[11px] font-bold text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-400/25 hover:bg-rose-500/20 inline-flex items-center gap-1 transition-colors"
+                            >
+                              <LucideIcon name="user-minus" size={12} />
+                              <span>移除</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             );

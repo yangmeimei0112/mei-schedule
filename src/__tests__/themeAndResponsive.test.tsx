@@ -329,9 +329,9 @@ describe('M1 Visual System: 3 Themes x 2 Modes, Sky-Blue Toast, dvh & 4 Aspect R
       // Mobile (<1024px) must NOT show full-screen blocking sidebar overlay on initial load
       expect(screen.queryByTestId('mobile-sidebar-overlay')).toBeNull();
 
-      // Appearance settings modal exposes v1.3.1 release badge & Studio Dock visibility control
+      // Appearance settings modal exposes v1.4.0 release badge & Studio Dock visibility control
       fireEvent.click(screen.getByTestId('open-appearance-modal-btn'));
-      expect(await screen.findByTestId('app-version-badge')).toHaveTextContent('v1.3.1');
+      expect(await screen.findByTestId('app-version-badge')).toHaveTextContent('v1.4.0');
       expect(screen.getByTestId('dock-visibility-control')).toBeInTheDocument();
       fireEvent.keyDown(window, { key: 'Escape' });
 

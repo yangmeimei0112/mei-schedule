@@ -1,10 +1,13 @@
-const CACHE_NAME = 'mei-schedule-cache-v1.3.1';
+const CACHE_NAME = 'mei-schedule-cache-v1.4.0';
 const APP_SHELL_URLS = [
   '/',
   '/index.html',
   '/manifest.webmanifest',
   '/favicon.svg',
   '/pwa-maskable.svg',
+  '/pwa-192.png',
+  '/pwa-512.png',
+  '/pwa-maskable-512.png',
   '/sdk/mei-dock.js'
 ];
 

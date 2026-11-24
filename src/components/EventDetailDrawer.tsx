@@ -84,7 +84,7 @@ export default function EventDetailDrawer() {
   const [recUntil, setRecUntil] = useState('');
   const [editScope, setEditScope] = useState<RecurrenceEditScope>('all');
 
-  // Comments state (TimeTree-style)
+  // Comments state (Shared live thread)
   const [commentInput, setCommentInput] = useState('');
 
   useEffect(() => {
@@ -468,7 +468,7 @@ export default function EventDetailDrawer() {
                     className="rounded text-sky-500"
                   />
                   <LucideIcon name="repeat" size={14} className="text-sky-500" />
-                  <span>啟用免費彈性重複規則</span>
+                  <span>啟用彈性重複規則</span>
                 </label>
                 {recEnabled && (
                   <span className="text-[11px] font-semibold text-sky-600 dark:text-sky-400">
@@ -654,7 +654,7 @@ export default function EventDetailDrawer() {
             </div>
           </form>
 
-          {/* TimeTree-Style Live Event Comments Thread */}
+          {/* Shared Live Event Comments Thread */}
           <section
             data-testid="event-comments-section"
             className="pt-4 border-t border-[var(--border-subtle)] space-y-3"

@@ -333,7 +333,7 @@ export default function AppearanceSettingsModal() {
             data-testid="app-version-badge"
             className="font-mono font-bold px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-400/25"
           >
-            v1.3.1
+            v1.4.0
           </span>
         </div>
       </div>

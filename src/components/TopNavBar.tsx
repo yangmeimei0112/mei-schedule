@@ -1,5 +1,6 @@
 import React from 'react';
 import { LucideIcon, MeiScheduleLogo } from './BrandMark';
+import FocusMiniPill from './FocusMiniPill';
 import { DESIGN_THEME_OPTIONS } from '../data/seedData';
 import { useScheduleStore } from '../store/useScheduleStore';
 import type { DesignTheme, ScheduleViewMode } from '../types/schedule';
@@ -327,41 +328,44 @@ function TopNavBar({ conflictCount, onFocusQuickCapture }: TopNavBarProps) {
       {/* Tier 2: Dedicated Calendar Date Bar + Responsive View Tabs / Desktop 3-Theme Switcher */}
       <div className="border-t border-[var(--border-subtle)] bg-[var(--surface-subtle)]/45">
         <div className="narrow-compact-px max-w-[1600px] mx-auto px-2.5 sm:px-5 py-1.5 flex flex-col md:flex-row md:items-center md:justify-between gap-1.5">
-          {/* Date Controls (Zero overlap with BrandMark across 320px-1440px+) */}
-          <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
-            <button
-              type="button"
-              data-testid="nav-today-btn"
-              onClick={goToToday}
-              title="回到今天 (T)"
-              className="btn-sky-secondary px-2.5 py-1 rounded-xl text-xs font-bold whitespace-nowrap shrink-0"
-            >
-              今天
-            </button>
-            <button
-              type="button"
-              data-testid="nav-prev-btn"
-              onClick={() => navigateDate(-stepDays)}
-              aria-label="上一區間"
-              className="p-1 rounded-lg hover:bg-[var(--surface-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] shrink-0"
-            >
-              <LucideIcon name="chevron-left" size={16} />
-            </button>
-            <button
-              type="button"
-              data-testid="nav-next-btn"
-              onClick={() => navigateDate(stepDays)}
-              aria-label="下一區間"
-              className="p-1 rounded-lg hover:bg-[var(--surface-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] shrink-0"
-            >
-              <LucideIcon name="chevron-right" size={16} />
-            </button>
-            <h1
-              data-testid="current-date-heading"
-              className="ml-0.5 text-xs sm:text-sm font-extrabold text-[var(--text-main)] whitespace-nowrap truncate"
-            >
-              {formatHeaderDateRange(selectedDate, viewMode)}
-            </h1>
+          {/* Date Controls + Background Focus Mini Pill (Zero overlap across 320px-1440px+) */}
+          <div className="flex items-center justify-between gap-1.5 min-w-0 flex-1 md:flex-initial">
+            <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
+              <button
+                type="button"
+                data-testid="nav-today-btn"
+                onClick={goToToday}
+                title="回到今天 (T)"
+                className="btn-sky-secondary px-2.5 py-1 rounded-xl text-xs font-bold whitespace-nowrap shrink-0"
+              >
+                今天
+              </button>
+              <button
+                type="button"
+                data-testid="nav-prev-btn"
+                onClick={() => navigateDate(-stepDays)}
+                aria-label="上一區間"
+                className="p-1 rounded-lg hover:bg-[var(--surface-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] shrink-0"
+              >
+                <LucideIcon name="chevron-left" size={16} />
+              </button>
+              <button
+                type="button"
+                data-testid="nav-next-btn"
+                onClick={() => navigateDate(stepDays)}
+                aria-label="下一區間"
+                className="p-1 rounded-lg hover:bg-[var(--surface-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] shrink-0"
+              >
+                <LucideIcon name="chevron-right" size={16} />
+              </button>
+              <h1
+                data-testid="current-date-heading"
+                className="ml-0.5 text-xs sm:text-sm font-extrabold text-[var(--text-main)] whitespace-nowrap truncate"
+              >
+                {formatHeaderDateRange(selectedDate, viewMode)}
+              </h1>
+            </div>
+            <FocusMiniPill />
           </div>
 
           {/* Mobile & Tablet (< lg): Full-Width 5-Mode View Switcher without cut-off pills */}

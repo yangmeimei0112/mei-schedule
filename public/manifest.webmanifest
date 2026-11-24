@@ -2,6 +2,7 @@
   "name": "咩時光 MeiSchedule — 全能智慧排程中心",
   "short_name": "咩時光",
   "description": "咩創意工作室跨五端全能智慧排程與多人共享時間軸軟體。",
+  "id": "/",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -11,6 +12,24 @@
   "lang": "zh-TW",
   "categories": ["productivity", "utilities"],
   "icons": [
+    {
+      "src": "/pwa-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
     {
       "src": "/favicon.svg",
       "sizes": "any",

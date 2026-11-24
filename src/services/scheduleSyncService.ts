@@ -545,8 +545,28 @@ export async function flushSyncQueue(
           }
         }
       } else if (item.operation === 'delete') {
-        const idCol = item.entity === 'preferences' ? 'user_id' : 'id';
-        const { error } = await customClient.from(tableName).delete().eq(idCol, item.recordId);
+        let error: unknown = null;
+        if (item.entity === 'calendar_members') {
+          const payloadCalId =
+            typeof item.payload?.calendar_id === 'string' ? item.payload.calendar_id : '';
+          const payloadUserId =
+            typeof item.payload?.user_id === 'string' ? item.payload.user_id : '';
+          const [splitCalId, splitUserId] = item.recordId.split('::');
+          const targetCalId = payloadCalId || splitCalId || '';
+          const targetUserId = payloadUserId || splitUserId || '';
+          if (targetCalId && targetUserId) {
+            const res = await customClient
+              .from(tableName)
+              .delete()
+              .eq('calendar_id', targetCalId)
+              .eq('user_id', targetUserId);
+            error = res.error;
+          }
+        } else {
+          const idCol = item.entity === 'preferences' ? 'user_id' : 'id';
+          const res = await customClient.from(tableName).delete().eq(idCol, item.recordId);
+          error = res.error;
+        }
         if (error) {
           if (isTableNotFoundError(error)) {
             return { status: 'local-only', remainingQueue: compacted, tablesMigrated: false };

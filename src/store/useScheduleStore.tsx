@@ -44,6 +44,7 @@ import {
   type MemberProfile
 } from '../services/memberAuthService';
 import {
+  calendarMemberToRow,
   calendarToRow,
   commentToRow,
   eventToRow,
@@ -499,6 +500,7 @@ export interface ScheduleStoreContextValue {
   setActiveCalendarSet: (setId: CalendarSetId) => void;
   joinSharedCalendar: (inviteCode: string) => Promise<{ success: boolean; calendar?: Calendar; error?: string }>;
   updateCalendarMemberRole: (calendarId: string, userId: string, role: CalendarRole) => void;
+  removeCalendarMember: (calendarId: string, userId: string) => boolean;
   getCurrentUserRoleForCalendar: (calendarId: string) => CalendarRole;
 
   // Comments & Focus Sessions
@@ -1511,12 +1513,87 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
     (calendarId: string, userId: string, role: CalendarRole) => {
       const target = stateRef.current.present.calendars.find((c) => c.id === calendarId);
       if (!target) return;
+      if (getCurrentUserRoleForCalendar(calendarId) !== 'owner') {
+        showToast('僅共享日曆擁有者可變更成員權限', { icon: 'lock' });
+        return;
+      }
+      const member = (target.members || []).find((m) => m.userId === userId);
+      if (!member || member.role === 'owner') return;
+
+      const updatedMember = { ...member, role };
       const nextMembers = (target.members || []).map((m) =>
-        m.userId === userId ? { ...m, role } : m
+        m.userId === userId ? updatedMember : m
       );
       updateCalendar(calendarId, { members: nextMembers });
+
+      if (isValidUuid(calendarId) && isValidUuid(userId)) {
+        enqueueCloudOps([
+          {
+            id: generateUuidV4(),
+            entity: 'calendar_members',
+            operation: 'upsert',
+            recordId: `${calendarId}::${userId}`,
+            payload: calendarMemberToRow(updatedMember),
+            queuedAt: new Date().toISOString(),
+            retryCount: 0
+          }
+        ]);
+      }
     },
-    [updateCalendar]
+    [enqueueCloudOps, getCurrentUserRoleForCalendar, showToast, updateCalendar]
+  );
+
+  const removeCalendarMember = useCallback(
+    (calendarId: string, memberUserId: string): boolean => {
+      const target = stateRef.current.present.calendars.find((c) => c.id === calendarId);
+      if (!target) return false;
+
+      const member = (target.members || []).find((m) => m.userId === memberUserId);
+      if (!member) return false;
+
+      if (member.role === 'owner' || target.ownerId === memberUserId) {
+        showToast('無法移除共享日曆擁有者', { icon: 'lock' });
+        return false;
+      }
+
+      const activeUserId = getActiveUserId();
+      const myRole = getCurrentUserRoleForCalendar(calendarId);
+      if (myRole !== 'owner' && memberUserId !== activeUserId) {
+        showToast('僅共享日曆擁有者可移除成員', { icon: 'lock' });
+        return false;
+      }
+
+      const nowIso = new Date().toISOString();
+      const nextMembers = (target.members || []).filter((m) => m.userId !== memberUserId);
+
+      commitUndoable(
+        `已移除成員「${member.displayName}」`,
+        (prev) => ({
+          ...prev,
+          calendars: prev.calendars.map((c) =>
+            c.id === calendarId ? { ...c, members: nextMembers, updatedAt: nowIso } : c
+          )
+        }),
+        { icon: 'user-minus' }
+      );
+
+      if (isValidUuid(calendarId) && isValidUuid(memberUserId)) {
+        enqueueCloudOps([
+          {
+            id: generateUuidV4(),
+            entity: 'calendar_members',
+            operation: 'delete',
+            recordId: `${calendarId}::${memberUserId}`,
+            payload: { calendar_id: calendarId, user_id: memberUserId },
+            queuedAt: nowIso,
+            retryCount: 0
+          }
+        ]);
+      }
+
+      return true;
+    },
+    [commitUndoable, enqueueCloudOps, getActiveUserId, getCurrentUserRoleForCalendar, showToast]
   );
 
   // ==========================================================================
@@ -1996,6 +2073,7 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
       setActiveCalendarSet,
       joinSharedCalendar,
       updateCalendarMemberRole,
+      removeCalendarMember,
       getCurrentUserRoleForCalendar,
       addEventComment,
       deleteEventComment,
@@ -2040,6 +2118,7 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
       setActiveCalendarSet,
       joinSharedCalendar,
       updateCalendarMemberRole,
+      removeCalendarMember,
       getCurrentUserRoleForCalendar,
       addEventComment,
       deleteEventComment,

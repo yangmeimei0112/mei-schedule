@@ -1,6 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import { LucideIcon } from './BrandMark';
-import { sendInstantNotification, triggerLightHaptic } from '../services/notificationBridge';
+import {
+  FOCUS_AMBIENT_OPTIONS,
+  FOCUS_TRACK_OPTIONS
+} from '../services/focusAudioEngine';
+import { useFocusSession } from '../store/FocusSessionContext';
 import { useScheduleStore } from '../store/useScheduleStore';
 
 const PRESET_DURATIONS = [
@@ -11,124 +15,56 @@ const PRESET_DURATIONS = [
 ];
 
 export default function FocusTimerModal() {
+  const { activeModal, closeModal } = useScheduleStore();
   const {
-    activeModal,
-    closeModal,
-    events,
-    focusTargetEventId,
-    focusTargetTaskId,
-    recordFocusSession
-  } = useScheduleStore();
+    plannedMinutes,
+    remainingSeconds,
+    isRunning,
+    categoryTag,
+    targetTitle,
+    audio,
+    selectPreset,
+    toggleRun,
+    resetTimer,
+    completeNow,
+    selectTrack,
+    selectAmbient,
+    setMusicVolume,
+    setAmbientVolume,
+    toggleMute,
+    toggleAudioPlay,
+    setAutoSync,
+    setChimeEnabled,
+    loadLocalAudioFile,
+    clearLocalAudioFile,
+    previewChime
+  } = useFocusSession();
 
-  const targetEvent = useMemo(
-    () => events.find((e) => e.id === focusTargetEventId) || null,
-    [events, focusTargetEventId]
-  );
-
-  const [plannedMinutes, setPlannedMinutes] = useState(25);
-  const [remainingSeconds, setRemainingSeconds] = useState(25 * 60);
-  const [isRunning, setIsRunning] = useState(false);
-  const [categoryTag, setCategoryTag] = useState('工作');
-  const startedAtRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    if (activeModal !== 'focus') return;
-    if (targetEvent) {
-      const eventMins = Math.max(
-        15,
-        Math.min(120, Math.round((Date.parse(targetEvent.endAt) - Date.parse(targetEvent.startAt)) / 60_000))
-      );
-      setPlannedMinutes(eventMins);
-      setRemainingSeconds(eventMins * 60);
-      setCategoryTag(targetEvent.categoryTag || '工作');
-    } else {
-      setPlannedMinutes(25);
-      setRemainingSeconds(25 * 60);
-    }
-    setIsRunning(false);
-    startedAtRef.current = null;
-  }, [activeModal, targetEvent]);
-
-  useEffect(() => {
-    if (!isRunning) return;
-    const id = setInterval(() => {
-      setRemainingSeconds((prev) => {
-        if (prev <= 1) {
-          setIsRunning(false);
-          const nowIso = new Date().toISOString();
-          recordFocusSession({
-            eventId: focusTargetEventId,
-            taskId: focusTargetTaskId,
-            categoryTag,
-            plannedMinutes,
-            actualMinutes: plannedMinutes,
-            completed: true,
-            startedAt: startedAtRef.current || new Date(Date.now() - plannedMinutes * 60_000).toISOString(),
-            endedAt: nowIso
-          });
-          void sendInstantNotification({
-            title: '專注計時完成',
-            body: `已完成 ${plannedMinutes} 分鐘專注（${targetEvent?.title || categoryTag}）`
-          });
-          void triggerLightHaptic();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(id);
-  }, [isRunning, categoryTag, focusTargetEventId, focusTargetTaskId, plannedMinutes, recordFocusSession, targetEvent]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (activeModal !== 'focus') return null;
 
   const totalSeconds = plannedMinutes * 60;
   const progressRatio = totalSeconds > 0 ? (totalSeconds - remainingSeconds) / totalSeconds : 0;
-  const radius = 84;
+  const radius = 78;
   const circumference = 2 * Math.PI * radius;
   const dashOffset = circumference * (1 - progressRatio);
 
   const minsDisplay = String(Math.floor(remainingSeconds / 60)).padStart(2, '0');
   const secsDisplay = String(remainingSeconds % 60).padStart(2, '0');
 
-  const handleTogglePlay = () => {
-    if (!isRunning && !startedAtRef.current) {
-      startedAtRef.current = new Date().toISOString();
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      loadLocalAudioFile(file);
     }
-    setIsRunning((r) => !r);
-  };
-
-  const handleSelectPreset = (minutes: number) => {
-    setIsRunning(false);
-    setPlannedMinutes(minutes);
-    setRemainingSeconds(minutes * 60);
-    startedAtRef.current = null;
-  };
-
-  const handleCompleteNow = () => {
-    setIsRunning(false);
-    const elapsedMin = Math.max(
-      1,
-      Math.round((totalSeconds - remainingSeconds) / 60) || plannedMinutes
-    );
-    const nowIso = new Date().toISOString();
-    recordFocusSession({
-      eventId: focusTargetEventId,
-      taskId: focusTargetTaskId,
-      categoryTag,
-      plannedMinutes,
-      actualMinutes: elapsedMin,
-      completed: true,
-      startedAt: startedAtRef.current || new Date(Date.now() - elapsedMin * 60_000).toISOString(),
-      endedAt: nowIso
-    });
-    void triggerLightHaptic();
-    closeModal();
+    e.target.value = '';
   };
 
   return (
     <div
       data-testid="focus-timer-modal"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/55 backdrop-blur-md"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/55 backdrop-blur-md"
       onClick={closeModal}
     >
       <div
@@ -136,49 +72,58 @@ export default function FocusTimerModal() {
         aria-modal="true"
         aria-label="專注番茄鐘計時器"
         onClick={(e) => e.stopPropagation()}
-        className="landscape-compact-modal max-h-dvh-90 overflow-y-auto w-full max-w-md bento-glass-card p-6 space-y-5 text-center"
+        className="landscape-compact-modal max-h-dvh-90 overflow-y-auto w-full max-w-lg bento-glass-card p-5 sm:p-6 space-y-4 text-center"
       >
-        <div className="flex items-center justify-between">
+        {/* Header */}
+        <div className="flex items-center justify-between gap-2">
           <div className="inline-flex items-center gap-2 text-sm font-extrabold text-[var(--text-main)]">
             <LucideIcon name="timer" size={18} className="text-sky-500" />
             <span>咩時光專注番茄鐘</span>
           </div>
-          <button
-            type="button"
-            onClick={closeModal}
-            aria-label="關閉番茄鐘"
-            className="p-1.5 rounded-xl hover:bg-[var(--surface-subtle)] text-[var(--text-muted)]"
-          >
-            <LucideIcon name="x" size={18} />
-          </button>
+          <div className="flex items-center gap-1.5">
+            {(isRunning || audio.isPlaying) && (
+              <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/12 text-sky-700 dark:text-sky-300 border border-sky-400/25">
+                關閉後持續背景運作
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={closeModal}
+              aria-label="關閉番茄鐘"
+              className="p-1.5 rounded-xl hover:bg-[var(--surface-subtle)] text-[var(--text-muted)]"
+            >
+              <LucideIcon name="x" size={18} />
+            </button>
+          </div>
         </div>
 
-        <div className="space-y-1">
-          <p className="text-xs text-[var(--text-muted)]">目前專注目標</p>
-          <p className="text-base font-extrabold text-[var(--text-main)] truncate">
-            {targetEvent ? targetEvent.title : `自由專注（#${categoryTag}）`}
+        {/* Target Event Label */}
+        <div className="space-y-0.5">
+          <p className="text-[11px] text-[var(--text-muted)]">目前專注目標</p>
+          <p className="text-sm sm:text-base font-extrabold text-[var(--text-main)] truncate">
+            {targetTitle ? targetTitle : `自由專注（#${categoryTag}）`}
           </p>
         </div>
 
         {/* Circular SVG Progress Ring */}
         <div className="relative inline-flex items-center justify-center">
-          <svg width="200" height="200" viewBox="0 0 200 200" className="-rotate-90">
+          <svg width="184" height="184" viewBox="0 0 184 184" className="-rotate-90">
             <circle
-              cx="100"
-              cy="100"
+              cx="92"
+              cy="92"
               r={radius}
               fill="none"
               stroke="currentColor"
-              strokeWidth="10"
+              strokeWidth="9"
               className="text-sky-500/15"
             />
             <circle
-              cx="100"
-              cy="100"
+              cx="92"
+              cy="92"
               r={radius}
               fill="none"
               stroke="url(#focusGradient)"
-              strokeWidth="10"
+              strokeWidth="9"
               strokeLinecap="round"
               strokeDasharray={circumference}
               strokeDashoffset={dashOffset}
@@ -194,7 +139,7 @@ export default function FocusTimerModal() {
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span
               data-testid="focus-timer-display"
-              className="font-mono text-4xl font-extrabold tracking-tight text-[var(--text-main)]"
+              className="font-mono text-4xl font-extrabold tracking-tight text-[var(--text-main)] tabular-nums"
             >
               {minsDisplay}:{secsDisplay}
             </span>
@@ -210,7 +155,7 @@ export default function FocusTimerModal() {
             <button
               key={preset.minutes}
               type="button"
-              onClick={() => handleSelectPreset(preset.minutes)}
+              onClick={() => selectPreset(preset.minutes)}
               className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-colors ${
                 plannedMinutes === preset.minutes
                   ? 'bg-sky-500 text-white'
@@ -222,26 +167,22 @@ export default function FocusTimerModal() {
           ))}
         </div>
 
-        {/* Controls */}
-        <div className="flex items-center justify-center gap-2.5 pt-1">
+        {/* Primary Timer Controls */}
+        <div className="flex items-center justify-center gap-2 sm:gap-2.5 flex-wrap">
           <button
             type="button"
-            onClick={() => {
-              setIsRunning(false);
-              setRemainingSeconds(plannedMinutes * 60);
-              startedAtRef.current = null;
-            }}
-            className="btn-sky-secondary px-3.5 py-2.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5"
+            onClick={resetTimer}
+            className="btn-sky-secondary px-3 py-2.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5"
           >
-            <LucideIcon name="rotate-ccw" size={15} />
+            <LucideIcon name="rotate-ccw" size={14} />
             <span>重設</span>
           </button>
 
           <button
             type="button"
             data-testid="focus-timer-toggle-btn"
-            onClick={handleTogglePlay}
-            className="btn-sky-primary px-6 py-2.5 rounded-xl text-sm font-extrabold inline-flex items-center gap-1.5"
+            onClick={toggleRun}
+            className="btn-sky-primary px-5 sm:px-6 py-2.5 rounded-xl text-sm font-extrabold inline-flex items-center gap-1.5"
           >
             <LucideIcon name={isRunning ? 'pause' : 'play'} size={16} />
             <span>{isRunning ? '暫停' : '開始專注'}</span>
@@ -250,13 +191,276 @@ export default function FocusTimerModal() {
           <button
             type="button"
             data-testid="focus-complete-record-btn"
-            onClick={handleCompleteNow}
-            className="px-3.5 py-2.5 rounded-xl text-xs font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-400/30 hover:bg-emerald-500/25 inline-flex items-center gap-1"
+            onClick={() => completeNow(true)}
+            className="px-3 py-2.5 rounded-xl text-xs font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-400/30 hover:bg-emerald-500/25 inline-flex items-center gap-1"
           >
-            <LucideIcon name="circle-check" size={15} />
+            <LucideIcon name="circle-check" size={14} />
             <span>完成並紀錄</span>
           </button>
         </div>
+
+        {/* ================================================================= */}
+        {/* Royalty-Free Offline Light Music & Natural Ambient Dual-Track Bar */}
+        {/* ================================================================= */}
+        <section
+          data-testid="focus-music-panel"
+          className="text-left p-3.5 sm:p-4 rounded-2xl bg-[var(--surface-subtle)]/90 border border-[var(--border-subtle)] space-y-3"
+        >
+          {/* Music Panel Header & Playback Controls */}
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="inline-flex items-center gap-2 min-w-0">
+              <div className="w-7 h-7 rounded-lg bg-sky-500/15 text-sky-600 dark:text-sky-400 inline-flex items-center justify-center shrink-0">
+                <LucideIcon name="headphones" size={15} />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-extrabold text-[var(--text-main)] flex items-center gap-1.5">
+                  <span>無版權輕音樂與環境音</span>
+                  {audio.isPlaying && !audio.isMuted && (
+                    <span
+                      data-testid="focus-audio-live-badge"
+                      className="inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-sky-500/15 text-sky-700 dark:text-sky-300"
+                    >
+                      播放中
+                    </span>
+                  )}
+                </div>
+                <p className="text-[10px] text-[var(--text-muted)]">
+                  100% 原創離線合成零版權疑慮，或匯入本機音檔循環播放
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                type="button"
+                data-testid="focus-audio-play-toggle-btn"
+                onClick={toggleAudioPlay}
+                aria-label={audio.isPlaying ? '暫停輕音樂' : '試聽輕音樂'}
+                className={`px-2.5 py-1.5 rounded-xl text-[11px] font-bold inline-flex items-center gap-1 border transition-colors ${
+                  audio.isPlaying
+                    ? 'bg-sky-500 text-white border-sky-500'
+                    : 'bg-[var(--surface-glass)] text-[var(--text-main)] border-[var(--border-subtle)] hover:border-sky-400/60'
+                }`}
+              >
+                <LucideIcon name={audio.isPlaying ? 'pause' : 'play'} size={12} />
+                <span>{audio.isPlaying ? '暫停' : '播放'}</span>
+              </button>
+
+              <button
+                type="button"
+                data-testid="focus-audio-mute-btn"
+                onClick={toggleMute}
+                aria-label={audio.isMuted ? '取消靜音' : '靜音'}
+                title={audio.isMuted ? '取消靜音' : '靜音'}
+                className="p-1.5 rounded-xl bg-[var(--surface-glass)] border border-[var(--border-subtle)] text-[var(--text-muted)] hover:text-sky-600 dark:hover:text-sky-300 transition-colors"
+              >
+                <LucideIcon name={audio.isMuted ? 'volume-x' : 'volume-2'} size={14} />
+              </button>
+            </div>
+          </div>
+
+          {/* 4 Original Royalty-Free Light Music Tracks */}
+          <div className="grid grid-cols-1 min-[380px]:grid-cols-2 gap-1.5">
+            {FOCUS_TRACK_OPTIONS.map((track) => {
+              const active = audio.trackId === track.id;
+              return (
+                <button
+                  key={track.id}
+                  type="button"
+                  data-testid={`focus-track-${track.id}`}
+                  aria-pressed={active}
+                  onClick={() => selectTrack(track.id)}
+                  className={`px-2.5 py-2 rounded-xl border text-left transition-colors flex items-center gap-2 min-w-0 ${
+                    active
+                      ? 'bg-sky-500/12 border-sky-500 text-[var(--text-main)]'
+                      : 'bg-[var(--surface-glass)] border-[var(--border-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:border-sky-400/50'
+                  }`}
+                >
+                  <LucideIcon
+                    name={track.icon}
+                    size={14}
+                    className={active ? 'text-sky-500 shrink-0' : 'shrink-0'}
+                  />
+                  <div className="min-w-0">
+                    <div className="text-[11px] font-extrabold text-[var(--text-main)] truncate">
+                      {track.name}
+                    </div>
+                    <div className="text-[10px] text-[var(--text-muted)] truncate">
+                      {track.subtitle}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Local Audio File Import Slot (.mp3 / .wav / .m4a / .ogg) */}
+          <div className="flex items-center justify-between gap-2 px-2.5 py-2 rounded-xl bg-[var(--surface-glass)] border border-dashed border-[var(--border-subtle)]">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="audio/*"
+              data-testid="focus-local-audio-input"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+            {audio.hasLocalFile && audio.localFileName ? (
+              <>
+                <button
+                  type="button"
+                  data-testid="focus-track-local-file"
+                  onClick={() => selectTrack('local-file')}
+                  className="flex items-center gap-1.5 min-w-0 flex-1 text-left"
+                >
+                  <LucideIcon
+                    name="music"
+                    size={13}
+                    className={
+                      audio.trackId === 'local-file'
+                        ? 'text-sky-500 shrink-0'
+                        : 'text-[var(--text-muted)] shrink-0'
+                    }
+                  />
+                  <span className="text-[11px] font-bold text-[var(--text-main)] truncate">
+                    本機音檔：{audio.localFileName}
+                  </span>
+                </button>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="px-2 py-1 rounded-lg text-[10px] font-bold bg-[var(--surface-subtle)] text-[var(--text-main)] hover:text-sky-600"
+                  >
+                    更換
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="focus-clear-local-audio-btn"
+                    onClick={clearLocalAudioFile}
+                    aria-label="清除本機音檔"
+                    className="p-1 rounded-lg text-[var(--text-muted)] hover:text-rose-500"
+                  >
+                    <LucideIcon name="x" size={12} />
+                  </button>
+                </div>
+              </>
+            ) : (
+              <button
+                type="button"
+                data-testid="focus-import-local-audio-btn"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full inline-flex items-center justify-center gap-1.5 text-[11px] font-bold text-[var(--text-muted)] hover:text-sky-600 dark:hover:text-sky-300 transition-colors"
+              >
+                <LucideIcon name="upload" size={13} />
+                <span>匯入本機音檔 (.mp3 / .wav / .m4a，僅本機離線播放)</span>
+              </button>
+            )}
+          </div>
+
+          {/* Single-Layer Natural Ambient Soundscape Chips */}
+          <div className="space-y-1.5">
+            <div className="text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-muted)]">
+              自然環境音疊加（選配）
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+              {FOCUS_AMBIENT_OPTIONS.map((amb) => {
+                const active = audio.ambientId === amb.id;
+                return (
+                  <button
+                    key={amb.id}
+                    type="button"
+                    data-testid={`focus-ambient-${amb.id}`}
+                    aria-pressed={active}
+                    onClick={() => selectAmbient(amb.id)}
+                    className={`px-2 py-1.5 rounded-xl text-[11px] font-bold border inline-flex items-center justify-center gap-1 transition-colors ${
+                      active
+                        ? 'bg-sky-500 text-white border-sky-500'
+                        : 'bg-[var(--surface-glass)] border-[var(--border-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)]'
+                    }`}
+                  >
+                    <LucideIcon name={amb.icon} size={12} className="shrink-0" />
+                    <span className="truncate">{amb.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Dual Independent Volume Sliders */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-0.5">
+            <label className="space-y-1">
+              <div className="flex items-center justify-between text-[10px] font-bold text-[var(--text-muted)]">
+                <span>輕音樂音量</span>
+                <span className="font-mono">{Math.round(audio.musicVolume * 100)}%</span>
+              </div>
+              <input
+                type="range"
+                data-testid="focus-music-volume-slider"
+                min={0}
+                max={100}
+                value={Math.round(audio.musicVolume * 100)}
+                onChange={(e) => setMusicVolume(Number(e.target.value) / 100)}
+                aria-label="輕音樂音量"
+                className="w-full accent-sky-500 h-1.5 rounded-full cursor-pointer"
+              />
+            </label>
+
+            <label className={`space-y-1 ${audio.ambientId === 'none' ? 'opacity-50' : ''}`}>
+              <div className="flex items-center justify-between text-[10px] font-bold text-[var(--text-muted)]">
+                <span>環境音音量</span>
+                <span className="font-mono">{Math.round(audio.ambientVolume * 100)}%</span>
+              </div>
+              <input
+                type="range"
+                data-testid="focus-ambient-volume-slider"
+                min={0}
+                max={100}
+                disabled={audio.ambientId === 'none'}
+                value={Math.round(audio.ambientVolume * 100)}
+                onChange={(e) => setAmbientVolume(Number(e.target.value) / 100)}
+                aria-label="環境音音量"
+                className="w-full accent-sky-500 h-1.5 rounded-full cursor-pointer disabled:cursor-not-allowed"
+              />
+            </label>
+          </div>
+
+          {/* Auto-Sync & Completion Chime Toggles */}
+          <div className="flex items-center justify-between gap-2 flex-wrap pt-2 border-t border-[var(--border-subtle)] text-[11px]">
+            <label className="inline-flex items-center gap-1.5 font-semibold text-[var(--text-main)] cursor-pointer select-none">
+              <input
+                type="checkbox"
+                data-testid="focus-autosync-toggle"
+                checked={audio.autoSyncWithTimer}
+                onChange={(e) => setAutoSync(e.target.checked)}
+                className="rounded border-sky-400 text-sky-500 focus:ring-sky-400"
+              />
+              <span>跟隨專注自動播放／暫停</span>
+            </label>
+
+            <div className="inline-flex items-center gap-2">
+              <label className="inline-flex items-center gap-1.5 font-semibold text-[var(--text-main)] cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  data-testid="focus-chime-toggle"
+                  checked={audio.chimeEnabled}
+                  onChange={(e) => setChimeEnabled(e.target.checked)}
+                  className="rounded border-sky-400 text-sky-500 focus:ring-sky-400"
+                />
+                <span>完成提示音</span>
+              </label>
+              <button
+                type="button"
+                data-testid="focus-chime-preview-btn"
+                onClick={previewChime}
+                aria-label="試聽完成提示音"
+                title="試聽療癒完成風鈴聲"
+                className="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-[var(--surface-glass)] border border-[var(--border-subtle)] text-sky-600 dark:text-sky-300 hover:border-sky-400/60"
+              >
+                試聽
+              </button>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   );

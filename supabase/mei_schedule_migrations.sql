@@ -52,7 +52,7 @@ CREATE INDEX IF NOT EXISTS idx_mei_schedule_calendars_invite
   ON public.mei_schedule_calendars(invite_code)
   WHERE invite_code IS NOT NULL;
 
--- 3.2 多人共享日曆成員與權限表 (TimeTree 級協作)
+-- 3.2 多人共享日曆成員與權限表 (多人協作)
 CREATE TABLE IF NOT EXISTS public.mei_schedule_calendar_members (
   calendar_id UUID NOT NULL REFERENCES public.mei_schedule_calendars(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -127,7 +127,7 @@ CREATE TABLE IF NOT EXISTS public.mei_schedule_tasks (
 CREATE INDEX IF NOT EXISTS idx_mei_schedule_tasks_user_order
   ON public.mei_schedule_tasks(user_id, completed, sort_order ASC);
 
--- 3.5 單一行程即時留言串 (TimeTree 級協作討論)
+-- 3.5 單一行程即時留言串 (多人協作討論)
 CREATE TABLE IF NOT EXISTS public.mei_schedule_event_comments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   event_id UUID NOT NULL REFERENCES public.mei_schedule_events(id) ON DELETE CASCADE,

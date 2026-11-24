@@ -22,6 +22,7 @@ import {
   toLocalDateKey
 } from './services/recurrenceEngine';
 import { detectScheduleConflicts } from './services/smartScheduler';
+import { FocusSessionProvider } from './store/FocusSessionContext';
 import {
   ScheduleProvider,
   useScheduleStore,
@@ -406,7 +407,9 @@ function MeiScheduleShell() {
 export default function App() {
   return (
     <ScheduleProvider>
-      <MeiScheduleShell />
+      <FocusSessionProvider>
+        <MeiScheduleShell />
+      </FocusSessionProvider>
     </ScheduleProvider>
   );
 }
