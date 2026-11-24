@@ -23,7 +23,7 @@
    - **TimeTree 級多人共享日曆與單一行程即時留言**：建立共享日曆與 6 碼邀請碼、成員角色權限管理（Owner / Editor / Viewer）及單一行程即時討論串。
    - **跨五端原生通知與系統匣迷你視窗**：Electron 桌面系統匣今日快覽（`#/tray`）與全域快記快捷鍵（`Cmd/Ctrl + Shift + Space`）、Capacitor 本地排程推播與觸覺回饋。
 4. **三套視覺風格 × 亮／深雙模式（6 種外觀）**
-   - 預設承襲咩創意工作室「晴空澄澈毛玻璃 (`sky-glass`)」，內建一鍵切換「極簡效率 (`minimal-linear`)」與「溫暖手帳 (`warm-journal`)」，全站嚴格零系統 Emoji、100% Lucide 向量圖示，並完整適配手機四大長寬比與動態視窗高度 (`dvh`)。
+   - 預設承襲咩創意工作室「晴空 (`sky-glass`)」，內建一鍵切換「極簡 (`minimal-linear`)」與「溫暖 (`warm-journal`)」，全站嚴格零系統 Emoji、100% Lucide 向量圖示，並完整適配手機四大長寬比與動態視窗高度 (`dvh`)。
 5. **本機優先離線可用 ＋ 咩創意工作室雲端帳號 SSO**
    - 免登入開箱即用（IndexedDB 離線持久化），登入咩創意工作室雲端帳號（原生 Google OAuth／信箱驗證碼註冊／Passkey）即無縫合併同步，並整合 `mei-dock.js` 返回工作室大廳膠囊。
 

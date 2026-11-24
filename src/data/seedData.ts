@@ -116,7 +116,7 @@ export const CALENDAR_SET_META: CalendarSetMeta[] = [
 export const DESIGN_THEME_OPTIONS: DesignThemeOption[] = [
   {
     id: 'sky-glass',
-    name: '晴空毛玻璃',
+    name: '晴空',
     subtitle: '預設承襲咩創意工作室澄澈冰藍質感',
     icon: 'cloud',
     previewBg: '#F4F9FF',
@@ -125,7 +125,7 @@ export const DESIGN_THEME_OPTIONS: DesignThemeOption[] = [
   },
   {
     id: 'minimal-linear',
-    name: '極簡效率',
+    name: '極簡',
     subtitle: '高資訊密度、俐落細線與低飽和專業色塊',
     icon: 'sliders-horizontal',
     previewBg: '#FFFFFF',
@@ -134,7 +134,7 @@ export const DESIGN_THEME_OPTIONS: DesignThemeOption[] = [
   },
   {
     id: 'warm-journal',
-    name: '溫暖手帳',
+    name: '溫暖',
     subtitle: '象牙紙感、圓潤膠囊與柔和琥珀光影',
     icon: 'book-open',
     previewBg: '#FAF6F0',

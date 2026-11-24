@@ -45,7 +45,7 @@ export default function CommandPalette() {
       { id: 'cmd-analytics', label: '開啟時間統計與專注儀表板', icon: 'bar-chart-3', run: () => openModal('analytics') },
       { id: 'cmd-shared', label: '管理多人共享日曆與邀請碼', icon: 'users', run: () => openModal('shared') },
       { id: 'cmd-sync', label: '匯入／匯出 .ics 與跨端提醒設定', icon: 'refresh-cw', run: () => openModal('sync') },
-      { id: 'cmd-appearance', label: '切換外觀風格（晴空／極簡／手帳）', icon: 'palette', run: () => openModal('appearance') },
+      { id: 'cmd-appearance', label: '切換外觀風格（晴空／極簡／溫暖）', icon: 'palette', run: () => openModal('appearance') },
       {
         id: 'cmd-dock-visible',
         label: '顯示「返回咩創意大廳」懸浮按鈕',

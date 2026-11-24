@@ -45,6 +45,10 @@ describe('M1 Visual System: 3 Themes x 2 Modes, Sky-Blue Toast, dvh & 4 Aspect R
   it('switches across all 6 theme combinations (3 design themes x light/dark) and reflects on <html>', async () => {
     render(<App />);
 
+    expect(screen.getByTestId('theme-switch-sky-glass')).toHaveTextContent('晴空');
+    expect(screen.getByTestId('theme-switch-minimal-linear')).toHaveTextContent('極簡');
+    expect(screen.getByTestId('theme-switch-warm-journal')).toHaveTextContent('溫暖');
+
     const themes: DesignTheme[] = ['sky-glass', 'minimal-linear', 'warm-journal'];
     for (const theme of themes) {
       fireEvent.click(screen.getByTestId(`theme-switch-${theme}`));
