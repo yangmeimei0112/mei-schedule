@@ -5,25 +5,23 @@
       <stop offset="50%" stop-color="#E0F2FE" />
       <stop offset="100%" stop-color="#BAE6FD" />
     </linearGradient>
-    <linearGradient id="pwaCardGrad" x1="126" y1="126" x2="386" y2="386" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#FFFFFF" />
-      <stop offset="100%" stop-color="#F0F9FF" />
-    </linearGradient>
-    <linearGradient id="pwaSkyGrad" x1="126" y1="126" x2="386" y2="386" gradientUnits="userSpaceOnUse">
+    <linearGradient id="pwaCardGrad" x1="116" y1="116" x2="396" y2="396" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#38BDF8" />
       <stop offset="100%" stop-color="#0284C7" />
     </linearGradient>
     <filter id="pwaCardShadow" x="-15%" y="-15%" width="130%" height="130%">
-      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#0284C7" flood-opacity="0.22" />
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#0284C7" flood-opacity="0.28" />
     </filter>
   </defs>
-  <!-- Full-bleed 背景確保任何形狀圓角裁切 (Maskable Safe Area) 皆無透明破綻 -->
+  <!-- Full-bleed 晴空漸層底色確保任意形狀裁切 (iOS / Android Maskable Safe Area) 無透明破綻 -->
   <rect width="512" height="512" fill="url(#pwaBgGrad)" />
-  <!-- 咩時光 MeiSchedule / 咩創意工作室統一品牌標誌底座 (收容於 80% 安全可視區內) -->
-  <rect x="126" y="126" width="260" height="260" rx="78" fill="url(#pwaCardGrad)" stroke="#38BDF8" stroke-width="7.5" stroke-opacity="0.5" filter="url(#pwaCardShadow)" />
-  <!-- 正統 Lucide Cloud x Infinity 純粹極簡線性向量 (Candidate F) -->
-  <g transform="translate(186.4, 186.4) scale(5.8)" stroke="url(#pwaSkyGrad)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none">
-    <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
-    <path d="M12 14.5c-1.2-1.2-2.4-1.8-3.6-1.8a1.8 1.8 0 1 0 0 3.6c1.2 0 2.4-.6 3.6-1.8Zm0 0c1.2 1.2 2.4 1.8 3.6 1.8a1.8 1.8 0 0 0 0-3.6c-1.2 0-2.4.6-3.6 1.8Z" />
+  <!-- 咩時光 MeiSchedule 專屬晴空超橢圓 App Icon 卡片 (收容於 80% 安全可視區內) -->
+  <rect x="116" y="116" width="280" height="280" rx="82" fill="url(#pwaCardGrad)" filter="url(#pwaCardShadow)" />
+  <!-- 日曆時間塊 (Time Blocks) 純白高對比向量幾何標誌 -->
+  <g transform="translate(169.6, 169.6) scale(7.2)" stroke="#FFFFFF" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <rect x="3.5" y="5.2" width="17" height="15.3" rx="4.2" />
+    <path d="M8.2 3.2v2.4M15.8 3.2v2.4" />
+    <rect x="6.6" y="9.4" width="7.6" height="2.7" rx="1.35" fill="#FFFFFF" stroke="none" />
+    <rect x="9.8" y="14.1" width="7.6" height="2.7" rx="1.35" fill="#FFFFFF" fill-opacity="0.52" stroke="none" />
   </g>
 </svg>

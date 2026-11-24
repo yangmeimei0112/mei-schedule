@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrandMark, LucideIcon } from './BrandMark';
+import { LucideIcon, MeiScheduleLogo } from './BrandMark';
 import { DESIGN_THEME_OPTIONS } from '../data/seedData';
 import { useScheduleStore } from '../store/useScheduleStore';
 import type { DesignTheme, ScheduleViewMode } from '../types/schedule';
@@ -109,10 +109,10 @@ export default function TopNavBar({ conflictCount, onFocusQuickCapture }: TopNav
 
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <span className="sm:hidden inline-flex shrink-0">
-              <BrandMark size="xs" />
+              <MeiScheduleLogo size="xs" />
             </span>
             <span className="hidden sm:inline-flex shrink-0">
-              <BrandMark size="sm" />
+              <MeiScheduleLogo size="sm" />
             </span>
             <div className="leading-tight hidden min-[375px]:block">
               <div className="flex items-baseline gap-1.5">

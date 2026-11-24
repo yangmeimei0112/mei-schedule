@@ -74,12 +74,19 @@ test('1. 全站零系統 Emoji 鐵律靜態掃描 (src, electron, public, supaba
   }
 });
 
-test('2. 品牌標誌 Candidate F、Lucide strokeWidth=1.75、三套視覺主題與行動端 dvh 規範驗證', () => {
+test('2. 專屬日曆時間塊標誌 (Time Blocks)、母品牌標誌、Lucide strokeWidth=1.75、三套視覺主題與行動端 dvh 規範驗證', () => {
   const brandSrc = fs.readFileSync(path.join(ROOT, 'src/components/BrandMark.tsx'), 'utf8');
   assert.match(brandSrc, /strokeWidth\s*=\s*1\.75/);
   assert.match(brandSrc, /absoluteStrokeWidth\s*=\s*true/);
+  assert.ok(brandSrc.includes('M8.2 3.2v2.4M15.8 3.2v2.4'));
+  assert.ok(brandSrc.includes('data-logo-design="time-blocks"'));
   assert.ok(brandSrc.includes('M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z'));
   assert.ok(brandSrc.includes('M12 14.5c'));
+
+  const favSvg = fs.readFileSync(path.join(ROOT, 'public/favicon.svg'), 'utf8');
+  assert.ok(favSvg.includes('M8.2 3.2v2.4M15.8 3.2v2.4'));
+  const pwaSvg = fs.readFileSync(path.join(ROOT, 'public/pwa-maskable.svg'), 'utf8');
+  assert.ok(pwaSvg.includes('M8.2 3.2v2.4M15.8 3.2v2.4'));
 
   const css = fs.readFileSync(path.join(ROOT, 'src/styles/index.css'), 'utf8');
   for (const token of [

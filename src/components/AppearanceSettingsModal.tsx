@@ -1,5 +1,5 @@
 import React from 'react';
-import { LucideIcon } from './BrandMark';
+import { LucideIcon, MeiScheduleLogo } from './BrandMark';
 import { DESIGN_THEME_OPTIONS } from '../data/seedData';
 import { useScheduleStore } from '../store/useScheduleStore';
 import type { ColorMode, DesignTheme } from '../types/schedule';
@@ -217,12 +217,15 @@ export default function AppearanceSettingsModal() {
         </section>
 
         <div className="pt-3 border-t border-[var(--border-subtle)] flex items-center justify-between gap-2 text-[11px] text-[var(--text-muted)]">
-          <span className="font-semibold">咩時光 MeiSchedule</span>
+          <div className="inline-flex items-center gap-2">
+            <MeiScheduleLogo size="xs" />
+            <span className="font-semibold text-[var(--text-main)]">咩時光 MeiSchedule</span>
+          </div>
           <span
             data-testid="app-version-badge"
             className="font-mono font-bold px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-400/25"
           >
-            v1.1.0
+            v1.2.0
           </span>
         </div>
       </div>

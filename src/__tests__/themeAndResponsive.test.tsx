@@ -10,6 +10,8 @@ import {
   CANDIDATE_F_INFINITY_PATH,
   LOGO_SIZES,
   LucideIcon,
+  MEI_SCHEDULE_LOGO_PINS_PATH,
+  MeiScheduleLogo,
   StudioLogo
 } from '../components/BrandMark';
 import StudioToast from '../components/StudioToast';
@@ -269,18 +271,45 @@ describe('M1 Visual System: 3 Themes x 2 Modes, Sky-Blue Toast, dvh & 4 Aspect R
       fallbackContainer.querySelector('[data-testid="studio-brand-logo"]')?.getAttribute('data-logo-size')
     ).toBe('md');
 
-    // Public SVG & mei-dock.js brand geometry verification
-    for (const relPath of ['public/favicon.svg', 'public/pwa-maskable.svg', 'public/sdk/mei-dock.js']) {
+    // Dedicated MeiSchedule Product Logo (Time Blocks) 7-tier verification
+    for (const sz of LOGO_SIZES) {
+      const { container, unmount } = render(<MeiScheduleLogo size={sz} />);
+      const wrapper = container.querySelector('[data-testid="meischedule-brand-logo"]');
+      expect(wrapper?.getAttribute('data-logo-size')).toBe(sz);
+      expect(wrapper?.getAttribute('data-logo-design')).toBe('time-blocks');
+
+      const badge = wrapper?.querySelector('.squircle-icon-badge');
+      expect(badge?.className).toContain(expectedSizes[sz].widthClass);
+
+      const logoSvg = wrapper?.querySelector('svg');
+      expect(logoSvg?.getAttribute('width')).toBe(expectedSizes[sz].iconPx);
+      expect(logoSvg?.getAttribute('height')).toBe(expectedSizes[sz].iconPx);
+      expect(logoSvg?.getAttribute('stroke-width')).toBe('1.75');
+      expect(logoSvg?.getAttribute('viewBox')).toBe('0 0 24 24');
+      expect(logoSvg?.querySelectorAll('rect')).toHaveLength(3);
+      expect(logoSvg?.querySelector('path')?.getAttribute('d')).toBe(MEI_SCHEDULE_LOGO_PINS_PATH);
+      unmount();
+    }
+
+    // Public MeiSchedule product SVG assets (Time Blocks geometry, stroke-width=1.75, zero emoji)
+    for (const relPath of ['public/favicon.svg', 'public/pwa-maskable.svg']) {
       const text = fs.readFileSync(path.join(ROOT_DIR, relPath), 'utf8');
       expect(text).toContain('stroke-width="1.75"');
-      expect(text).toContain('M17.5 19H9');
-      expect(text).toContain('M12 14.5c');
-      expect(text).not.toContain('m12 3-1.912');
+      expect(text).toContain(MEI_SCHEDULE_LOGO_PINS_PATH);
+      expect(text).toContain('width="7.6" height="2.7" rx="1.35"');
       expect(EMOJI_REGEX.test(text)).toBe(false);
     }
+
+    // Parent Studio return dock preserves Studio geometric integrity & zero emoji
+    const dockSvgText = fs.readFileSync(path.join(ROOT_DIR, 'public/sdk/mei-dock.js'), 'utf8');
+    expect(dockSvgText).toContain('stroke-width="1.75"');
+    expect(dockSvgText).toContain('M17.5 19H9');
+    expect(dockSvgText).toContain('M12 14.5c');
+    expect(dockSvgText).not.toContain('m12 3-1.912');
+    expect(EMOJI_REGEX.test(dockSvgText)).toBe(false);
   });
 
-  it('v1.1.0 multi-device regressions: mobile defaults sidebar closed, mei-dock sits below modals & auto-collapses on mobile, and displays v1.1.0', async () => {
+  it('v1.2.0 multi-device regressions: mobile defaults sidebar closed, mei-dock sits below modals & auto-collapses on mobile, and displays v1.2.0', async () => {
     const origWidth = window.innerWidth;
     Object.defineProperty(window, 'innerWidth', { value: 390, configurable: true, writable: true });
 
@@ -289,9 +318,9 @@ describe('M1 Visual System: 3 Themes x 2 Modes, Sky-Blue Toast, dvh & 4 Aspect R
       // Mobile (<1024px) must NOT show full-screen blocking sidebar overlay on initial load
       expect(screen.queryByTestId('mobile-sidebar-overlay')).toBeNull();
 
-      // Appearance settings modal exposes v1.1.0 release badge
+      // Appearance settings modal exposes v1.2.0 release badge & Time Blocks logo
       fireEvent.click(screen.getByTestId('open-appearance-modal-btn'));
-      expect(await screen.findByTestId('app-version-badge')).toHaveTextContent('v1.1.0');
+      expect(await screen.findByTestId('app-version-badge')).toHaveTextContent('v1.2.0');
       unmount();
 
       // Verify mei-dock.js auto-collapses on mobile, stays below z-50 modals (z-index: 35), and adapts to dark mode

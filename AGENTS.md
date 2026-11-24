@@ -24,7 +24,9 @@
 
 ## 4. 零系統 Emoji、Lucide 1.75 與三套視覺風格規範
 - **零系統 Unicode Emoji**：全站所有原始碼、HTML、SVG、SQL、測試與文件嚴格禁止命中 `/[\u{1F300}-\u{1FAFF}\u{2300}-\u{23FF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}]/u` 之字元（包含 `U+2318`、`U+2713`、`U+2715`、`U+23F0` 等符號區；鍵盤快捷鍵一律以純 ASCII `Cmd/Ctrl + K` 呈現）。100% 使用 Lucide 向量圖示（統一封裝預設 `strokeWidth=1.75`、`absoluteStrokeWidth=true`）。
-- **品牌標誌規範**：`BrandMark` / `StudioLogo` 嚴格維持 Candidate F 雲朵無限幾何路徑（`M17.5 19H9...` 與 `M12 14.5c...`，禁用 `m12 3-1.912`）與 7 級尺寸規範（`2xs` 至 `2xl`）。
+- **品牌標誌規範**：
+  - 本專案專屬產品標誌 `MeiScheduleLogo` 採用 **日曆時間塊 (Time Blocks)** 純向量幾何（圓角日曆外框 `rx="4.2"` ＋ 雙裝訂針 `M8.2 3.2v2.4M15.8 3.2v2.4` ＋ 兩段錯落時間塊膠囊，`strokeWidth=1.75`、支援 7 級尺寸 `2xs` 至 `2xl`），統一套用於頂部導覽列、Electron 系統匣、`public/favicon.svg` 與 `public/pwa-maskable.svg`。
+  - 母品牌「咩創意工作室」識別 `StudioLogo`（用於會員專區與 `public/sdk/mei-dock.js`）維持既有工作室標誌規範與 7 級尺寸矩陣，不混用子專案產品標誌。
 - **三套風格 x 亮深雙模式**：支援 `sky-glass`（預設：晴空澄澈毛玻璃）、`minimal-linear`（極簡效率專業）、`warm-journal`（溫暖質感手帳）三套設計風格，搭配亮色／深色模式即時零閃爍切換。
 
 ## 5. 任務狀態回報與多代理監控紀律 (Task Status Reporting Integrity & Anti-Noise Protocol)

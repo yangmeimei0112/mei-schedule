@@ -547,6 +547,90 @@ export function StudioLogo({
   );
 }
 
-export const MeiScheduleLogo = StudioLogo;
+export const MEI_SCHEDULE_LOGO_PINS_PATH = 'M8.2 3.2v2.4M15.8 3.2v2.4';
+
+export interface MeiScheduleLogoProps extends React.HTMLAttributes<HTMLDivElement> {
+  size?: LogoSize | string | null;
+  className?: string;
+  badgeClassName?: string;
+  'data-testid'?: string;
+  frameless?: boolean;
+  variant?: 'glass' | 'solid';
+}
+
+/**
+ * 咩時光 (MeiSchedule) 專屬產品標誌 — 日曆時間塊 (Time Blocks)
+ * 極簡圓角日曆框 + 兩段錯落圓潤時間塊膠囊，遵循 Lucide 1.75 線寬與 7 級尺寸矩陣 (2xs–2xl)
+ */
+export function MeiScheduleLogo({
+  size = 'md',
+  className = '',
+  badgeClassName = '',
+  'data-testid': testId = 'meischedule-brand-logo',
+  frameless = false,
+  variant = 'glass',
+  ...rest
+}: MeiScheduleLogoProps) {
+  const normalizedSize = normalizeLogoSize(size);
+  const current = SIZE_MAP[normalizedSize];
+  const isSolid = variant === 'solid';
+
+  const logoSvg = (
+    <svg
+      data-lucide-name="meischedule-time-blocks"
+      xmlns="http://www.w3.org/2000/svg"
+      width={current.icon}
+      height={current.icon}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.75}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`meischedule-time-blocks-svg ${
+        isSolid ? 'text-white' : 'text-[var(--accent-hover)] dark:text-[var(--accent-primary)]'
+      } ${frameless ? 'drop-shadow-md' : ''}`.trim()}
+    >
+      <rect x="3.5" y="5.2" width="17" height="15.3" rx="4.2" />
+      <path d={MEI_SCHEDULE_LOGO_PINS_PATH} />
+      <rect x="6.6" y="9.4" width="7.6" height="2.7" rx="1.35" fill="currentColor" stroke="none" />
+      <rect
+        x="9.8"
+        y="14.1"
+        width="7.6"
+        height="2.7"
+        rx="1.35"
+        fill="currentColor"
+        fillOpacity={isSolid ? 0.52 : 0.45}
+        stroke="none"
+      />
+    </svg>
+  );
+
+  return (
+    <div
+      className={`meischedule-brand-logo studio-brand-logo relative inline-flex items-center justify-center shrink-0 ${className}`.trim()}
+      data-testid={testId}
+      data-logo-size={normalizedSize}
+      data-logo-design="time-blocks"
+      {...rest}
+    >
+      {frameless ? (
+        logoSvg
+      ) : (
+        <div
+          className={`${
+            isSolid
+              ? 'btn-sky-primary inline-flex items-center justify-center shrink-0'
+              : 'squircle-icon-badge inline-flex items-center justify-center shrink-0 transition-transform duration-300 border'
+          } ${current.box} ${badgeClassName}`.trim()}
+        >
+          {logoSvg}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export const BrandMark = StudioLogo;
-export default StudioLogo;
+export default MeiScheduleLogo;

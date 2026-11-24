@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { BrandMark, LucideIcon } from './BrandMark';
+import { LucideIcon, MeiScheduleLogo } from './BrandMark';
 import QuickCaptureBar from './QuickCaptureBar';
 import { COLOR_TOKEN_PALETTE, formatLocalDate } from '../data/seedData';
 import { expandRecurringEvents } from '../services/recurrenceEngine';
@@ -38,7 +38,7 @@ export default function DesktopTrayWidget() {
     >
       <header className="flex items-center justify-between gap-2 px-1">
         <div className="flex items-center gap-2">
-          <BrandMark size="xs" />
+          <MeiScheduleLogo size="xs" />
           <div>
             <h1 className="text-sm font-extrabold text-[var(--text-main)] leading-tight">
               咩時光今日快覽

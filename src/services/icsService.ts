@@ -341,7 +341,7 @@ export function exportEventsToIcs(
   const lines: string[] = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Mei Creative Studio//MeiSchedule v1.1//ZH',
+    'PRODID:-//Mei Creative Studio//MeiSchedule v1.2//ZH',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
     foldIcsLine(`X-WR-CALNAME:${escapeIcsText(calendarName)}`)
