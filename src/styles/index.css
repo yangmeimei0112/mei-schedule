@@ -1,0 +1,798 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   全站專屬字體規範 (Studio Typography System)
+   - 英文字體：Zen Maru Gothic (圓潤清爽日系圓體英文)
+   - 中文大標題：阿里巴巴普惠體 (Alibaba PuHuiTi 3.0)
+   - 中文中標題與小標題/內文：思源黑體 (Noto Sans TC)
+   - 等寬時間與代碼字體：JetBrains Mono
+   ========================================================================== */
+
+@font-face {
+  font-family: 'Zen Maru Gothic Latin';
+  src: local('Zen Maru Gothic Medium'),
+       local('Zen Maru Gothic Regular'),
+       local('Zen Maru Gothic');
+  font-weight: 400 500;
+  font-display: swap;
+  unicode-range: U+0000-024F, U+2000-206F, U+2070-209F, U+20A0-20CF, U+2100-214F, U+2150-218F;
+}
+
+@font-face {
+  font-family: 'Zen Maru Gothic Latin';
+  src: local('Zen Maru Gothic Bold'),
+       local('Zen Maru Gothic Black'),
+       local('Zen Maru Gothic');
+  font-weight: 600 900;
+  font-display: swap;
+  unicode-range: U+0000-024F, U+2000-206F, U+2070-209F, U+20A0-20CF, U+2100-214F, U+2150-218F;
+}
+
+@font-face {
+  font-family: 'Alibaba PuHuiTi 3.0';
+  src: local('Alibaba PuHuiTi 3.0 Bold'),
+       local('Alibaba PuHuiTi 3.0-85-Bold'),
+       local('Alibaba PuHuiTi Bold'),
+       local('Alibaba PuHuiTi 3.0'),
+       local('Alibaba PuHuiTi'),
+       local('AlibabaPuHuiTi'),
+       local('阿里巴巴普惠體 3.0 Bold'),
+       local('阿里巴巴普惠體 3.0'),
+       local('阿里巴巴普惠體 Bold'),
+       local('阿里巴巴普惠體'),
+       url('https://cdn.jsdelivr.net/npm/alibabapuhuiti-3-85-bold@1.0.0/AlibabaPuHuiTi-3-85-Bold.woff2') format('woff2'),
+       url('https://cdn.jsdelivr.net/npm/@pinhai/ali-fonts/AlibabaPuHuiTi-3-85-Bold.woff2') format('woff2');
+  font-weight: 600 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Alibaba PuHuiTi 3.0';
+  src: local('Alibaba PuHuiTi 3.0 Regular'),
+       local('Alibaba PuHuiTi 3.0-55-Regular'),
+       local('Alibaba PuHuiTi Regular'),
+       local('Alibaba PuHuiTi 3.0'),
+       local('Alibaba PuHuiTi'),
+       local('AlibabaPuHuiTi'),
+       local('阿里巴巴普惠體 3.0 Regular'),
+       local('阿里巴巴普惠體 3.0'),
+       local('阿里巴巴普惠體'),
+       url('https://cdn.jsdelivr.net/npm/alibabapuhuiti-3-55-regular@1.0.0/AlibabaPuHuiTi-3-55-Regular.woff2') format('woff2'),
+       url('https://cdn.jsdelivr.net/npm/@pinhai/ali-fonts/AlibabaPuHuiTi-3-55-Regular.woff2') format('woff2');
+  font-weight: 400 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Alibaba PuHuiTi';
+  src: local('Alibaba PuHuiTi 3.0 Bold'),
+       local('Alibaba PuHuiTi 3.0-85-Bold'),
+       local('Alibaba PuHuiTi Bold'),
+       local('Alibaba PuHuiTi 3.0'),
+       local('Alibaba PuHuiTi'),
+       local('AlibabaPuHuiTi'),
+       local('阿里巴巴普惠體 3.0 Bold'),
+       local('阿里巴巴普惠體 3.0'),
+       local('阿里巴巴普惠體 Bold'),
+       local('阿里巴巴普惠體'),
+       url('https://cdn.jsdelivr.net/npm/alibabapuhuiti-3-85-bold@1.0.0/AlibabaPuHuiTi-3-85-Bold.woff2') format('woff2'),
+       url('https://cdn.jsdelivr.net/npm/@pinhai/ali-fonts/AlibabaPuHuiTi-3-85-Bold.woff2') format('woff2');
+  font-weight: 600 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Alibaba PuHuiTi';
+  src: local('Alibaba PuHuiTi 3.0 Regular'),
+       local('Alibaba PuHuiTi 3.0-55-Regular'),
+       local('Alibaba PuHuiTi Regular'),
+       local('Alibaba PuHuiTi 3.0'),
+       local('Alibaba PuHuiTi'),
+       local('AlibabaPuHuiTi'),
+       local('阿里巴巴普惠體 3.0 Regular'),
+       local('阿里巴巴普惠體 3.0'),
+       local('阿里巴巴普惠體'),
+       url('https://cdn.jsdelivr.net/npm/alibabapuhuiti-3-55-regular@1.0.0/AlibabaPuHuiTi-3-55-Regular.woff2') format('woff2'),
+       url('https://cdn.jsdelivr.net/npm/@pinhai/ali-fonts/AlibabaPuHuiTi-3-55-Regular.woff2') format('woff2');
+  font-weight: 400 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ==========================================================================
+   三套視覺風格 x 亮深雙模式 CSS 變數系統 (6 Visual Combinations)
+   ========================================================================== */
+
+/* 1A. Sky-Glass Light (預設：晴空澄澈毛玻璃 - 亮色) */
+:root,
+:root[data-design-theme="sky-glass"] {
+  --font-en: "Zen Maru Gothic", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-title-lg: "Alibaba PuHuiTi 3.0", "Alibaba PuHuiTi", "AlibabaPuHuiTi", "阿里巴巴普惠體", "Noto Sans TC", sans-serif;
+  --font-title-md: "Noto Sans TC", "Noto Sans CJK TC", "Source Han Sans TC", "Source Han Sans", "思源黑體", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-body: "Noto Sans TC", "Noto Sans CJK TC", "Source Han Sans TC", "Source Han Sans", "思源黑體", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --bg-primary: #F4F9FF;
+  --bg-secondary: #E0F2FE;
+  --surface-glass: rgba(255, 255, 255, 0.84);
+  --surface-glass-strong: rgba(255, 255, 255, 0.94);
+  --surface-subtle: #F8FAFC;
+  --surface-blur: 20px;
+
+  --sky-primary: #38BDF8;
+  --sky-hover: #0284C7;
+  --sky-deep: #0369A1;
+  --sky-tint: #EFF6FF;
+  --accent-primary: #38BDF8;
+  --accent-hover: #0284C7;
+  --accent-deep: #0369A1;
+
+  --border-sky: rgba(56, 189, 248, 0.24);
+  --border-sky-hover: rgba(56, 189, 248, 0.55);
+  --border-subtle: rgba(56, 189, 248, 0.24);
+  --border-hover: rgba(56, 189, 248, 0.55);
+  --grid-line: rgba(148, 163, 184, 0.22);
+
+  --text-main: #0F172A;
+  --text-muted: #475569;
+
+  --card-radius: 24px;
+  --block-radius: 16px;
+  --shadow-bento: 0 14px 36px -10px rgba(14, 165, 233, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
+  --shadow-bento-hover: 0 22px 48px -12px rgba(14, 165, 233, 0.22), 0 6px 16px -4px rgba(15, 23, 42, 0.06);
+}
+
+/* 1B. Sky-Glass Dark (晴空澄澈毛玻璃 - 星夜冰藍深色) */
+:root.dark,
+:root.dark[data-design-theme="sky-glass"] {
+  --bg-primary: #080E1A;
+  --bg-secondary: #0F172A;
+  --surface-glass: rgba(15, 23, 42, 0.82);
+  --surface-glass-strong: rgba(15, 23, 42, 0.92);
+  --surface-subtle: #1E293B;
+  --surface-blur: 20px;
+
+  --sky-primary: #38BDF8;
+  --sky-hover: #7DD3FC;
+  --sky-deep: #BAE6FD;
+  --sky-tint: #1E293B;
+  --accent-primary: #38BDF8;
+  --accent-hover: #7DD3FC;
+  --accent-deep: #BAE6FD;
+
+  --border-sky: rgba(56, 189, 248, 0.22);
+  --border-sky-hover: rgba(56, 189, 248, 0.52);
+  --border-subtle: rgba(56, 189, 248, 0.22);
+  --border-hover: rgba(56, 189, 248, 0.52);
+  --grid-line: rgba(148, 163, 184, 0.16);
+
+  --text-main: #F8FAFC;
+  --text-muted: #94A3B8;
+
+  --card-radius: 24px;
+  --block-radius: 16px;
+  --shadow-bento: 0 16px 40px -12px rgba(2, 8, 23, 0.65), 0 0 0 1px rgba(56, 189, 248, 0.14);
+  --shadow-bento-hover: 0 24px 52px -12px rgba(14, 165, 233, 0.22), 0 0 0 1px rgba(56, 189, 248, 0.38);
+}
+
+/* 2A. Minimal-Linear Light (極簡效率專業 - 亮色) */
+:root[data-design-theme="minimal-linear"] {
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F8FAFC;
+  --surface-glass: #FFFFFF;
+  --surface-glass-strong: #FFFFFF;
+  --surface-subtle: #F1F5F9;
+  --surface-blur: 0px;
+
+  --accent-primary: #2563EB;
+  --accent-hover: #1D4ED8;
+  --accent-deep: #1E40AF;
+
+  --border-sky: #E2E8F0;
+  --border-sky-hover: #CBD5E1;
+  --border-subtle: #E2E8F0;
+  --border-hover: #CBD5E1;
+  --grid-line: #E2E8F0;
+
+  --text-main: #0F172A;
+  --text-muted: #64748B;
+
+  --card-radius: 12px;
+  --block-radius: 8px;
+  --shadow-bento: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-bento-hover: 0 6px 16px -4px rgba(15, 23, 42, 0.08);
+}
+
+/* 2B. Minimal-Linear Dark (極簡效率專業 - 深炭黑) */
+:root.dark[data-design-theme="minimal-linear"] {
+  --bg-primary: #0B0D12;
+  --bg-secondary: #12151E;
+  --surface-glass: #12151E;
+  --surface-glass-strong: #161A26;
+  --surface-subtle: #1A1F2C;
+  --surface-blur: 0px;
+
+  --accent-primary: #60A5FA;
+  --accent-hover: #93C5FD;
+  --accent-deep: #BFDBFE;
+
+  --border-sky: #242938;
+  --border-sky-hover: #363E54;
+  --border-subtle: #242938;
+  --border-hover: #363E54;
+  --grid-line: #242938;
+
+  --text-main: #F1F5F9;
+  --text-muted: #94A3B8;
+
+  --card-radius: 12px;
+  --block-radius: 8px;
+  --shadow-bento: 0 1px 3px rgba(0, 0, 0, 0.45);
+  --shadow-bento-hover: 0 8px 20px -6px rgba(0, 0, 0, 0.65);
+}
+
+/* 3A. Warm-Journal Light (溫暖質感手帳 - 暖象牙紙感) */
+:root[data-design-theme="warm-journal"] {
+  --bg-primary: #FAF6F0;
+  --bg-secondary: #F3ECE2;
+  --surface-glass: #FFFDF9;
+  --surface-glass-strong: #FFFDF9;
+  --surface-subtle: #F5EFE6;
+  --surface-blur: 8px;
+
+  --accent-primary: #D97706;
+  --accent-hover: #B45309;
+  --accent-deep: #92400E;
+
+  --border-sky: #E7DDD0;
+  --border-sky-hover: #D6C5B0;
+  --border-subtle: #E7DDD0;
+  --border-hover: #D6C5B0;
+  --grid-line: rgba(180, 155, 128, 0.26);
+
+  --text-main: #292524;
+  --text-muted: #78716C;
+
+  --card-radius: 24px;
+  --block-radius: 20px;
+  --shadow-bento: 0 10px 28px -10px rgba(120, 90, 60, 0.12), 0 2px 6px rgba(120, 90, 60, 0.05);
+  --shadow-bento-hover: 0 16px 36px -10px rgba(120, 90, 60, 0.18), 0 4px 10px rgba(120, 90, 60, 0.08);
+}
+
+/* 3B. Warm-Journal Dark (溫暖質感手帳 - 暖深可可) */
+:root.dark[data-design-theme="warm-journal"] {
+  --bg-primary: #1C1917;
+  --bg-secondary: #24201D;
+  --surface-glass: #292524;
+  --surface-glass-strong: #312C29;
+  --surface-subtle: #36312D;
+  --surface-blur: 8px;
+
+  --accent-primary: #F59E0B;
+  --accent-hover: #FBBF24;
+  --accent-deep: #FDE68A;
+
+  --border-sky: #44403C;
+  --border-sky-hover: #57534E;
+  --border-subtle: #44403C;
+  --border-hover: #57534E;
+  --grid-line: rgba(120, 113, 108, 0.26);
+
+  --text-main: #F5F5F4;
+  --text-muted: #A8A29E;
+
+  --card-radius: 24px;
+  --block-radius: 20px;
+  --shadow-bento: 0 14px 32px -12px rgba(0, 0, 0, 0.55);
+  --shadow-bento-hover: 0 20px 40px -12px rgba(0, 0, 0, 0.72);
+}
+
+/* ==========================================================================
+   基礎頁面與字體層次
+   ========================================================================== */
+
+html {
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  transition: background-color 350ms cubic-bezier(0.4, 0, 0.2, 1),
+              color 350ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+h1, .font-heading-lg, .font-title-lg {
+  font-family: var(--font-title-lg);
+  letter-spacing: -0.015em;
+}
+
+h2, h3, .font-heading-md, .font-title-md {
+  font-family: var(--font-title-md);
+  letter-spacing: -0.01em;
+}
+
+h4, h5, h6, p, span, button, input, textarea, select, label, .font-heading-sm, .font-title-sm, .font-body {
+  font-family: var(--font-body);
+}
+
+.font-en {
+  font-family: var(--font-en);
+}
+
+/* ==========================================================================
+   三套主題環境背景與卡片質感 (.sky-ambient-bg / .bento-glass-card / .schedule-time-block)
+   ========================================================================== */
+
+.sky-ambient-bg {
+  background-color: var(--bg-primary);
+  background-image:
+    radial-gradient(at 12% 8%, rgba(56, 189, 248, 0.18) 0px, transparent 48%),
+    radial-gradient(at 88% 12%, rgba(186, 230, 253, 0.36) 0px, transparent 52%),
+    radial-gradient(at 52% 85%, rgba(224, 242, 254, 0.42) 0px, transparent 55%);
+}
+
+:root.dark .sky-ambient-bg {
+  background-color: var(--bg-primary);
+  background-image:
+    radial-gradient(at 15% 10%, rgba(56, 189, 248, 0.13) 0px, transparent 45%),
+    radial-gradient(at 85% 15%, rgba(14, 165, 233, 0.10) 0px, transparent 50%),
+    radial-gradient(at 50% 90%, rgba(3, 105, 161, 0.12) 0px, transparent 55%);
+}
+
+:root[data-design-theme="minimal-linear"] .sky-ambient-bg,
+:root.dark[data-design-theme="minimal-linear"] .sky-ambient-bg {
+  background-color: var(--bg-primary);
+  background-image: none;
+}
+
+:root[data-design-theme="warm-journal"] .sky-ambient-bg {
+  background-color: var(--bg-primary);
+  background-image:
+    radial-gradient(at 15% 10%, rgba(251, 191, 36, 0.10) 0px, transparent 48%),
+    radial-gradient(at 85% 90%, rgba(217, 119, 6, 0.08) 0px, transparent 52%);
+}
+
+:root.dark[data-design-theme="warm-journal"] .sky-ambient-bg {
+  background-color: var(--bg-primary);
+  background-image:
+    radial-gradient(at 15% 10%, rgba(245, 158, 11, 0.07) 0px, transparent 48%),
+    radial-gradient(at 85% 90%, rgba(180, 83, 9, 0.06) 0px, transparent 52%);
+}
+
+.bento-glass-card,
+.schedule-surface-card {
+  background: var(--surface-glass);
+  backdrop-filter: blur(var(--surface-blur));
+  -webkit-backdrop-filter: blur(var(--surface-blur));
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--card-radius);
+  box-shadow: var(--shadow-bento);
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.22s ease,
+              box-shadow 0.25s ease,
+              background-color 0.22s ease;
+}
+
+.bento-glass-card:hover,
+.schedule-surface-card:hover {
+  border-color: var(--border-hover);
+}
+
+.schedule-time-block {
+  border-radius: var(--block-radius);
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.18s ease,
+              border-color 0.18s ease,
+              opacity 0.18s ease;
+}
+
+:root[data-design-theme="minimal-linear"] .schedule-time-block {
+  filter: saturate(0.78);
+}
+
+.schedule-buffer-hatch {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(148, 163, 184, 0.16),
+    rgba(148, 163, 184, 0.16) 4px,
+    transparent 4px,
+    transparent 10px
+  );
+}
+
+/* ==========================================================================
+   品牌標誌底座與主次按鈕（嚴格禁止 transition: all）
+   ========================================================================== */
+
+.squircle-icon-badge {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.16), rgba(14, 165, 233, 0.06));
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  color: #0284C7;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.6);
+}
+
+.dark .squircle-icon-badge {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.20), rgba(14, 165, 233, 0.08));
+  border: 1px solid rgba(56, 189, 248, 0.32);
+  color: #38BDF8;
+  box-shadow: inset 0 1px 1px rgba(56, 189, 248, 0.15);
+}
+
+.studio-brand-logo {
+  user-select: none;
+}
+
+.studio-brand-logo .squircle-icon-badge {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.22), rgba(14, 165, 233, 0.08));
+  border: 1px solid rgba(56, 189, 248, 0.36);
+  color: #0284C7;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.7), 0 2px 6px -1px rgba(14, 165, 233, 0.15);
+}
+
+.dark .studio-brand-logo .squircle-icon-badge {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.24), rgba(14, 165, 233, 0.10));
+  border: 1px solid rgba(56, 189, 248, 0.40);
+  color: #38BDF8;
+  box-shadow: inset 0 1px 1px rgba(56, 189, 248, 0.25), 0 2px 6px -1px rgba(14, 165, 233, 0.25);
+}
+
+.btn-sky-primary {
+  background: linear-gradient(135deg, #38BDF8 0%, #0EA5E9 55%, #0284C7 100%);
+  color: #FFFFFF;
+  box-shadow: 0 8px 20px -4px rgba(14, 165, 233, 0.38);
+  transition: color 0.2s ease,
+              background-color 0.2s ease,
+              border-color 0.2s ease,
+              box-shadow 0.2s ease,
+              transform 0.2s ease;
+}
+
+.btn-sky-primary:hover {
+  background: linear-gradient(135deg, #0EA5E9 0%, #0284C7 100%);
+  box-shadow: 0 12px 24px -4px rgba(2, 132, 199, 0.48);
+  transform: translateY(-1px);
+}
+
+.btn-sky-primary:active {
+  transform: translateY(0);
+}
+
+:root[data-design-theme="minimal-linear"] .btn-sky-primary {
+  background: #0F172A;
+  box-shadow: none;
+}
+
+:root.dark[data-design-theme="minimal-linear"] .btn-sky-primary {
+  background: #2563EB;
+  box-shadow: none;
+}
+
+:root[data-design-theme="warm-journal"] .btn-sky-primary {
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+  box-shadow: 0 8px 18px -4px rgba(217, 119, 6, 0.32);
+}
+
+.btn-sky-secondary {
+  background: rgba(239, 246, 255, 0.9);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  color: #0369A1;
+  transition: color 0.2s ease,
+              background-color 0.2s ease,
+              border-color 0.2s ease,
+              box-shadow 0.2s ease,
+              transform 0.2s ease;
+}
+
+.btn-sky-secondary:hover {
+  background: #E0F2FE;
+  border-color: rgba(56, 189, 248, 0.55);
+  color: #0284C7;
+}
+
+.dark .btn-sky-secondary {
+  background: rgba(30, 41, 59, 0.85);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  color: #BAE6FD;
+}
+
+.dark .btn-sky-secondary:hover {
+  background: rgba(56, 189, 248, 0.18);
+  border-color: rgba(56, 189, 248, 0.45);
+  color: #E0F2FE;
+}
+
+/* ==========================================================================
+   iOS / Android 安全區域內距與隱藏捲軸
+   ========================================================================== */
+
+.pb-safe-bottom {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom, 1rem));
+}
+.pt-safe {
+  padding-top: max(0px, env(safe-area-inset-top, 0px));
+}
+.pb-safe {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom, 1rem));
+}
+.pl-safe {
+  padding-left: max(0px, env(safe-area-inset-left, 0px));
+}
+.pr-safe {
+  padding-right: max(0px, env(safe-area-inset-right, 0px));
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ==========================================================================
+   狀態通知膠囊動畫 (StudioToast Spring Enter & Exit)
+   ========================================================================== */
+
+@keyframes toastSpringEnter {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 2rem, 0) scale(0.95);
+  }
+  72% {
+    opacity: 1;
+    transform: translate3d(0, -3px, 0) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes toastSlideExit {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(0, 2rem, 0) scale(0.95);
+  }
+}
+
+@keyframes toastContentFade {
+  0% {
+    opacity: 0.3;
+    transform: translateY(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.toast-spring-enter {
+  animation: toastSpringEnter 350ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.toast-slide-exit {
+  animation: toastSlideExit 340ms cubic-bezier(0.4, 0, 1, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.toast-content-fade {
+  animation: toastContentFade 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* 主題切換平順過渡 (350ms 60fps) */
+html.theme-transitioning,
+html.theme-transitioning body,
+html.theme-transitioning header,
+html.theme-transitioning nav,
+html.theme-transitioning main,
+html.theme-transitioning aside,
+html.theme-transitioning section,
+html.theme-transitioning .bento-glass-card,
+html.theme-transitioning .schedule-surface-card {
+  transition-property: background-color, border-color, color !important;
+  transition-duration: 350ms !important;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+@media (max-width: 640px) {
+  html.theme-transitioning,
+  html.theme-transitioning body,
+  html.theme-transitioning header,
+  html.theme-transitioning nav,
+  html.theme-transitioning main,
+  html.theme-transitioning .bento-glass-card,
+  html.theme-transitioning .schedule-surface-card {
+    transition-duration: 300ms !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.theme-transitioning,
+  html.theme-transitioning body,
+  html.theme-transitioning *,
+  .toast-spring-enter,
+  .toast-slide-exit,
+  .toast-content-fade {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }
+}
+
+/* ==========================================================================
+   品牌流體標題與標語自適應 (clamp + 窄屏退路)
+   ========================================================================== */
+
+.studio-title-align-box {
+  width: -moz-fit-content;
+  width: fit-content;
+  max-width: 100%;
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.studio-hero-title-zh {
+  font-size: clamp(1.375rem, 4.8vw, 2.25rem);
+}
+
+.studio-hero-title-en {
+  font-size: clamp(1.15rem, 4.3vw, 2.25rem);
+}
+
+.studio-tagline-justify {
+  width: 100%;
+  text-align: justify;
+  text-align-last: justify;
+  text-justify: inter-ideograph;
+}
+
+@media (max-width: 374px) {
+  .studio-tagline-justify {
+    text-align: left;
+    text-align-last: auto;
+    letter-spacing: 0.04em;
+  }
+}
+
+/* ==========================================================================
+   多比例裝置與動態視窗高度適配系統 (Multi-Aspect-Ratio & Dynamic Viewport dvh)
+   1. 窄屏 / 摺疊外螢幕 (21:9 ~ 22:9, 320px - 360px)
+   2. 主流直向手機 (16:9 ~ 20:9, 375px - 430px)
+   3. 摺疊內螢幕 / 小平板 (4:3 ~ 1:1, 600px - 840px)
+   4. 手機橫向短高模式 (orientation: landscape and max-height: 500px)
+   ========================================================================== */
+
+.min-h-dvh-screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.h-dvh-90 {
+  height: 90vh;
+  height: 90dvh;
+}
+
+.max-h-dvh-92 {
+  max-height: 92vh;
+  max-height: 92dvh;
+}
+
+.max-h-dvh-90 {
+  max-height: 90vh;
+  max-height: 90dvh;
+}
+
+.max-h-dvh-85 {
+  max-height: 85vh;
+  max-height: 85dvh;
+}
+
+.max-h-dvh-60 {
+  max-height: 60vh;
+  max-height: 60dvh;
+}
+
+/* 1. 窄屏與摺疊外螢幕 (320px - 360px, 21:9 ~ 22:9) */
+@media (max-width: 360px) {
+  .bento-glass-card,
+  .schedule-surface-card {
+    border-radius: 18px;
+  }
+  .narrow-compact-px {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+}
+
+/* 2. 主流直向手機 (375px - 430px, 16:9 ~ 20:9) */
+@media (min-width: 375px) and (max-width: 430px) {
+  .mobile-portrait-stack {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* 行動端 (<768px) 抬升 mei-dock.js 避免遮擋底部單手導覽列 */
+@media (max-width: 767px) {
+  #mei-studio-dock-root.pos-bottom-left,
+  #mei-studio-dock-root.pos-bottom-right {
+    bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+
+/* Electron 系統匣迷你路由 (#/tray) 徹底隱藏 Studio Dock */
+body.tray-route #mei-studio-dock-root {
+  display: none !important;
+}
+
+/* 3. 摺疊內螢幕與小平板 (4:3 ~ 1:1, 600px - 840px) */
+@media (min-width: 600px) and (max-width: 860px) and (min-aspect-ratio: 3/4) and (max-aspect-ratio: 4/3) {
+  .foldable-inner-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* 4. 手機橫向短高模式 (orientation: landscape and max-height: 500px) */
+@media (orientation: landscape) and (max-height: 500px) {
+  .mobile-header-bar {
+    height: 3.125rem !important;
+  }
+
+  .mobile-bottom-nav {
+    padding-bottom: max(0.35rem, env(safe-area-inset-bottom, 0.35rem)) !important;
+  }
+
+  .mobile-bottom-nav-grid {
+    padding-top: 0.25rem !important;
+  }
+
+  .mobile-nav-primary-btn {
+    margin-top: 0 !important;
+  }
+
+  .mobile-nav-primary-badge {
+    width: 1.75rem !important;
+    height: 1.75rem !important;
+    border-radius: 0.5rem !important;
+  }
+
+  .landscape-compact-modal {
+    max-height: 94vh !important;
+    max-height: 94dvh !important;
+    padding: 0.875rem 1.25rem !important;
+  }
+}
+
+/* 細緻捲軸樣式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.28);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(14, 165, 233, 0.48);
+}

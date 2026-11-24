@@ -1,0 +1,142 @@
+name: MeiSchedule Five-Platform CI & Release
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  ci:
+    name: Web / PWA Typecheck, Tests & Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies (skip electron binary on CI)
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+        run: npm ci
+      - name: TypeScript typecheck
+        run: npx tsc --noEmit
+      - name: Run full Vitest suite
+        run: npm test
+      - name: Build production Web/PWA bundle
+        run: npm run build
+      - name: Compile Electron main process & verify static rules
+        run: npm run build:electron:check
+      - name: Upload Web dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: meischedule-web-dist
+          path: dist/
+
+  build-windows:
+    name: Build Windows Installer (.exe)
+    needs: ci
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build Web & Electron
+        env:
+          ELECTRON_BUILD: '1'
+        run: npm run build && npm run build:electron
+      - name: Package Windows NSIS .exe
+        run: npx electron-builder --win --x64 --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: meischedule-windows-exe
+          path: release/*.exe
+
+  build-macos:
+    name: Build macOS Disk Image (.dmg)
+    needs: ci
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build Web & Electron
+        env:
+          ELECTRON_BUILD: '1'
+        run: npm run build && npm run build:electron
+      - name: Package macOS .dmg
+        run: npx electron-builder --mac --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: meischedule-macos-dmg
+          path: release/*.dmg
+
+  build-android:
+    name: Build Android APK (Capacitor 6)
+    needs: ci
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Install dependencies
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+        run: npm ci
+      - name: Build Web bundle & sync Capacitor Android
+        run: |
+          npm run build
+          npx cap add android
+          npx cap sync android
+      - name: Assemble Android Debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: meischedule-android-apk
+          path: android/app/build/outputs/apk/debug/*.apk
+
+  package-ios-project:
+    name: Package iOS Xcode Project (Capacitor 6)
+    needs: ci
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+        run: npm ci
+      - name: Build Web bundle & sync Capacitor iOS
+        run: |
+          npm run build
+          npx cap add ios
+          npx cap sync ios
+      - name: Archive Xcode project for signing
+        run: tar -czf meischedule-ios-xcode-project.tar.gz ios/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: meischedule-ios-xcode-project
+          path: meischedule-ios-xcode-project.tar.gz

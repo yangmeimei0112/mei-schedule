@@ -1,0 +1,633 @@
+import React, { useMemo, useState } from 'react';
+import { LucideIcon } from './BrandMark';
+import { COLOR_TOKEN_PALETTE, formatLocalDate } from '../data/seedData';
+import { parseLocalDateKey } from '../services/recurrenceEngine';
+import { detectScheduleConflicts } from '../services/smartScheduler';
+import { triggerLightHaptic } from '../services/notificationBridge';
+import { useScheduleStore } from '../store/useScheduleStore';
+import type { ExpandedEventInstance } from '../types/schedule';
+
+const HOURS = Array.from({ length: 18 }, (_, i) => i + 6); // 06:00 to 23:00
+
+function formatTimeHM(iso: string): string {
+  const d = new Date(iso);
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
+function minutesOfDay(iso: string): number {
+  const d = new Date(iso);
+  return d.getHours() * 60 + d.getMinutes();
+}
+
+export interface TimelineViewProps {
+  instances: ExpandedEventInstance[];
+}
+
+export default function TimelineView({ instances }: TimelineViewProps) {
+  const {
+    selectedDate,
+    comments,
+    preferences,
+    selectEvent,
+    moveOrResizeEvent,
+    scheduleTaskToTimeBlock,
+    toggleEventSubtask,
+    toggleEventComplete,
+    completeEventEarly,
+    createEvent,
+    openModal
+  } = useScheduleStore();
+
+  const [dragOverHour, setDragOverHour] = useState<number | null>(null);
+
+  const dayInstances = useMemo(
+    () => instances.filter((inst) => inst.occurrenceDate === selectedDate),
+    [instances, selectedDate]
+  );
+
+  const allDayEvents = useMemo(() => dayInstances.filter((e) => e.allDay), [dayInstances]);
+  const timedEvents = useMemo(
+    () =>
+      dayInstances
+        .filter((e) => !e.allDay)
+        .sort((a, b) => Date.parse(a.startAt) - Date.parse(b.startAt)),
+    [dayInstances]
+  );
+
+  const conflicts = useMemo(() => detectScheduleConflicts(timedEvents), [timedEvents]);
+  const conflictEventIds = useMemo(() => {
+    const s = new Set<string>();
+    for (const c of conflicts) {
+      s.add(c.eventIdA);
+      s.add(c.eventIdB);
+    }
+    return s;
+  }, [conflicts]);
+
+  const commentCountByEvent = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const c of comments) {
+      map.set(c.eventId, (map.get(c.eventId) || 0) + 1);
+    }
+    return map;
+  }, [comments]);
+
+  // Compute meaningful free gaps (>= 30m) within user's work window
+  const freeGaps = useMemo(() => {
+    const base = parseLocalDateKey(selectedDate);
+    const workStart = new Date(
+      base.getFullYear(),
+      base.getMonth(),
+      base.getDate(),
+      preferences.workStartHour,
+      0
+    ).getTime();
+    const workEnd = new Date(
+      base.getFullYear(),
+      base.getMonth(),
+      base.getDate(),
+      preferences.workEndHour,
+      0
+    ).getTime();
+
+    const busy = timedEvents
+      .map((e) => ({
+        start: Math.max(workStart, Date.parse(e.startAt)),
+        end: Math.min(workEnd, Date.parse(e.endAt))
+      }))
+      .filter((b) => b.end > b.start)
+      .sort((a, b) => a.start - b.start);
+
+    const gaps: Array<{ startMs: number; endMs: number; minutes: number }> = [];
+    let cursor = workStart;
+    for (const b of busy) {
+      if (b.start - cursor >= 30 * 60_000) {
+        gaps.push({
+          startMs: cursor,
+          endMs: b.start,
+          minutes: Math.round((b.start - cursor) / 60_000)
+        });
+      }
+      if (b.end > cursor) cursor = b.end;
+    }
+    if (workEnd - cursor >= 30 * 60_000) {
+      gaps.push({
+        startMs: cursor,
+        endMs: workEnd,
+        minutes: Math.round((workEnd - cursor) / 60_000)
+      });
+    }
+    return gaps;
+  }, [timedEvents, selectedDate, preferences.workStartHour, preferences.workEndHour]);
+
+  const todayKey = formatLocalDate(new Date(), 0);
+  const isToday = selectedDate === todayKey;
+  const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();
+
+  const handleDropOnHour = (e: React.DragEvent, hour: number) => {
+    e.preventDefault();
+    setDragOverHour(null);
+    const base = parseLocalDateKey(selectedDate);
+    const targetStart = new Date(base.getFullYear(), base.getMonth(), base.getDate(), hour, 0, 0, 0);
+
+    const taskPayloadRaw = e.dataTransfer.getData('application/x-mei-task');
+    if (taskPayloadRaw) {
+      try {
+        const payload = JSON.parse(taskPayloadRaw) as { taskId: string; estimatedMinutes?: number };
+        const dur = Math.max(15, payload.estimatedMinutes || 30);
+        const targetEnd = new Date(targetStart.getTime() + dur * 60_000);
+        scheduleTaskToTimeBlock(payload.taskId, targetStart.toISOString(), targetEnd.toISOString());
+        void triggerLightHaptic();
+      } catch {
+        // Ignore malformed payload
+      }
+      return;
+    }
+
+    const evtPayloadRaw = e.dataTransfer.getData('application/x-mei-event');
+    if (evtPayloadRaw) {
+      try {
+        const payload = JSON.parse(evtPayloadRaw) as { eventId: string; durationMs: number };
+        const targetEnd = new Date(targetStart.getTime() + Math.max(15 * 60_000, payload.durationMs));
+        moveOrResizeEvent(payload.eventId, targetStart.toISOString(), targetEnd.toISOString());
+        void triggerLightHaptic();
+      } catch {
+        // Ignore malformed payload
+      }
+    }
+  };
+
+  const handleAdjustDuration = (evt: ExpandedEventInstance, deltaMinutes: number) => {
+    const startMs = Date.parse(evt.startAt);
+    const endMs = Date.parse(evt.endAt);
+    const nextEnd = Math.max(startMs + 15 * 60_000, endMs + deltaMinutes * 60_000);
+    moveOrResizeEvent(evt.masterEventId, evt.startAt, new Date(nextEnd).toISOString());
+    void triggerLightHaptic();
+  };
+
+  const handleCreateInSlot = (startMs: number, endMs?: number) => {
+    const defaultEnd = endMs ?? startMs + preferences.defaultEventMinutes * 60_000;
+    const created = createEvent({
+      title: '新專注時間塊',
+      startAt: new Date(startMs).toISOString(),
+      endAt: new Date(defaultEnd).toISOString(),
+      colorToken: 'sky',
+      categoryTag: '工作',
+      isFlexible: true
+    });
+    selectEvent(created.id, selectedDate);
+  };
+
+  const totalReleasedMinutes = timedEvents.reduce((sum, e) => sum + (e.releasedMinutes || 0), 0);
+
+  return (
+    <div data-testid="timeline-view" className="space-y-4">
+      {/* Top Status Strip: Conflict Warning + Released Free Time + Free Gaps */}
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs font-bold text-[var(--text-muted)] inline-flex items-center gap-1.5">
+            <LucideIcon name="clock" size={14} className="text-sky-500" />
+            <span>今日共 {dayInstances.length} 筆排程</span>
+          </span>
+
+          {conflicts.length > 0 && (
+            <button
+              type="button"
+              data-testid="timeline-conflict-alert"
+              onClick={() => openModal('smart')}
+              className="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-400/30 inline-flex items-center gap-1"
+            >
+              <LucideIcon name="triangle-alert" size={13} />
+              <span>偵測到 {conflicts.length} 處時間／緩衝衝突，點此預覽重排</span>
+            </button>
+          )}
+
+          {totalReleasedMinutes > 0 && (
+            <span
+              data-testid="timeline-released-badge"
+              className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-400/30 inline-flex items-center gap-1"
+            >
+              <LucideIcon name="sparkles" size={13} />
+              <span>已提早釋放 {totalReleasedMinutes} 分鐘空檔</span>
+            </span>
+          )}
+        </div>
+
+        <button
+          type="button"
+          data-testid="timeline-smart-autofill-btn"
+          onClick={() => openModal('smart')}
+          className="btn-sky-secondary px-3 py-1.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5"
+        >
+          <LucideIcon name="wand-sparkles" size={14} />
+          <span>自動填入待辦空檔</span>
+        </button>
+      </div>
+
+      {/* All-Day Banner Strip */}
+      {allDayEvents.length > 0 && (
+        <div className="bento-glass-card p-3 space-y-1.5" data-testid="timeline-allday-strip">
+          <div className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider">
+            全天行程
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {allDayEvents.map((evt) => {
+              const palette = COLOR_TOKEN_PALETTE[evt.colorToken] || COLOR_TOKEN_PALETTE.sky;
+              return (
+                <button
+                  key={evt.instanceId}
+                  type="button"
+                  onClick={() => selectEvent(evt.masterEventId, evt.occurrenceDate)}
+                  className={`px-3 py-1.5 rounded-xl border text-xs font-bold inline-flex items-center gap-2 transition-transform hover:-translate-y-0.5 ${palette.surfaceClass} ${palette.borderClass}`}
+                >
+                  <span className={`w-2 h-2 rounded-full ${palette.dotClass}`} />
+                  <span>{evt.title}</span>
+                  <span className={`px-1.5 py-0.5 rounded-md text-[10px] ${palette.badgeClass}`}>
+                    {evt.categoryTag}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Structured Visual Timeline Cards + Free Gap Slots */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
+        {/* Left/Main: Structured Visual Card Timeline */}
+        <section className="xl:col-span-7 bento-glass-card p-4 sm:p-5 space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-extrabold text-[var(--text-main)] inline-flex items-center gap-1.5">
+              <LucideIcon name="milestone" size={16} className="text-sky-500" />
+              <span>視覺化今日時間軸</span>
+            </h2>
+            <span className="text-[11px] text-[var(--text-muted)]">
+              可點擊子任務打勾、微調時長或啟動專注
+            </span>
+          </div>
+
+          {timedEvents.length === 0 ? (
+            <div className="py-12 text-center space-y-3">
+              <LucideIcon name="calendar-days" size={32} className="mx-auto text-sky-400 opacity-75" />
+              <div className="space-y-1">
+                <p className="text-sm font-bold text-[var(--text-main)]">這一天目前完全空閒</p>
+                <p className="text-xs text-[var(--text-muted)]">
+                  可使用上方自然語言輸入列新增，或從左側拖曳待辦進入右側時段格
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const base = parseLocalDateKey(selectedDate);
+                  const start = new Date(
+                    base.getFullYear(),
+                    base.getMonth(),
+                    base.getDate(),
+                    preferences.workStartHour,
+                    0
+                  ).getTime();
+                  handleCreateInSlot(start);
+                }}
+                className="btn-sky-primary px-4 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5"
+              >
+                <LucideIcon name="plus" size={14} />
+                <span>建立第一個時間塊</span>
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {timedEvents.map((evt) => {
+                const palette = COLOR_TOKEN_PALETTE[evt.colorToken] || COLOR_TOKEN_PALETTE.sky;
+                const durationMin = Math.max(
+                  15,
+                  Math.round((Date.parse(evt.endAt) - Date.parse(evt.startAt)) / 60_000)
+                );
+                const hasConflict = conflictEventIds.has(evt.instanceId);
+                const commentCount = commentCountByEvent.get(evt.masterEventId) || 0;
+                const doneSubtasks = evt.subtasks.filter((s) => s.done).length;
+                const isCompleted = evt.status === 'completed';
+
+                return (
+                  <article
+                    key={evt.instanceId}
+                    data-testid={`timeline-event-${evt.masterEventId}`}
+                    draggable
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData(
+                        'application/x-mei-event',
+                        JSON.stringify({
+                          eventId: evt.masterEventId,
+                          durationMs: Date.parse(evt.endAt) - Date.parse(evt.startAt)
+                        })
+                      );
+                      e.dataTransfer.effectAllowed = 'move';
+                    }}
+                    className={`schedule-time-block relative border p-3.5 sm:p-4 transition-all ${palette.surfaceClass} ${palette.borderClass} ${
+                      isCompleted ? 'opacity-70' : ''
+                    } ${hasConflict ? 'ring-2 ring-rose-500/70' : ''}`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`w-1.5 self-stretch rounded-full shrink-0 ${palette.accentBarClass}`} />
+
+                      <div className="min-w-0 flex-1 space-y-2">
+                        {/* Top Row: Time + Title + Status Badges */}
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap text-[11px] font-mono font-bold opacity-80">
+                              <span>
+                                {formatTimeHM(evt.startAt)} – {formatTimeHM(evt.endAt)}
+                              </span>
+                              <span>({durationMin}m)</span>
+                              {evt.recurrenceRule && (
+                                <span className="inline-flex items-center gap-0.5">
+                                  <LucideIcon name="repeat" size={11} />
+                                  重複
+                                </span>
+                              )}
+                              {evt.isFlexible && (
+                                <span className="px-1.5 py-0.2 rounded bg-sky-500/15 text-sky-700 dark:text-sky-200 font-sans">
+                                  彈性
+                                </span>
+                              )}
+                              {hasConflict && (
+                                <span className="px-1.5 py-0.2 rounded bg-rose-500 text-white font-sans inline-flex items-center gap-0.5">
+                                  <LucideIcon name="triangle-alert" size={10} />
+                                  衝突
+                                </span>
+                              )}
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => selectEvent(evt.masterEventId, evt.occurrenceDate)}
+                              className={`mt-0.5 text-left text-sm sm:text-base font-extrabold leading-snug hover:underline block w-full ${
+                                isCompleted ? 'line-through' : ''
+                              }`}
+                            >
+                              {evt.title}
+                            </button>
+                          </div>
+
+                          <button
+                            type="button"
+                            data-testid={`timeline-complete-btn-${evt.masterEventId}`}
+                            onClick={() => toggleEventComplete(evt.masterEventId)}
+                            aria-label={isCompleted ? '標記為未完成' : '標記為已完成'}
+                            className="p-1.5 rounded-xl bg-white/60 dark:bg-slate-900/50 hover:scale-105 transition-transform shrink-0"
+                          >
+                            <LucideIcon
+                              name={isCompleted ? 'circle-check' : 'circle'}
+                              size={18}
+                              className={isCompleted ? 'text-emerald-500' : 'opacity-65'}
+                            />
+                          </button>
+                        </div>
+
+                        {/* Metadata Chips */}
+                        <div className="flex items-center gap-2 flex-wrap text-[11px]">
+                          <span className={`px-2 py-0.5 rounded-full font-bold ${palette.badgeClass}`}>
+                            {evt.categoryTag}
+                          </span>
+                          {evt.location && (
+                            <span className="inline-flex items-center gap-1 opacity-80">
+                              <LucideIcon name="map-pin" size={12} />
+                              {evt.location}
+                            </span>
+                          )}
+                          {(evt.bufferBeforeMin > 0 || evt.bufferAfterMin > 0) && (
+                            <span className="inline-flex items-center gap-1 opacity-75">
+                              <LucideIcon name="shield-check" size={12} />
+                              緩衝 {evt.bufferBeforeMin}/{evt.bufferAfterMin}m
+                            </span>
+                          )}
+                          {commentCount > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => selectEvent(evt.masterEventId, evt.occurrenceDate)}
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-700 dark:text-violet-300 font-bold"
+                            >
+                              <LucideIcon name="message-square" size={11} />
+                              <span>{commentCount} 則留言</span>
+                            </button>
+                          )}
+                          {evt.releasedMinutes && evt.releasedMinutes > 0 && (
+                            <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-200 font-bold">
+                              提早釋放 {evt.releasedMinutes}m
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Inline Subtasks Checklist */}
+                        {evt.subtasks.length > 0 && (
+                          <div className="pt-1.5 border-t border-current/10 space-y-1">
+                            <div className="text-[10px] font-bold opacity-75">
+                              子任務進度 ({doneSubtasks}/{evt.subtasks.length})
+                            </div>
+                            {evt.subtasks.map((sub) => (
+                              <label
+                                key={sub.id}
+                                className="flex items-center gap-2 text-xs cursor-pointer select-none"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={sub.done}
+                                  onChange={() => toggleEventSubtask(evt.masterEventId, sub.id)}
+                                  className="rounded border-slate-400 text-sky-500 focus:ring-sky-400"
+                                />
+                                <span className={sub.done ? 'line-through opacity-60' : ''}>
+                                  {sub.title}
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Quick Action Row (Mobile-Safe -15m/+15m Resize + Early Finish + Focus) */}
+                        <div className="pt-1.5 flex items-center justify-between gap-2 flex-wrap">
+                          <div className="inline-flex items-center gap-1">
+                            <button
+                              type="button"
+                              data-testid={`resize-minus-15-${evt.masterEventId}`}
+                              onClick={() => handleAdjustDuration(evt, -15)}
+                              className="px-2 py-1 rounded-lg text-[11px] font-mono font-bold bg-white/65 dark:bg-slate-900/50 border border-current/15 hover:bg-white dark:hover:bg-slate-800"
+                            >
+                              -15m
+                            </button>
+                            <button
+                              type="button"
+                              data-testid={`resize-plus-15-${evt.masterEventId}`}
+                              onClick={() => handleAdjustDuration(evt, 15)}
+                              className="px-2 py-1 rounded-lg text-[11px] font-mono font-bold bg-white/65 dark:bg-slate-900/50 border border-current/15 hover:bg-white dark:hover:bg-slate-800"
+                            >
+                              +15m
+                            </button>
+                          </div>
+
+                          <div className="inline-flex items-center gap-1.5">
+                            {!isCompleted && (
+                              <button
+                                type="button"
+                                data-testid={`early-complete-btn-${evt.masterEventId}`}
+                                onClick={() => completeEventEarly(evt.masterEventId)}
+                                className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-200 hover:bg-emerald-500/25 inline-flex items-center gap-1"
+                              >
+                                <LucideIcon name="zap" size={12} />
+                                <span>提早完成</span>
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              data-testid={`start-focus-btn-${evt.masterEventId}`}
+                              onClick={() => openModal('focus', { focusTargetEventId: evt.masterEventId })}
+                              className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-sky-500 text-white hover:bg-sky-600 inline-flex items-center gap-1"
+                            >
+                              <LucideIcon name="play" size={11} />
+                              <span>專注</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => selectEvent(evt.masterEventId, evt.occurrenceDate)}
+                              className="px-2 py-1 rounded-lg text-[11px] font-bold bg-white/65 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-800"
+                            >
+                              詳情
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+
+              {/* Available Free Gap Suggestions */}
+              {freeGaps.length > 0 && (
+                <div className="pt-2 space-y-1.5">
+                  <div className="text-[11px] font-bold text-[var(--text-muted)]">
+                    今日可用空檔（點擊快速建立時間塊）
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {freeGaps.map((gap) => (
+                      <button
+                        key={gap.startMs}
+                        type="button"
+                        onClick={() =>
+                          handleCreateInSlot(
+                            gap.startMs,
+                            Math.min(gap.endMs, gap.startMs + 45 * 60_000)
+                          )
+                        }
+                        className="px-3 py-1.5 rounded-xl border border-dashed border-sky-400/50 bg-sky-500/5 hover:bg-sky-500/12 text-xs font-semibold text-sky-700 dark:text-sky-300 inline-flex items-center gap-1.5"
+                      >
+                        <LucideIcon name="plus" size={12} />
+                        <span className="font-mono">
+                          {formatTimeHM(new Date(gap.startMs).toISOString())}–
+                          {formatTimeHM(new Date(gap.endMs).toISOString())}
+                        </span>
+                        <span className="opacity-75">({gap.minutes} 分鐘空檔)</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+
+        {/* Right: Hourly Interactive Drop Grid (06:00–23:00) */}
+        <section className="xl:col-span-5 bento-glass-card p-4 sm:p-5 space-y-2">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-extrabold text-[var(--text-main)] inline-flex items-center gap-1.5">
+              <LucideIcon name="layout-dashboard" size={15} className="text-sky-500" />
+              <span>拖曳排程時段格</span>
+            </h2>
+            <span className="text-[11px] text-[var(--text-muted)]">拖入待辦或行程即可改期</span>
+          </div>
+
+          <div className="relative divide-y divide-[var(--border-subtle)] border border-[var(--border-subtle)] rounded-2xl overflow-hidden bg-[var(--surface-subtle)]/50">
+            {HOURS.map((hour) => {
+              const slotEvents = timedEvents.filter((e) => {
+                const startH = new Date(e.startAt).getHours();
+                return startH === hour;
+              });
+              const isDragTarget = dragOverHour === hour;
+              const isNowHour = isToday && Math.floor(nowMinutes / 60) === hour;
+
+              return (
+                <div
+                  key={hour}
+                  data-testid={`timeline-hour-slot-${hour}`}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setDragOverHour(hour);
+                  }}
+                  onDragLeave={() => setDragOverHour((prev) => (prev === hour ? null : prev))}
+                  onDrop={(e) => handleDropOnHour(e, hour)}
+                  className={`relative min-h-[46px] px-2.5 py-1.5 flex items-start gap-2.5 transition-colors ${
+                    isDragTarget ? 'bg-sky-500/20 ring-2 ring-inset ring-sky-400' : ''
+                  }`}
+                >
+                  {isNowHour && (
+                    <div
+                      data-testid="current-time-indicator"
+                      className="pointer-events-none absolute left-0 right-0 h-0.5 bg-rose-500 z-10 flex items-center"
+                      style={{ top: `${Math.round(((nowMinutes % 60) / 60) * 100)}%` }}
+                    >
+                      <span className="w-2 h-2 rounded-full bg-rose-500 -ml-1" />
+                    </div>
+                  )}
+
+                  <span className="w-11 text-[11px] font-mono font-semibold text-[var(--text-muted)] shrink-0 pt-0.5">
+                    {String(hour).padStart(2, '0')}:00
+                  </span>
+
+                  <div className="flex-1 min-w-0 space-y-1">
+                    {slotEvents.length === 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const base = parseLocalDateKey(selectedDate);
+                          const start = new Date(
+                            base.getFullYear(),
+                            base.getMonth(),
+                            base.getDate(),
+                            hour,
+                            0
+                          ).getTime();
+                          handleCreateInSlot(start);
+                        }}
+                        className="w-full text-left text-[11px] text-transparent hover:text-sky-600 dark:hover:text-sky-400 py-1 rounded-lg transition-colors"
+                      >
+                        + 於 {String(hour).padStart(2, '0')}:00 新增時間塊
+                      </button>
+                    ) : (
+                      slotEvents.map((evt) => {
+                        const palette = COLOR_TOKEN_PALETTE[evt.colorToken] || COLOR_TOKEN_PALETTE.sky;
+                        const dur = Math.max(
+                          15,
+                          Math.round((Date.parse(evt.endAt) - Date.parse(evt.startAt)) / 60_000)
+                        );
+                        return (
+                          <button
+                            key={evt.instanceId}
+                            type="button"
+                            onClick={() => selectEvent(evt.masterEventId, evt.occurrenceDate)}
+                            className={`w-full text-left px-2.5 py-1.5 rounded-xl border text-xs font-bold flex items-center justify-between gap-2 ${palette.surfaceClass} ${palette.borderClass}`}
+                          >
+                            <span className="truncate">{evt.title}</span>
+                            <span className="text-[10px] font-mono opacity-75 shrink-0">
+                              {formatTimeHM(evt.startAt)} ({dur}m)
+                            </span>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}

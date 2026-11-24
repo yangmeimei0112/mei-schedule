@@ -1,0 +1,39 @@
+{
+  "name": "咩時光 MeiSchedule — 全能智慧排程中心",
+  "short_name": "咩時光",
+  "description": "咩創意工作室跨五端全能智慧排程與多人共享時間軸軟體。",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F4F9FF",
+  "theme_color": "#38BDF8",
+  "lang": "zh-TW",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-maskable.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "今日時間軸",
+      "short_name": "今日",
+      "url": "/"
+    },
+    {
+      "name": "迷你今日快覽",
+      "short_name": "快覽",
+      "url": "/#/tray"
+    }
+  ]
+}
