@@ -1,11 +1,48 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { LucideIcon, MeiScheduleLogo } from './BrandMark';
 import { DESIGN_THEME_OPTIONS } from '../data/seedData';
 import { useScheduleStore } from '../store/useScheduleStore';
-import type { ColorMode, DesignTheme } from '../types/schedule';
+import type { ColorMode, DesignTheme, StudioDockVisibilityMode } from '../types/schedule';
+
+const DOCK_VISIBILITY_KEY = 'mei_studio_dock_visibility_v1';
+
+function readCurrentDockMode(): StudioDockVisibilityMode {
+  if (typeof window === 'undefined') return 'visible';
+  if (window.MeiStudioDock?.getMode) {
+    return window.MeiStudioDock.getMode();
+  }
+  try {
+    const saved = window.localStorage?.getItem(DOCK_VISIBILITY_KEY);
+    if (saved === 'visible' || saved === 'edge-hidden' || saved === 'completely-hidden') {
+      return saved;
+    }
+  } catch {
+    // Ignore restricted storage
+  }
+  return 'visible';
+}
 
 export default function AppearanceSettingsModal() {
   const { activeModal, closeModal, preferences, updatePreferences, showToast } = useScheduleStore();
+  const [dockMode, setDockMode] = useState<StudioDockVisibilityMode>(readCurrentDockMode);
+
+  useEffect(() => {
+    if (activeModal !== 'appearance') return;
+    setDockMode(readCurrentDockMode());
+
+    const unsub = window.MeiStudioDock?.onModeChange?.((next) => {
+      setDockMode(next);
+    });
+    const onCustomEvent = (evt: Event) => {
+      const detail = (evt as CustomEvent<{ mode?: StudioDockVisibilityMode }>).detail;
+      if (detail?.mode) setDockMode(detail.mode);
+    };
+    window.addEventListener('mei-dock-mode-change', onCustomEvent);
+    return () => {
+      unsub?.();
+      window.removeEventListener('mei-dock-mode-change', onCustomEvent);
+    };
+  }, [activeModal]);
 
   if (activeModal !== 'appearance') return null;
 
@@ -19,6 +56,31 @@ export default function AppearanceSettingsModal() {
     updatePreferences({ colorMode: mode });
     const label = mode === 'dark' ? '深色模式' : mode === 'light' ? '亮色模式' : '跟隨系統';
     showToast(`色彩模式已切換為：${label}`, { icon: mode === 'dark' ? 'moon' : 'sun' });
+  };
+
+  const handleSelectDockMode = (mode: StudioDockVisibilityMode) => {
+    if (window.MeiStudioDock?.setMode) {
+      window.MeiStudioDock.setMode(mode);
+    } else {
+      try {
+        window.localStorage?.setItem(DOCK_VISIBILITY_KEY, mode);
+      } catch {
+        // Ignore restricted storage
+      }
+    }
+    setDockMode(mode);
+    const toastMeta: Record<StudioDockVisibilityMode, { text: string; icon: string }> = {
+      visible: { text: '已顯示「返回咩創意大廳」懸浮按鈕', icon: 'eye' },
+      'edge-hidden': {
+        text: '已收至螢幕邊緣微露拉條，點擊邊緣即可再展開',
+        icon: 'panel-left-close'
+      },
+      'completely-hidden': {
+        text: '已完全隱藏返回大廳按鈕，可於外觀設定或 Cmd/Ctrl+K 重新開啟',
+        icon: 'eye-off'
+      }
+    };
+    showToast(toastMeta[mode].text, { icon: toastMeta[mode].icon });
   };
 
   return (
@@ -144,7 +206,53 @@ export default function AppearanceSettingsModal() {
           </div>
         </section>
 
-        {/* 3. Work Window & Default Event Duration */}
+        {/* 3. Studio Hub Return Dock Visibility (顯示 / 貼邊微露 / 完全隱藏) */}
+        <section data-testid="dock-visibility-control" className="space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="text-xs font-extrabold text-[var(--text-muted)] uppercase tracking-wider">
+              返回咩創意大廳懸浮按鈕
+            </h3>
+            <span className="text-[11px] font-semibold text-sky-600 dark:text-sky-400">
+              {dockMode === 'visible'
+                ? '目前：顯示中'
+                : dockMode === 'edge-hidden'
+                  ? '目前：貼邊微露'
+                  : '目前：完全隱藏'}
+            </span>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {(
+              [
+                ['visible', '顯示膠囊', 'eye'],
+                ['edge-hidden', '貼邊微露', 'panel-left-close'],
+                ['completely-hidden', '完全隱藏', 'eye-off']
+              ] as Array<[StudioDockVisibilityMode, string, string]>
+            ).map(([modeId, label, icon]) => {
+              const active = dockMode === modeId;
+              return (
+                <button
+                  key={modeId}
+                  type="button"
+                  data-testid={`dock-mode-${modeId}`}
+                  onClick={() => handleSelectDockMode(modeId)}
+                  className={`py-2.5 px-2.5 sm:px-3 rounded-xl text-xs font-bold border inline-flex items-center justify-center gap-1.5 transition-colors ${
+                    active
+                      ? 'bg-sky-500 text-white border-sky-500'
+                      : 'bg-[var(--surface-subtle)] border-[var(--border-subtle)] text-[var(--text-main)] hover:border-sky-400/50'
+                  }`}
+                >
+                  <LucideIcon name={icon} size={14} />
+                  <span>{label}</span>
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-[11px] text-[var(--text-muted)] leading-relaxed">
+            選擇「貼邊微露」將退至螢幕邊緣僅留極細半透明拉條，點一下即可再展開；若選擇「完全隱藏」，可隨時回到此設定頁或按 Cmd/Ctrl + K 重新開啟。
+          </p>
+        </section>
+
+        {/* 4. Work Window & Default Event Duration */}
         <section className="p-4 rounded-2xl bg-[var(--surface-subtle)] border border-[var(--border-subtle)] space-y-3">
           <h3 className="text-xs font-extrabold text-[var(--text-main)] inline-flex items-center gap-1.5">
             <LucideIcon name="sliders-horizontal" size={14} className="text-sky-500" />
@@ -225,7 +333,7 @@ export default function AppearanceSettingsModal() {
             data-testid="app-version-badge"
             className="font-mono font-bold px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-400/25"
           >
-            v1.3.0
+            v1.3.1
           </span>
         </div>
       </div>

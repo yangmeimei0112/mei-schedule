@@ -305,10 +305,23 @@ export interface MeiStudioSsoGlobal {
   _notify?: (member: Record<string, unknown> | null) => void;
 }
 
+export type StudioDockVisibilityMode = 'visible' | 'edge-hidden' | 'completely-hidden';
+
+export interface MeiStudioDockGlobal {
+  getMode: () => StudioDockVisibilityMode;
+  setMode: (mode: StudioDockVisibilityMode) => StudioDockVisibilityMode;
+  show: () => StudioDockVisibilityMode;
+  hideToEdge: () => StudioDockVisibilityMode;
+  hideCompletely: () => StudioDockVisibilityMode;
+  toggle: () => StudioDockVisibilityMode;
+  onModeChange: (cb: (mode: StudioDockVisibilityMode) => void) => () => void;
+}
+
 declare global {
   interface Window {
     MeiDesktop?: DesktopBridgeApi;
     MeiStudioSSO?: MeiStudioSsoGlobal;
+    MeiStudioDock?: MeiStudioDockGlobal;
     __MEI_STUDIO_DOCK_SET_PROJECT__?: (title: string) => void;
     __MEI_STUDIO_DOCK_MOUNTED__?: boolean;
     __TEST_PREFERS_DARK__?: boolean;

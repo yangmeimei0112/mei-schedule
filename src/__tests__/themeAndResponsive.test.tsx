@@ -325,9 +325,10 @@ describe('M1 Visual System: 3 Themes x 2 Modes, Sky-Blue Toast, dvh & 4 Aspect R
       // Mobile (<1024px) must NOT show full-screen blocking sidebar overlay on initial load
       expect(screen.queryByTestId('mobile-sidebar-overlay')).toBeNull();
 
-      // Appearance settings modal exposes v1.3.0 release badge & Time Blocks logo
+      // Appearance settings modal exposes v1.3.1 release badge & Studio Dock visibility control
       fireEvent.click(screen.getByTestId('open-appearance-modal-btn'));
-      expect(await screen.findByTestId('app-version-badge')).toHaveTextContent('v1.3.0');
+      expect(await screen.findByTestId('app-version-badge')).toHaveTextContent('v1.3.1');
+      expect(screen.getByTestId('dock-visibility-control')).toBeInTheDocument();
       fireEvent.keyDown(window, { key: 'Escape' });
 
       // Theme swap triggers 450ms theme-transitioning + theme crossfade veil
@@ -377,19 +378,58 @@ describe('M1 Visual System: 3 Themes x 2 Modes, Sky-Blue Toast, dvh & 4 Aspect R
       expect(await screen.findByTestId('silent-preload-indicator')).toBeInTheDocument();
       revisit.unmount();
 
-      // Verify mei-dock.js auto-collapses on mobile, stays below z-50 modals (z-index: 35), and adapts to dark mode
+      // Verify mei-dock.js auto-collapses on mobile, stays below z-50 modals (z-index: 35), adapts to dark mode,
+      // and supports dual-mode hiding (edge peek handle + complete hide) synced with AppearanceSettingsModal
       const dockCode = fs.readFileSync(path.join(ROOT_DIR, 'public/sdk/mei-dock.js'), 'utf8');
       expect(dockCode).toContain('z-index: 35;');
       expect(dockCode).toContain('html.dark .mei-dock-capsule');
+      expect(dockCode).toContain('mei-dock-edge-tab');
 
+      window.localStorage.removeItem('mei_studio_dock_visibility_v1');
       window.location.hash = '';
       delete window.__MEI_STUDIO_DOCK_MOUNTED__;
+      delete window.MeiStudioDock;
       document.getElementById('mei-studio-dock-root')?.remove();
+      document.getElementById('mei-dock-edge-tab')?.remove();
       new Function(dockCode)();
+      const getDockApi = () => (window as Window).MeiStudioDock;
       const dockEl = document.getElementById('mei-studio-dock-root');
+      const edgeTab = document.getElementById('mei-dock-edge-tab');
       expect(dockEl).not.toBeNull();
+      expect(edgeTab).not.toBeNull();
       expect(dockEl?.classList.contains('mei-dock-collapsed')).toBe(true);
+      expect(getDockApi()?.getMode()).toBe('visible');
+
+      // 1-click Hide button tucks dock into edge peek tab
+      const hideBtn = dockEl?.querySelector('#mei-dock-hide-btn') as HTMLButtonElement;
+      expect(hideBtn).not.toBeNull();
+      fireEvent.click(hideBtn);
+      expect(dockEl?.classList.contains('mei-dock-edge-hidden')).toBe(true);
+      expect(edgeTab?.classList.contains('mei-dock-edge-tab-visible')).toBe(true);
+      expect(window.localStorage.getItem('mei_studio_dock_visibility_v1')).toBe('edge-hidden');
+
+      // Clicking edge peek tab smoothly restores capsule
+      fireEvent.click(edgeTab!);
+      expect(dockEl?.classList.contains('mei-dock-edge-hidden')).toBe(false);
+      expect(edgeTab?.classList.contains('mei-dock-edge-tab-visible')).toBe(false);
+      expect(getDockApi()?.getMode()).toBe('visible');
+
+      // AppearanceSettingsModal completely hides and restores dock via window.MeiStudioDock
+      const modalRun = render(<App />);
+      fireEvent.click(screen.getByTestId('open-appearance-modal-btn'));
+      fireEvent.click(await screen.findByTestId('dock-mode-completely-hidden'));
+      expect(dockEl?.classList.contains('mei-dock-completely-hidden')).toBe(true);
+      expect(edgeTab?.classList.contains('mei-dock-edge-tab-visible')).toBe(false);
+      expect(window.localStorage.getItem('mei_studio_dock_visibility_v1')).toBe('completely-hidden');
+
+      fireEvent.click(screen.getByTestId('dock-mode-visible'));
+      expect(dockEl?.classList.contains('mei-dock-completely-hidden')).toBe(false);
+      expect(getDockApi()?.getMode()).toBe('visible');
+      modalRun.unmount();
+
       dockEl?.remove();
+      edgeTab?.remove();
+      window.localStorage.removeItem('mei_studio_dock_visibility_v1');
     } finally {
       Object.defineProperty(window, 'innerWidth', {
         value: origWidth,

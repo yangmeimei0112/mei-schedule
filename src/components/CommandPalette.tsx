@@ -18,6 +18,7 @@ export default function CommandPalette() {
     toggleTaskComplete,
     openModal,
     updatePreferences,
+    showToast,
     undo,
     redo
   } = useScheduleStore();
@@ -46,6 +47,33 @@ export default function CommandPalette() {
       { id: 'cmd-sync', label: '匯入／匯出 .ics 與跨端提醒設定', icon: 'refresh-cw', run: () => openModal('sync') },
       { id: 'cmd-appearance', label: '切換外觀風格（晴空／極簡／手帳）', icon: 'palette', run: () => openModal('appearance') },
       {
+        id: 'cmd-dock-visible',
+        label: '顯示「返回咩創意大廳」懸浮按鈕',
+        icon: 'eye',
+        run: () => {
+          window.MeiStudioDock?.show();
+          showToast('已顯示「返回咩創意大廳」懸浮按鈕', { icon: 'eye' });
+        }
+      },
+      {
+        id: 'cmd-dock-edge',
+        label: '隱藏「返回咩創意大廳」按鈕（貼邊微露）',
+        icon: 'panel-left-close',
+        run: () => {
+          window.MeiStudioDock?.hideToEdge();
+          showToast('已收至螢幕邊緣微露拉條', { icon: 'panel-left-close' });
+        }
+      },
+      {
+        id: 'cmd-dock-completely-hidden',
+        label: '完全隱藏「返回咩創意大廳」懸浮按鈕',
+        icon: 'eye-off',
+        run: () => {
+          window.MeiStudioDock?.hideCompletely();
+          showToast('已完全隱藏返回大廳按鈕，可隨時按 Cmd/Ctrl+K 重新開啟', { icon: 'eye-off' });
+        }
+      },
+      {
         id: 'cmd-dark',
         label: resolvedColorMode === 'dark' ? '切換至亮色模式' : '切換至深色模式',
         icon: resolvedColorMode === 'dark' ? 'sun' : 'moon',
@@ -54,7 +82,7 @@ export default function CommandPalette() {
       { id: 'cmd-undo', label: '復原上一步操作 (Undo)', icon: 'undo-2', run: () => undo() },
       { id: 'cmd-redo', label: '重做操作 (Redo)', icon: 'redo-2', run: () => redo() }
     ],
-    [goToToday, setViewMode, openModal, resolvedColorMode, updatePreferences, undo, redo]
+    [goToToday, setViewMode, openModal, resolvedColorMode, updatePreferences, showToast, undo, redo]
   );
 
   const q = query.trim().toLowerCase();

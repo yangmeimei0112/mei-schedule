@@ -844,16 +844,22 @@ html.color-mode-transitioning .squircle-icon-badge {
   }
 }
 
-/* 行動端 (<768px) 抬升 mei-dock.js 避免遮擋底部單手導覽列 */
+/* 行動端 (<768px) 抬升 mei-dock.js 膠囊與貼邊微露拉條，避免遮擋底部單手導覽列 */
 @media (max-width: 767px) {
   #mei-studio-dock-root.pos-bottom-left,
   #mei-studio-dock-root.pos-bottom-right {
     bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px)) !important;
   }
+
+  #mei-dock-edge-tab.pos-bottom-left,
+  #mei-dock-edge-tab.pos-bottom-right {
+    bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px)) !important;
+  }
 }
 
-/* Electron 系統匣迷你路由 (#/tray) 徹底隱藏 Studio Dock */
-body.tray-route #mei-studio-dock-root {
+/* Electron 系統匣迷你路由 (#/tray) 徹底隱藏 Studio Dock 與貼邊拉條 */
+body.tray-route #mei-studio-dock-root,
+body.tray-route #mei-dock-edge-tab {
   display: none !important;
 }
 
