@@ -14,7 +14,14 @@ import {
   MeiScheduleLogo,
   StudioLogo
 } from '../components/BrandMark';
+import AppPreloaderOverlay from '../components/AppPreloaderOverlay';
 import StudioToast from '../components/StudioToast';
+import {
+  COLOR_MODE_TRANSITION_MS,
+  PRELOAD_SESSION_KEY,
+  THEME_TRANSITION_MS,
+  __resetPreloadEngineForTests
+} from '../services/preloadEngine';
 import type { DesignTheme } from '../types/schedule';
 
 const ROOT_DIR = path.resolve(__dirname, '../..');
@@ -309,7 +316,7 @@ describe('M1 Visual System: 3 Themes x 2 Modes, Sky-Blue Toast, dvh & 4 Aspect R
     expect(EMOJI_REGEX.test(dockSvgText)).toBe(false);
   });
 
-  it('v1.2.0 multi-device regressions: mobile defaults sidebar closed, mei-dock sits below modals & auto-collapses on mobile, and displays v1.2.0', async () => {
+  it('v1.3.0 regressions: mobile sidebar default closed, mei-dock layer/collapse, dual-speed 450ms/680ms cross-dissolve, Hybrid Mode 2 preloader & v1.3.0 badge', async () => {
     const origWidth = window.innerWidth;
     Object.defineProperty(window, 'innerWidth', { value: 390, configurable: true, writable: true });
 
@@ -318,10 +325,57 @@ describe('M1 Visual System: 3 Themes x 2 Modes, Sky-Blue Toast, dvh & 4 Aspect R
       // Mobile (<1024px) must NOT show full-screen blocking sidebar overlay on initial load
       expect(screen.queryByTestId('mobile-sidebar-overlay')).toBeNull();
 
-      // Appearance settings modal exposes v1.2.0 release badge & Time Blocks logo
+      // Appearance settings modal exposes v1.3.0 release badge & Time Blocks logo
       fireEvent.click(screen.getByTestId('open-appearance-modal-btn'));
-      expect(await screen.findByTestId('app-version-badge')).toHaveTextContent('v1.2.0');
+      expect(await screen.findByTestId('app-version-badge')).toHaveTextContent('v1.3.0');
+      fireEvent.keyDown(window, { key: 'Escape' });
+
+      // Theme swap triggers 450ms theme-transitioning + theme crossfade veil
+      const currentTheme = document.documentElement.getAttribute('data-design-theme');
+      const nextTheme = currentTheme === 'warm-journal' ? 'minimal-linear' : 'warm-journal';
+      fireEvent.click(screen.getByTestId(`theme-switch-${nextTheme}`));
+      await waitFor(() => {
+        expect(document.documentElement.classList.contains('theme-transitioning')).toBe(true);
+        expect(screen.getByTestId('theme-crossfade-veil')).toHaveAttribute('data-transition-kind', 'theme');
+      });
+
+      // Dark/Light swap triggers slower 680ms color-mode-transitioning + color-mode crossfade veil
+      fireEvent.click(screen.getByTestId('color-mode-toggle-btn'));
+      await waitFor(() => {
+        expect(document.documentElement.classList.contains('color-mode-transitioning')).toBe(true);
+        expect(screen.getByTestId('theme-crossfade-veil')).toHaveAttribute('data-transition-kind', 'color-mode');
+      });
+      // Reset color mode cleanly
+      fireEvent.click(screen.getByTestId('color-mode-toggle-btn'));
       unmount();
+
+      // Verify CSS defines 450ms theme transition, slower 680ms color-mode transition, and GPU containment
+      const css = fs.readFileSync(path.join(ROOT_DIR, 'src/styles/index.css'), 'utf8');
+      expect(css).toContain('html.theme-transitioning');
+      expect(css).toContain('transition-duration: 450ms !important;');
+      expect(css).toContain('html.color-mode-transitioning');
+      expect(css).toContain('transition-duration: 680ms !important;');
+      expect(css).toContain('contain: layout style;');
+      expect(COLOR_MODE_TRANSITION_MS).toBeGreaterThan(THEME_TRANSITION_MS);
+
+      // Verify Hybrid Mode 2 Preloader: first visit shows brand splash, marks sessionStorage, then unmounts cleanly
+      __resetPreloadEngineForTests();
+      const firstVisit = render(<AppPreloaderOverlay hydrated={true} forceActiveInTest={true} />);
+      expect(screen.getByTestId('app-preloader-overlay')).toBeInTheDocument();
+      await waitFor(
+        () => {
+          expect(window.sessionStorage.getItem(PRELOAD_SESSION_KEY)).toBe('1');
+          expect(screen.queryByTestId('app-preloader-overlay')).toBeNull();
+        },
+        { timeout: 2500 }
+      );
+      firstVisit.unmount();
+
+      // Same-tab reload / revisit: 0ms instant (no full-screen overlay), silent warm-up indicator instead
+      const revisit = render(<AppPreloaderOverlay hydrated={true} forceActiveInTest={true} />);
+      expect(screen.queryByTestId('app-preloader-overlay')).toBeNull();
+      expect(await screen.findByTestId('silent-preload-indicator')).toBeInTheDocument();
+      revisit.unmount();
 
       // Verify mei-dock.js auto-collapses on mobile, stays below z-50 modals (z-index: 35), and adapts to dark mode
       const dockCode = fs.readFileSync(path.join(ROOT_DIR, 'public/sdk/mei-dock.js'), 'utf8');

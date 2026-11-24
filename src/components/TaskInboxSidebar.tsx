@@ -9,7 +9,7 @@ export interface TaskInboxSidebarProps {
   className?: string;
 }
 
-export default function TaskInboxSidebar({ className = '' }: TaskInboxSidebarProps) {
+function TaskInboxSidebar({ className = '' }: TaskInboxSidebarProps) {
   const {
     calendars,
     tasks,
@@ -477,3 +477,5 @@ export default function TaskInboxSidebar({ className = '' }: TaskInboxSidebarPro
     </aside>
   );
 }
+
+export default React.memo(TaskInboxSidebar);

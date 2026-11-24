@@ -20,7 +20,7 @@ export interface MonthViewProps {
  * semantic color event bars WITH readable titles on all screen sizes,
  * paired with a detailed selected-day agenda panel directly underneath.
  */
-export default function MonthView({ instances }: MonthViewProps) {
+function MonthView({ instances }: MonthViewProps) {
   const {
     selectedDate,
     preferences,
@@ -242,3 +242,5 @@ export default function MonthView({ instances }: MonthViewProps) {
     </div>
   );
 }
+
+export default React.memo(MonthView);

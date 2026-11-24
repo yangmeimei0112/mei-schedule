@@ -26,7 +26,7 @@ export default function MobileBottomNav({ onFocusQuickCapture }: MobileBottomNav
       <nav
         data-testid="mobile-bottom-nav"
         aria-label="行動端底部導覽列"
-        className="mobile-bottom-nav sm:hidden fixed bottom-0 inset-x-0 z-30 border-t border-[var(--border-subtle)] bg-[var(--surface-glass-strong)] backdrop-blur-xl pb-safe-bottom"
+        className="mobile-bottom-nav sm:hidden fixed bottom-0 inset-x-0 z-30 border-t border-[var(--border-subtle)] bg-[var(--surface-glass-strong)] backdrop-blur-[10px] pb-safe-bottom"
       >
         <div className="grid grid-cols-5 h-14 max-w-md mx-auto px-1">
           <button

@@ -173,4 +173,4 @@ const QuickCaptureBar = forwardRef<HTMLInputElement, QuickCaptureBarProps>(funct
   );
 });
 
-export default QuickCaptureBar;
+export default React.memo(QuickCaptureBar);

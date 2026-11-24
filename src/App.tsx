@@ -1,18 +1,9 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import AgendaListView from './components/AgendaListView';
-import AnalyticsDashboard from './components/AnalyticsDashboard';
-import AppearanceSettingsModal from './components/AppearanceSettingsModal';
-import CalendarSyncModal from './components/CalendarSyncModal';
-import CommandPalette from './components/CommandPalette';
-import DesktopTrayWidget from './components/DesktopTrayWidget';
-import EventDetailDrawer from './components/EventDetailDrawer';
-import FocusTimerModal from './components/FocusTimerModal';
-import MemberPortalModal from './components/MemberPortalModal';
+import AppPreloaderOverlay, { ThemeCrossfadeVeil } from './components/AppPreloaderOverlay';
 import MobileBottomNav from './components/MobileBottomNav';
 import MonthView from './components/MonthView';
 import QuickCaptureBar from './components/QuickCaptureBar';
-import SharedCalendarModal from './components/SharedCalendarModal';
-import SmartRescheduleDrawer from './components/SmartRescheduleDrawer';
 import StudioToast from './components/StudioToast';
 import TaskInboxSidebar from './components/TaskInboxSidebar';
 import TimelineView from './components/TimelineView';
@@ -24,23 +15,58 @@ import {
   type OAuthUrlErrorResult
 } from './services/memberAuthService';
 import { syncNativeStatusBar } from './services/notificationBridge';
+import { lazyModalLoaders } from './services/preloadEngine';
 import {
   expandRecurringEvents,
   parseLocalDateKey,
   toLocalDateKey
 } from './services/recurrenceEngine';
 import { detectScheduleConflicts } from './services/smartScheduler';
-import { ScheduleProvider, useScheduleStore } from './store/useScheduleStore';
+import {
+  ScheduleProvider,
+  useScheduleStore,
+  useThemeTransition,
+  useToastState
+} from './store/useScheduleStore';
 
 export { extractAndCleanOAuthUrlError, type OAuthUrlErrorResult };
+
+// Lazy-loaded heavy modals, drawers & Electron tray widget (eagerly preloaded at startup)
+const DesktopTrayWidget = lazy(lazyModalLoaders.DesktopTrayWidget);
+const EventDetailDrawer = lazy(lazyModalLoaders.EventDetailDrawer);
+const FocusTimerModal = lazy(lazyModalLoaders.FocusTimerModal);
+const AnalyticsDashboard = lazy(lazyModalLoaders.AnalyticsDashboard);
+const SmartRescheduleDrawer = lazy(lazyModalLoaders.SmartRescheduleDrawer);
+const SharedCalendarModal = lazy(lazyModalLoaders.SharedCalendarModal);
+const CalendarSyncModal = lazy(lazyModalLoaders.CalendarSyncModal);
+const AppearanceSettingsModal = lazy(lazyModalLoaders.AppearanceSettingsModal);
+const CommandPalette = lazy(lazyModalLoaders.CommandPalette);
+const MemberPortalModal = lazy(lazyModalLoaders.MemberPortalModal);
 
 function isTrayHashRoute(): boolean {
   if (typeof window === 'undefined') return false;
   return (window.location.hash || '').startsWith('#/tray');
 }
 
+/** Isolated Toast subscriber — Toast updates NEVER re-render the main calendar workspace */
+const StudioToastContainer = React.memo(function StudioToastContainer({
+  elevated
+}: {
+  elevated: boolean;
+}) {
+  const { toast, dismissToast } = useToastState();
+  return <StudioToast toast={toast} onDismiss={dismissToast} elevated={elevated} />;
+});
+
+/** Isolated Cross-Dissolve Veil subscriber — Veil lifecycle NEVER re-renders views */
+const ThemeCrossfadeVeilContainer = React.memo(function ThemeCrossfadeVeilContainer() {
+  const transitionState = useThemeTransition();
+  return <ThemeCrossfadeVeil transitionState={transitionState} />;
+});
+
 function MeiScheduleShell() {
   const {
+    hydrated,
     calendars,
     events,
     preferences,
@@ -52,7 +78,6 @@ function MeiScheduleShell() {
     selectedEventId,
     sidebarOpen,
     activeModal,
-    toast,
     setCurrentMember,
     setViewMode,
     goToToday,
@@ -61,7 +86,6 @@ function MeiScheduleShell() {
     openModal,
     closeModal,
     showToast,
-    dismissToast,
     undo,
     redo
   } = useScheduleStore();
@@ -169,7 +193,18 @@ function MeiScheduleShell() {
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [activeModal, selectedEventId, closeModal, openModal, selectEvent, undo, redo, goToToday, setViewMode, handleFocusQuickCapture]);
+  }, [
+    activeModal,
+    selectedEventId,
+    closeModal,
+    openModal,
+    selectEvent,
+    undo,
+    redo,
+    goToToday,
+    setViewMode,
+    handleFocusQuickCapture
+  ]);
 
   // Filter events by visible calendars & active Calendar Set
   const visibleCalendarIds = useMemo(() => {
@@ -190,40 +225,83 @@ function MeiScheduleShell() {
     [events, visibleCalendarIds]
   );
 
-  // Compute expansion range matching current viewMode
-  const { rangeStartKey, rangeEndKey } = useMemo(() => {
-    const base = parseLocalDateKey(selectedDate);
-    if (viewMode === 'month') {
-      const start = new Date(base.getFullYear(), base.getMonth(), -7);
-      const end = new Date(base.getFullYear(), base.getMonth() + 1, 14);
-      return { rangeStartKey: toLocalDateKey(start), rangeEndKey: toLocalDateKey(end) };
-    }
-    if (viewMode === 'agenda') {
-      const start = new Date(base.getFullYear(), base.getMonth(), base.getDate() - 3);
-      const end = new Date(base.getFullYear(), base.getMonth(), base.getDate() + 21);
-      return { rangeStartKey: toLocalDateKey(start), rangeEndKey: toLocalDateKey(end) };
-    }
-    const start = new Date(base.getFullYear(), base.getMonth(), base.getDate() - 7);
-    const end = new Date(base.getFullYear(), base.getMonth(), base.getDate() + 10);
-    return { rangeStartKey: toLocalDateKey(start), rangeEndKey: toLocalDateKey(end) };
-  }, [selectedDate, viewMode]);
+  // Anchored 65-day recurrence expansion cache:
+  // Switching between Day / 3-Day / Week / Month / Agenda or stepping nearby dates
+  // reuses the exact cached expanded array with ZERO recurrence recomputation!
+  const [cacheAnchorDate, setCacheAnchorDate] = useState<string>(selectedDate);
 
-  const expandedInstances = useMemo(
-    () => expandRecurringEvents(filteredMasterEvents, rangeStartKey, rangeEndKey),
-    [filteredMasterEvents, rangeStartKey, rangeEndKey]
+  useEffect(() => {
+    const anchorMs = parseLocalDateKey(cacheAnchorDate).getTime();
+    const selMs = parseLocalDateKey(selectedDate).getTime();
+    const diffDays = Math.abs(selMs - anchorMs) / 86_400_000;
+    if (diffDays > 14) {
+      setCacheAnchorDate(selectedDate);
+    }
+  }, [selectedDate, cacheAnchorDate]);
+
+  const { cacheStartKey, cacheEndKey } = useMemo(() => {
+    const base = parseLocalDateKey(cacheAnchorDate);
+    const start = new Date(base.getFullYear(), base.getMonth(), base.getDate() - 32);
+    const end = new Date(base.getFullYear(), base.getMonth(), base.getDate() + 38);
+    return {
+      cacheStartKey: toLocalDateKey(start),
+      cacheEndKey: toLocalDateKey(end)
+    };
+  }, [cacheAnchorDate]);
+
+  const cachedExpandedInstances = useMemo(
+    () => expandRecurringEvents(filteredMasterEvents, cacheStartKey, cacheEndKey),
+    [filteredMasterEvents, cacheStartKey, cacheEndKey]
   );
 
+  // Slice cached instances for current viewMode (O(N) fast array filter, no RRULE expansion)
+  const viewInstances = useMemo(() => {
+    if (viewMode === 'month') {
+      const base = parseLocalDateKey(selectedDate);
+      const startKey = toLocalDateKey(new Date(base.getFullYear(), base.getMonth(), -7));
+      const endKey = toLocalDateKey(new Date(base.getFullYear(), base.getMonth() + 1, 14));
+      if (startKey >= cacheStartKey && endKey <= cacheEndKey) {
+        return cachedExpandedInstances.filter(
+          (i) => i.occurrenceDate >= startKey && i.occurrenceDate <= endKey
+        );
+      }
+      return expandRecurringEvents(filteredMasterEvents, startKey, endKey);
+    }
+    if (viewMode === 'agenda') {
+      const base = parseLocalDateKey(selectedDate);
+      const startKey = toLocalDateKey(new Date(base.getFullYear(), base.getMonth(), base.getDate() - 3));
+      const endKey = toLocalDateKey(new Date(base.getFullYear(), base.getMonth(), base.getDate() + 21));
+      if (startKey >= cacheStartKey && endKey <= cacheEndKey) {
+        return cachedExpandedInstances.filter(
+          (i) => i.occurrenceDate >= startKey && i.occurrenceDate <= endKey
+        );
+      }
+      return expandRecurringEvents(filteredMasterEvents, startKey, endKey);
+    }
+    return cachedExpandedInstances;
+  }, [viewMode, selectedDate, cacheStartKey, cacheEndKey, cachedExpandedInstances, filteredMasterEvents]);
+
   const selectedDayConflicts = useMemo(() => {
-    const dayOnly = expandedInstances.filter((i) => i.occurrenceDate === selectedDate);
+    const dayOnly = cachedExpandedInstances.filter((i) => i.occurrenceDate === selectedDate);
     return detectScheduleConflicts(dayOnly);
-  }, [expandedInstances, selectedDate]);
+  }, [cachedExpandedInstances, selectedDate]);
+
+  const handleMemberNotify = useCallback(
+    (msg: string, icon?: string) => {
+      showToast(msg, { icon });
+    },
+    [showToast]
+  );
 
   // Electron System Tray Popover Route (#/tray)
   if (isTrayRoute) {
     return (
       <div data-testid="mei-schedule-app" className="min-h-dvh-screen">
-        <DesktopTrayWidget />
-        <StudioToast toast={toast} onDismiss={dismissToast} elevated={false} />
+        <Suspense fallback={null}>
+          <DesktopTrayWidget />
+        </Suspense>
+        <ThemeCrossfadeVeilContainer />
+        <StudioToastContainer elevated={false} />
       </div>
     );
   }
@@ -231,8 +309,11 @@ function MeiScheduleShell() {
   return (
     <div
       data-testid="mei-schedule-app"
-      className="min-h-dvh-screen sky-ambient-bg flex flex-col transition-colors"
+      className="min-h-dvh-screen sky-ambient-bg flex flex-col"
     >
+      {/* Hybrid Mode 2 Preloader (First-visit brand splash / Revisit 0ms instant + silent warm-up) */}
+      <AppPreloaderOverlay hydrated={hydrated} disabled={isTrayRoute} />
+
       <TopNavBar
         conflictCount={selectedDayConflicts.length}
         onFocusQuickCapture={handleFocusQuickCapture}
@@ -280,41 +361,44 @@ function MeiScheduleShell() {
         <div className="flex-1 min-w-0 w-full space-y-4">
           <QuickCaptureBar ref={quickCaptureInputRef} />
 
-          {viewMode === 'day' && <TimelineView instances={expandedInstances} />}
-          {viewMode === '3day' && <WeekGridView mode="3day" instances={expandedInstances} />}
-          {viewMode === 'week' && <WeekGridView mode="week" instances={expandedInstances} />}
-          {viewMode === 'month' && <MonthView instances={expandedInstances} />}
-          {viewMode === 'agenda' && <AgendaListView instances={expandedInstances} />}
+          {viewMode === 'day' && <TimelineView instances={viewInstances} />}
+          {viewMode === '3day' && <WeekGridView mode="3day" instances={viewInstances} />}
+          {viewMode === 'week' && <WeekGridView mode="week" instances={viewInstances} />}
+          {viewMode === 'month' && <MonthView instances={viewInstances} />}
+          {viewMode === 'agenda' && <AgendaListView instances={viewInstances} />}
         </div>
       </main>
 
       {/* Mobile Bottom One-Handed Navigation */}
       <MobileBottomNav onFocusQuickCapture={handleFocusQuickCapture} />
 
-      {/* Event Detail & Live Comments Drawer */}
-      <EventDetailDrawer />
+      {/* Conditionally-Mounted Lazy Modals & Drawers (Preloaded at startup -> 0ms open, 0 idle overhead) */}
+      <Suspense fallback={null}>
+        {selectedEventId && <EventDetailDrawer />}
+        {activeModal === 'focus' && <FocusTimerModal />}
+        {activeModal === 'analytics' && <AnalyticsDashboard />}
+        {activeModal === 'smart' && <SmartRescheduleDrawer />}
+        {activeModal === 'shared' && <SharedCalendarModal />}
+        {activeModal === 'sync' && <CalendarSyncModal />}
+        {activeModal === 'appearance' && <AppearanceSettingsModal />}
+        {activeModal === 'command' && <CommandPalette />}
+        {activeModal === 'member' && (
+          <MemberPortalModal
+            isOpen={true}
+            onClose={closeModal}
+            currentMember={currentMember}
+            onMemberChange={setCurrentMember}
+            onNotify={handleMemberNotify}
+            syncStatus={syncStatus}
+          />
+        )}
+      </Suspense>
 
-      {/* Flagship Modals & Drawers */}
-      <FocusTimerModal />
-      <AnalyticsDashboard />
-      <SmartRescheduleDrawer />
-      <SharedCalendarModal />
-      <CalendarSyncModal />
-      <AppearanceSettingsModal />
-      <CommandPalette />
+      {/* Style B Cinematic Cross-Dissolve Veil (680ms slow Dark/Light, 450ms theme swap) */}
+      <ThemeCrossfadeVeilContainer />
 
-      {/* Global High-Contrast Sky-Blue Toast (elevated on mobile above bottom nav & FAB) */}
-      <StudioToast toast={toast} onDismiss={dismissToast} elevated={true} />
-
-      {/* Global Studio Cloud SSO Member Portal Modal */}
-      <MemberPortalModal
-        isOpen={activeModal === 'member'}
-        onClose={closeModal}
-        currentMember={currentMember}
-        onMemberChange={setCurrentMember}
-        onNotify={(msg, icon) => showToast(msg, { icon })}
-        syncStatus={syncStatus}
-      />
+      {/* Global High-Contrast Sky-Blue Toast (isolated context — never re-renders workspace) */}
+      <StudioToastContainer elevated={true} />
     </div>
   );
 }

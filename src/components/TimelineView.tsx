@@ -23,7 +23,7 @@ export interface TimelineViewProps {
   instances: ExpandedEventInstance[];
 }
 
-export default function TimelineView({ instances }: TimelineViewProps) {
+function TimelineView({ instances }: TimelineViewProps) {
   const {
     selectedDate,
     comments,
@@ -631,3 +631,5 @@ export default function TimelineView({ instances }: TimelineViewProps) {
     </div>
   );
 }
+
+export default React.memo(TimelineView);

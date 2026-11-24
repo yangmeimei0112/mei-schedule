@@ -119,10 +119,10 @@
 
   --bg-primary: #F4F9FF;
   --bg-secondary: #E0F2FE;
-  --surface-glass: rgba(255, 255, 255, 0.84);
+  --surface-glass: rgba(255, 255, 255, 0.92);
   --surface-glass-strong: rgba(255, 255, 255, 0.94);
   --surface-subtle: #F8FAFC;
-  --surface-blur: 20px;
+  --surface-blur: 14px;
 
   --sky-primary: #38BDF8;
   --sky-hover: #0284C7;
@@ -152,10 +152,10 @@
 :root.dark[data-design-theme="sky-glass"] {
   --bg-primary: #080E1A;
   --bg-secondary: #0F172A;
-  --surface-glass: rgba(15, 23, 42, 0.82);
+  --surface-glass: rgba(15, 23, 42, 0.90);
   --surface-glass-strong: rgba(15, 23, 42, 0.92);
   --surface-subtle: #1E293B;
-  --surface-blur: 20px;
+  --surface-blur: 14px;
 
   --sky-primary: #38BDF8;
   --sky-hover: #7DD3FC;
@@ -373,14 +373,13 @@ h4, h5, h6, p, span, button, input, textarea, select, label, .font-heading-sm, .
 .bento-glass-card,
 .schedule-surface-card {
   background: var(--surface-glass);
-  backdrop-filter: blur(var(--surface-blur));
-  -webkit-backdrop-filter: blur(var(--surface-blur));
   border: 1px solid var(--border-subtle);
   border-radius: var(--card-radius);
   box-shadow: var(--shadow-bento);
-  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+  contain: layout style;
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
               border-color 0.22s ease,
-              box-shadow 0.25s ease,
+              box-shadow 0.22s ease,
               background-color 0.22s ease;
 }
 
@@ -391,6 +390,7 @@ h4, h5, h6, p, span, button, input, textarea, select, label, .font-heading-sm, .
 
 .schedule-time-block {
   border-radius: var(--block-radius);
+  contain: layout style paint;
   transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
               box-shadow 0.18s ease,
               border-color 0.18s ease,
@@ -623,7 +623,12 @@ h4, h5, h6, p, span, button, input, textarea, select, label, .font-heading-sm, .
   animation: toastContentFade 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* 主題切換平順過渡 (350ms 60fps) */
+/* ==========================================================================
+   風格 B：電影交叉淡融轉場系統
+   - 主題風格切換 (theme-transitioning): 450ms 絲滑交叉淡融
+   - 深色／亮色切換 (color-mode-transitioning): 680ms 慢速柔緩日出／日落淡融
+   ========================================================================== */
+
 html.theme-transitioning,
 html.theme-transitioning body,
 html.theme-transitioning header,
@@ -631,22 +636,101 @@ html.theme-transitioning nav,
 html.theme-transitioning main,
 html.theme-transitioning aside,
 html.theme-transitioning section,
+html.theme-transitioning article,
+html.theme-transitioning button,
+html.theme-transitioning input,
+html.theme-transitioning select,
+html.theme-transitioning textarea,
 html.theme-transitioning .bento-glass-card,
-html.theme-transitioning .schedule-surface-card {
-  transition-property: background-color, border-color, color !important;
-  transition-duration: 350ms !important;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+html.theme-transitioning .schedule-surface-card,
+html.theme-transitioning .schedule-time-block,
+html.theme-transitioning .squircle-icon-badge {
+  transition-property: background-color, border-color, color, box-shadow, border-radius, fill, stroke !important;
+  transition-duration: 450ms !important;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
 
-@media (max-width: 640px) {
-  html.theme-transitioning,
-  html.theme-transitioning body,
-  html.theme-transitioning header,
-  html.theme-transitioning nav,
-  html.theme-transitioning main,
-  html.theme-transitioning .bento-glass-card,
-  html.theme-transitioning .schedule-surface-card {
-    transition-duration: 300ms !important;
+html.color-mode-transitioning,
+html.color-mode-transitioning body,
+html.color-mode-transitioning header,
+html.color-mode-transitioning nav,
+html.color-mode-transitioning main,
+html.color-mode-transitioning aside,
+html.color-mode-transitioning section,
+html.color-mode-transitioning article,
+html.color-mode-transitioning button,
+html.color-mode-transitioning input,
+html.color-mode-transitioning select,
+html.color-mode-transitioning textarea,
+html.color-mode-transitioning .bento-glass-card,
+html.color-mode-transitioning .schedule-surface-card,
+html.color-mode-transitioning .schedule-time-block,
+html.color-mode-transitioning .squircle-icon-badge {
+  transition-property: background-color, border-color, color, box-shadow, fill, stroke !important;
+  transition-duration: 680ms !important;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+@keyframes themeVeilDissolveSlow {
+  0% {
+    opacity: 0;
+  }
+  26% {
+    opacity: 0.38;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes themeVeilDissolveFast {
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.22;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.theme-crossfade-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+.theme-crossfade-veil-slow {
+  animation: themeVeilDissolveSlow 680ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.theme-crossfade-veil-fast {
+  animation: themeVeilDissolveFast 450ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes preloaderLogoBreath {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.045);
+  }
+}
+
+.preloader-logo-breath {
+  animation: preloaderLogoBreath 1.6s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* 行動端智慧分層毛玻璃降載：頂底導覽列精簡至 blur(10px) 保持 60fps 捲動 */
+@media (max-width: 767px) {
+  [data-testid="top-nav-bar"],
+  [data-testid="mobile-bottom-nav"] {
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
   }
 }
 
@@ -654,6 +738,11 @@ html.theme-transitioning .schedule-surface-card {
   html.theme-transitioning,
   html.theme-transitioning body,
   html.theme-transitioning *,
+  html.color-mode-transitioning,
+  html.color-mode-transitioning body,
+  html.color-mode-transitioning *,
+  .theme-crossfade-veil,
+  .preloader-logo-breath,
   .toast-spring-enter,
   .toast-slide-exit,
   .toast-content-fade {

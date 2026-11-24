@@ -36,7 +36,7 @@ export interface TopNavBarProps {
   onFocusQuickCapture: () => void;
 }
 
-export default function TopNavBar({ conflictCount, onFocusQuickCapture }: TopNavBarProps) {
+function TopNavBar({ conflictCount, onFocusQuickCapture }: TopNavBarProps) {
   const {
     viewMode,
     selectedDate,
@@ -90,7 +90,7 @@ export default function TopNavBar({ conflictCount, onFocusQuickCapture }: TopNav
   return (
     <header
       data-testid="top-nav-bar"
-      className="sticky top-0 z-30 pt-safe border-b border-[var(--border-subtle)] bg-[var(--surface-glass-strong)] backdrop-blur-xl"
+      className="sticky top-0 z-30 pt-safe border-b border-[var(--border-subtle)] bg-[var(--surface-glass-strong)] backdrop-blur-[14px]"
     >
       {/* Tier 1: Brand Identity + Desktop View Switcher + Quick Tools */}
       <div className="mobile-header-bar narrow-compact-px max-w-[1600px] mx-auto h-14 px-2.5 sm:px-5 flex items-center justify-between gap-2">
@@ -425,3 +425,5 @@ export default function TopNavBar({ conflictCount, onFocusQuickCapture }: TopNav
     </header>
   );
 }
+
+export default React.memo(TopNavBar);

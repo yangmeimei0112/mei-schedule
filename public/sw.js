@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mei-schedule-cache-v1.2.0';
+const CACHE_NAME = 'mei-schedule-cache-v1.3.0';
 const APP_SHELL_URLS = [
   '/',
   '/index.html',
@@ -36,6 +36,7 @@ self.addEventListener('fetch', (event) => {
   // Bypass external cloud API calls (Supabase Auth/Rest/Realtime)
   if (url.origin !== self.location.origin) return;
 
+  // Navigation requests: Network-first with fast offline fallback
   if (req.mode === 'navigate') {
     event.respondWith(
       fetch(req)
@@ -49,6 +50,24 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Immutable hashed Vite chunks (/assets/*): Cache-First for instant revisit loads
+  if (url.pathname.startsWith('/assets/')) {
+    event.respondWith(
+      caches.match(req).then((cached) => {
+        if (cached) return cached;
+        return fetch(req).then((res) => {
+          if (res && res.status === 200) {
+            const clone = res.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
+          }
+          return res;
+        });
+      })
+    );
+    return;
+  }
+
+  // Other same-origin resources: Stale-While-Revalidate
   event.respondWith(
     caches.match(req).then((cached) => {
       const networkFetch = fetch(req)

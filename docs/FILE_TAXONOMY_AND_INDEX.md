@@ -33,7 +33,7 @@ mei-schedule/
 │   ├── main.ts                            # 主視窗、系統匣／選單列迷你視窗 (#/tray)、全域快捷鍵與原生通知
 │   └── preload.ts                         # 安全隔離 contextBridge API (window.MeiDesktop)
 ├── public/
-│   ├── favicon.svg                        # 品牌向量圖示 (Candidate F)
+│   ├── favicon.svg                        # 咩時光專屬品牌向量圖示 (Time Blocks 日曆時間塊)
 │   ├── pwa-maskable.svg                   # PWA 自適應遮罩圖示
 │   ├── manifest.webmanifest               # 標準 Web App Manifest
 │   ├── sw.js                              # 離線優先 Service Worker
@@ -65,7 +65,7 @@ mei-schedule/
 | **RFC 5545 `.ics` 互通與 Google 日曆連動** | `src/services/icsService.ts`<br>`src/components/CalendarSyncModal.tsx` | `src/__tests__/icsService.test.ts` |
 | **五大排程視角與拖曳時間塊** | `src/components/TimelineView.tsx`<br>`src/components/WeekGridView.tsx`<br>`src/components/MonthView.tsx`<br>`src/components/AgendaListView.tsx`<br>`src/components/TaskInboxSidebar.tsx` | `src/__tests__/timelineAndViews.test.tsx` |
 | **專注番茄鐘、統計儀表板與共享日曆留言** | `src/components/FocusTimerModal.tsx`<br>`src/components/AnalyticsDashboard.tsx`<br>`src/components/SharedCalendarModal.tsx`<br>`src/components/EventDetailDrawer.tsx` | `src/__tests__/sharedAndFocus.test.tsx` |
-| **三套設計風格、亮深雙模式、Toast 與 `dvh`** | `src/styles/index.css`<br>`src/components/AppearanceSettingsModal.tsx`<br>`src/components/StudioToast.tsx`<br>`src/components/BrandMark.tsx` | `src/__tests__/themeAndResponsive.test.tsx`<br>`scripts/verify-schedule.mjs` |
+| **三套設計風格、亮深雙模式、轉場動畫、Toast 與 `dvh`** | `src/styles/index.css`<br>`src/components/AppearanceSettingsModal.tsx`<br>`src/components/StudioToast.tsx`<br>`src/components/BrandMark.tsx`<br>`src/components/AppPreloaderOverlay.tsx`<br>`src/services/preloadEngine.ts` | `src/__tests__/themeAndResponsive.test.tsx`<br>`scripts/verify-schedule.mjs` |
 | **Supabase Cloud SSO v3.0、離線儲存與同步** | `src/services/supabaseClient.ts`<br>`src/services/memberAuthService.ts`<br>`src/services/localStore.ts`<br>`src/services/scheduleSyncService.ts`<br>`supabase/mei_schedule_migrations.sql` | `src/__tests__/authAndCrossPlatform.test.tsx` |
 | **Electron 桌面端、Capacitor 行動端與 CI/CD** | `electron/main.ts`<br>`electron/preload.ts`<br>`src/services/notificationBridge.ts`<br>`capacitor.config.ts`<br>`electron-builder.yml`<br>`.github/workflows/ci-and-release.yml` | `scripts/verify-schedule.mjs`<br>`npm run build:electron:check` |
 

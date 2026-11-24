@@ -16,7 +16,7 @@ export interface AgendaListViewProps {
   instances: ExpandedEventInstance[];
 }
 
-export default function AgendaListView({ instances }: AgendaListViewProps) {
+function AgendaListView({ instances }: AgendaListViewProps) {
   const {
     searchQuery,
     setSearchQuery,
@@ -196,3 +196,5 @@ export default function AgendaListView({ instances }: AgendaListViewProps) {
     </div>
   );
 }
+
+export default React.memo(AgendaListView);

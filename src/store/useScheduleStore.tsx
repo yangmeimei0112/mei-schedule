@@ -5,8 +5,14 @@ import React, {
   useEffect,
   useMemo,
   useReducer,
-  useRef
+  useRef,
+  useState
 } from 'react';
+import {
+  COLOR_MODE_TRANSITION_MS,
+  THEME_BOOT_STORAGE_KEY,
+  THEME_TRANSITION_MS
+} from '../services/preloadEngine';
 import type {
   Calendar,
   CalendarRole,
@@ -129,8 +135,45 @@ function computeResolvedColorMode(mode: UserPreferences['colorMode']): 'light' |
   return resolveSystemColorMode();
 }
 
+function readCachedBootTheme(): {
+  designTheme?: UserPreferences['designTheme'];
+  colorMode?: UserPreferences['colorMode'];
+} {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = window.localStorage?.getItem(THEME_BOOT_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as {
+      designTheme?: string;
+      colorMode?: string;
+    };
+    const validThemes: Array<UserPreferences['designTheme']> = [
+      'sky-glass',
+      'minimal-linear',
+      'warm-journal'
+    ];
+    const validModes: Array<UserPreferences['colorMode']> = ['system', 'light', 'dark'];
+    return {
+      designTheme: validThemes.includes(parsed.designTheme as UserPreferences['designTheme'])
+        ? (parsed.designTheme as UserPreferences['designTheme'])
+        : undefined,
+      colorMode: validModes.includes(parsed.colorMode as UserPreferences['colorMode'])
+        ? (parsed.colorMode as UserPreferences['colorMode'])
+        : undefined
+    };
+  } catch {
+    return {};
+  }
+}
+
 function buildInitialState(): ScheduleStoreState {
   const seed = createSeedScheduleData(new Date(), 'local-guest');
+  const cachedTheme = readCachedBootTheme();
+  const initialPreferences: UserPreferences = {
+    ...seed.preferences,
+    ...(cachedTheme.designTheme ? { designTheme: cachedTheme.designTheme } : {}),
+    ...(cachedTheme.colorMode ? { colorMode: cachedTheme.colorMode } : {})
+  };
   const member = loadCurrentMember();
   const isDesktopViewport =
     typeof window === 'undefined' ? true : window.innerWidth >= 1024;
@@ -142,8 +185,8 @@ function buildInitialState(): ScheduleStoreState {
     lastSyncedAt: null,
     syncQueue: [],
     present: seed.snapshot,
-    preferences: seed.preferences,
-    resolvedColorMode: computeResolvedColorMode(seed.preferences.colorMode),
+    preferences: initialPreferences,
+    resolvedColorMode: computeResolvedColorMode(initialPreferences.colorMode),
     past: [],
     future: [],
     viewMode: 'day',
@@ -489,7 +532,23 @@ export interface ScheduleStoreContextValue {
   dismissToast: () => void;
 }
 
+export interface ThemeTransitionPayload {
+  key: number;
+  kind: 'theme' | 'color-mode';
+  targetMode: 'light' | 'dark';
+}
+
+interface ToastContextValue {
+  toast: ToastState | null;
+  dismissToast: () => void;
+}
+
 const ScheduleStoreContext = createContext<ScheduleStoreContextValue | null>(null);
+const ToastStateContext = createContext<ToastContextValue>({
+  toast: null,
+  dismissToast: () => {}
+});
+const ThemeTransitionContext = createContext<ThemeTransitionPayload | null>(null);
 
 // ============================================================================
 // Provider Implementation
@@ -499,6 +558,10 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
   const [state, rawDispatch] = useReducer(scheduleReducer, undefined, buildInitialState);
   const stateRef = useRef<ScheduleStoreState>(state);
   stateRef.current = state;
+
+  // Isolated Toast & Theme Transition states prevent full-tree re-renders
+  const [toastState, setToastState] = useState<ToastState | null>(null);
+  const [themeTransition, setThemeTransition] = useState<ThemeTransitionPayload | null>(null);
 
   const dispatch = useCallback((action: Action) => {
     stateRef.current = scheduleReducer(stateRef.current, action);
@@ -515,7 +578,7 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
 
   const dismissToast = useCallback(() => {
     clearToastTimers();
-    dispatch({ type: 'SET_TOAST', toast: null });
+    setToastState(null);
   }, [clearToastTimers]);
 
   const showToast = useCallback(
@@ -543,12 +606,12 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
         timestamp: Date.now()
       };
 
-      dispatch({ type: 'SET_TOAST', toast: toastPayload });
+      setToastState(toastPayload);
 
       toastTimersRef.current.stay = setTimeout(() => {
-        dispatch({ type: 'MARK_TOAST_EXITING' });
+        setToastState((prev) => (prev ? { ...prev, isExiting: true } : null));
         toastTimersRef.current.exit = setTimeout(() => {
-          dispatch({ type: 'SET_TOAST', toast: null });
+          setToastState(null);
         }, 340);
       }, duration);
     },
@@ -1689,13 +1752,98 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Theme & Color Mode DOM Synchronization
+  const prevVisualRef = useRef<{
+    initialized: boolean;
+    designTheme: string;
+    resolvedColorMode: 'light' | 'dark';
+  }>({
+    initialized: false,
+    designTheme: state.preferences.designTheme || 'sky-glass',
+    resolvedColorMode: state.resolvedColorMode
+  });
+  const themeTransitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const transitionSeqRef = useRef(0);
+
+  // Theme & Color Mode DOM Synchronization + Dual-Speed Style B Cross-Dissolve
   useEffect(() => {
     if (typeof document === 'undefined') return;
     const html = document.documentElement;
-    html.setAttribute('data-design-theme', state.preferences.designTheme || 'sky-glass');
-    html.classList.toggle('dark', state.resolvedColorMode === 'dark');
-  }, [state.preferences.designTheme, state.resolvedColorMode]);
+    const nextTheme = state.preferences.designTheme || 'sky-glass';
+    const nextMode = state.resolvedColorMode;
+
+    // Persist tiny boot cache so index.html eliminates reload FOUC before React mounts
+    try {
+      window.localStorage?.setItem(
+        THEME_BOOT_STORAGE_KEY,
+        JSON.stringify({
+          designTheme: nextTheme,
+          colorMode: state.preferences.colorMode,
+          resolvedColorMode: nextMode
+        })
+      );
+    } catch {
+      // Ignore storage restrictions
+    }
+
+    const prev = prevVisualRef.current;
+    if (!prev.initialized) {
+      prevVisualRef.current = {
+        initialized: true,
+        designTheme: nextTheme,
+        resolvedColorMode: nextMode
+      };
+      html.setAttribute('data-design-theme', nextTheme);
+      html.classList.toggle('dark', nextMode === 'dark');
+      return;
+    }
+
+    const colorModeChanged = prev.resolvedColorMode !== nextMode;
+    const themeChanged = prev.designTheme !== nextTheme;
+    prevVisualRef.current = {
+      initialized: true,
+      designTheme: nextTheme,
+      resolvedColorMode: nextMode
+    };
+
+    if (colorModeChanged || themeChanged) {
+      if (themeTransitionTimerRef.current) {
+        clearTimeout(themeTransitionTimerRef.current);
+      }
+
+      const kind: 'color-mode' | 'theme' = colorModeChanged ? 'color-mode' : 'theme';
+      const durationMs = colorModeChanged ? COLOR_MODE_TRANSITION_MS : THEME_TRANSITION_MS;
+
+      html.classList.remove('theme-transitioning', 'color-mode-transitioning');
+      html.classList.add(colorModeChanged ? 'color-mode-transitioning' : 'theme-transitioning');
+
+      transitionSeqRef.current += 1;
+      setThemeTransition({
+        key: transitionSeqRef.current,
+        kind,
+        targetMode: nextMode
+      });
+
+      themeTransitionTimerRef.current = setTimeout(() => {
+        html.classList.remove('theme-transitioning', 'color-mode-transitioning');
+        setThemeTransition(null);
+        themeTransitionTimerRef.current = null;
+      }, durationMs + 50);
+    }
+
+    html.setAttribute('data-design-theme', nextTheme);
+    html.classList.toggle('dark', nextMode === 'dark');
+  }, [state.preferences.designTheme, state.preferences.colorMode, state.resolvedColorMode]);
+
+  useEffect(() => {
+    return () => {
+      if (themeTransitionTimerRef.current) {
+        clearTimeout(themeTransitionTimerRef.current);
+      }
+      if (typeof document !== 'undefined') {
+        document.documentElement.classList.remove('theme-transitioning', 'color-mode-transitioning');
+      }
+    };
+  }, []);
 
   // Listen to OS prefers-color-scheme when colorMode === 'system'
   useEffect(() => {
@@ -1915,9 +2063,21 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
     ]
   );
 
+  const toastContextValue = useMemo<ToastContextValue>(
+    () => ({
+      toast: toastState,
+      dismissToast
+    }),
+    [toastState, dismissToast]
+  );
+
   return (
     <ScheduleStoreContext.Provider value={value}>
-      {children}
+      <ToastStateContext.Provider value={toastContextValue}>
+        <ThemeTransitionContext.Provider value={themeTransition}>
+          {children}
+        </ThemeTransitionContext.Provider>
+      </ToastStateContext.Provider>
     </ScheduleStoreContext.Provider>
   );
 }
@@ -1928,4 +2088,12 @@ export function useScheduleStore(): ScheduleStoreContextValue {
     throw new Error('useScheduleStore must be used within a ScheduleProvider');
   }
   return ctx;
+}
+
+export function useToastState(): ToastContextValue {
+  return useContext(ToastStateContext);
+}
+
+export function useThemeTransition(): ThemeTransitionPayload | null {
+  return useContext(ThemeTransitionContext);
 }

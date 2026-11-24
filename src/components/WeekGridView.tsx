@@ -79,7 +79,7 @@ export interface WeekGridViewProps {
   instances: ExpandedEventInstance[];
 }
 
-export default function WeekGridView({ mode, instances }: WeekGridViewProps) {
+function WeekGridView({ mode, instances }: WeekGridViewProps) {
   const {
     selectedDate,
     preferences,
@@ -357,3 +357,5 @@ export default function WeekGridView({ mode, instances }: WeekGridViewProps) {
     </div>
   );
 }
+
+export default React.memo(WeekGridView);
