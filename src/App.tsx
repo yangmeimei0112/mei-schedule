@@ -243,18 +243,33 @@ function MeiScheduleShell() {
         {/* Left Sidebar (Desktop collapsible + Mobile Drawer Overlay) */}
         {sidebarOpen && (
           <>
-            <div className="hidden lg:block sticky top-20">
+            <div className="hidden lg:block sticky top-28 pb-20">
               <TaskInboxSidebar />
             </div>
             {/* Mobile Slide-Over Sidebar */}
             <div
+              data-testid="mobile-sidebar-overlay"
               className="lg:hidden fixed inset-0 z-40 bg-slate-950/45 backdrop-blur-sm flex"
               onClick={() => setSidebarOpen(false)}
             >
               <div
                 onClick={(e) => e.stopPropagation()}
-                className="w-[88vw] max-w-[330px] h-full overflow-y-auto bg-[var(--bg-primary)] p-3.5 shadow-2xl pb-24"
+                className="w-[88vw] max-w-[330px] h-full overflow-y-auto bg-[var(--bg-primary)] p-3.5 shadow-2xl pb-24 space-y-3"
               >
+                <div className="flex items-center justify-between px-1 pb-2 border-b border-[var(--border-subtle)]">
+                  <span className="text-xs font-extrabold text-[var(--text-main)]">
+                    行事曆與待辦收件匣
+                  </span>
+                  <button
+                    type="button"
+                    data-testid="close-mobile-sidebar-btn"
+                    onClick={() => setSidebarOpen(false)}
+                    aria-label="關閉側邊欄"
+                    className="btn-sky-secondary px-2.5 py-1 rounded-xl text-[11px] font-bold"
+                  >
+                    收合
+                  </button>
+                </div>
                 <TaskInboxSidebar />
               </div>
             </div>

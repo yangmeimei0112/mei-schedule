@@ -107,9 +107,11 @@ const QuickCaptureBar = forwardRef<HTMLInputElement, QuickCaptureBarProps>(funct
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           placeholder={
-            captureAsTask
-              ? '輸入待辦事項，例如：完成週報 45分鐘 #工作 !高'
-              : '自然語言快輸：明天下午3點半跟團隊開會 90分鐘 #工作 每週三 !高'
+            compact
+              ? '快輸：下午3點開會 30m #工作'
+              : captureAsTask
+                ? '輸入待辦事項，例如：完成週報 45分鐘 #工作 !高'
+                : '自然語言快輸：明天下午3點半跟團隊開會 90分鐘 #工作 每週三 !高'
           }
           aria-label="自然語言快速新增排程或待辦"
           className="flex-1 min-w-0 bg-transparent text-sm text-[var(--text-main)] placeholder:text-[var(--text-muted)] focus:outline-none"

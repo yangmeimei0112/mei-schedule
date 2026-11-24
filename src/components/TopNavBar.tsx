@@ -92,77 +92,46 @@ export default function TopNavBar({ conflictCount, onFocusQuickCapture }: TopNav
       data-testid="top-nav-bar"
       className="sticky top-0 z-30 pt-safe border-b border-[var(--border-subtle)] bg-[var(--surface-glass-strong)] backdrop-blur-xl"
     >
-      <div className="mobile-header-bar narrow-compact-px max-w-[1600px] mx-auto h-16 px-3 sm:px-5 flex items-center justify-between gap-2">
-        {/* Left: Sidebar Toggle + Brand + Date Navigation */}
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+      {/* Tier 1: Brand Identity + Desktop View Switcher + Quick Tools */}
+      <div className="mobile-header-bar narrow-compact-px max-w-[1600px] mx-auto h-14 px-2.5 sm:px-5 flex items-center justify-between gap-2">
+        {/* Left: Sidebar Toggle + Brand Identity (shrink-0 prevents overlap on every viewport) */}
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
           <button
             type="button"
             data-testid="toggle-sidebar-btn"
             onClick={() => setSidebarOpen(!sidebarOpen)}
             aria-label={sidebarOpen ? '收合側邊欄' : '展開側邊欄'}
             title={sidebarOpen ? '收合側邊欄' : '展開側邊欄'}
-            className="btn-sky-secondary p-2 rounded-xl inline-flex items-center justify-center shrink-0"
+            className="btn-sky-secondary p-1.5 sm:p-2 rounded-xl inline-flex items-center justify-center shrink-0"
           >
             <LucideIcon name={sidebarOpen ? 'panel-left-close' : 'panel-left-open'} size={16} />
           </button>
 
-          <div className="flex items-center gap-2 min-w-0">
-            <BrandMark size="sm" />
-            <div className="min-w-0 leading-tight hidden sm:block">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <span className="sm:hidden inline-flex shrink-0">
+              <BrandMark size="xs" />
+            </span>
+            <span className="hidden sm:inline-flex shrink-0">
+              <BrandMark size="sm" />
+            </span>
+            <div className="leading-tight hidden min-[375px]:block">
               <div className="flex items-baseline gap-1.5">
-                <span className="font-heading-lg text-base font-extrabold tracking-tight text-[var(--text-main)] whitespace-nowrap">
+                <span className="font-heading-lg text-sm sm:text-base font-extrabold tracking-tight text-[var(--text-main)] whitespace-nowrap">
                   咩時光
                 </span>
-                <span className="font-en text-xs font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400">
+                <span className="hidden md:inline font-en text-[11px] font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400 whitespace-nowrap">
                   MeiSchedule
                 </span>
               </div>
-              <div className="flex items-center gap-1.5 text-[11px] text-[var(--text-muted)] truncate">
+              <div className="hidden md:flex items-center gap-1.5 text-[10px] text-[var(--text-muted)]">
                 <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${syncDotClass}`} />
-                <span className="truncate">{syncStatusMessage}</span>
+                <span className="whitespace-nowrap">{syncStatusMessage}</span>
               </div>
             </div>
           </div>
-
-          {/* Date Controls */}
-          <div className="flex items-center gap-1 ml-0.5 sm:ml-2">
-            <button
-              type="button"
-              data-testid="nav-today-btn"
-              onClick={goToToday}
-              title="回到今天 (T)"
-              className="btn-sky-secondary px-2.5 py-1.5 rounded-xl text-xs font-bold shrink-0"
-            >
-              今天
-            </button>
-            <button
-              type="button"
-              data-testid="nav-prev-btn"
-              onClick={() => navigateDate(-stepDays)}
-              aria-label="上一區間"
-              className="p-1.5 rounded-lg hover:bg-[var(--surface-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)]"
-            >
-              <LucideIcon name="chevron-left" size={16} />
-            </button>
-            <button
-              type="button"
-              data-testid="nav-next-btn"
-              onClick={() => navigateDate(stepDays)}
-              aria-label="下一區間"
-              className="p-1.5 rounded-lg hover:bg-[var(--surface-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)]"
-            >
-              <LucideIcon name="chevron-right" size={16} />
-            </button>
-            <h1
-              data-testid="current-date-heading"
-              className="studio-hero-title-zh text-sm sm:text-base font-bold text-[var(--text-main)] truncate max-w-[130px] sm:max-w-[240px]"
-            >
-              {formatHeaderDateRange(selectedDate, viewMode)}
-            </h1>
-          </div>
         </div>
 
-        {/* Center: Five View Mode Switcher (Desktop/Tablet) */}
+        {/* Center: Five View Mode Switcher (Desktop >= lg) */}
         <nav
           role="tablist"
           aria-label="排程檢視模式"
@@ -179,7 +148,7 @@ export default function TopNavBar({ conflictCount, onFocusQuickCapture }: TopNav
                 data-testid={`view-tab-${tab.id}`}
                 onClick={() => setViewMode(tab.id)}
                 title={`${tab.label} (快捷鍵 ${tab.shortcut})`}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 transition-colors ${
+                className={`px-2.5 xl:px-3 py-1.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 whitespace-nowrap transition-colors ${
                   active
                     ? 'bg-sky-500 text-white'
                     : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
@@ -192,7 +161,7 @@ export default function TopNavBar({ conflictCount, onFocusQuickCapture }: TopNav
           })}
         </nav>
 
-        {/* Right: Quick Tools, 3-Theme Switcher, Color Mode, Undo/Redo, Member */}
+        {/* Right: Quick Tools, Appearance, Color Mode, Undo/Redo, Quick Add, Member */}
         <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
           {/* Command Palette / Search */}
           <button
@@ -201,10 +170,10 @@ export default function TopNavBar({ conflictCount, onFocusQuickCapture }: TopNav
             onClick={() => openModal('command')}
             aria-label="開啟全域搜尋與指令列"
             title="全域搜尋與快捷指令 (Cmd/Ctrl + K)"
-            className="btn-sky-secondary px-2 sm:px-2.5 py-2 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5"
+            className="btn-sky-secondary p-1.5 sm:px-2.5 sm:py-2 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 shrink-0"
           >
             <LucideIcon name="search" size={15} />
-            <span className="hidden xl:inline">搜尋</span>
+            <span className="hidden xl:inline whitespace-nowrap">搜尋</span>
             <kbd className="hidden xl:inline px-1.5 py-0.5 text-[10px] font-mono rounded bg-[var(--surface-subtle)] border border-[var(--border-subtle)]">
               K
             </kbd>
@@ -217,9 +186,9 @@ export default function TopNavBar({ conflictCount, onFocusQuickCapture }: TopNav
             onClick={() => openModal('smart')}
             aria-label="智慧排程與預覽重排"
             title="智慧排程助手（預覽重排）"
-            className="relative btn-sky-secondary p-2 rounded-xl inline-flex items-center justify-center"
+            className="relative btn-sky-secondary p-1.5 sm:p-2 rounded-xl inline-flex items-center justify-center shrink-0"
           >
-            <LucideIcon name="wand-sparkles" size={16} />
+            <LucideIcon name="wand-sparkles" size={15} />
             {conflictCount > 0 && (
               <span
                 data-testid="header-conflict-badge"
@@ -237,9 +206,9 @@ export default function TopNavBar({ conflictCount, onFocusQuickCapture }: TopNav
             onClick={() => openModal('focus')}
             aria-label="專注番茄鐘"
             title="專注計時器 (F)"
-            className="hidden sm:inline-flex btn-sky-secondary p-2 rounded-xl items-center justify-center"
+            className="hidden sm:inline-flex btn-sky-secondary p-2 rounded-xl items-center justify-center shrink-0"
           >
-            <LucideIcon name="timer" size={16} />
+            <LucideIcon name="timer" size={15} />
           </button>
 
           {/* Analytics Dashboard */}
@@ -249,9 +218,9 @@ export default function TopNavBar({ conflictCount, onFocusQuickCapture }: TopNav
             onClick={() => openModal('analytics')}
             aria-label="時間統計儀表板"
             title="專注與時間統計儀表板"
-            className="hidden md:inline-flex btn-sky-secondary p-2 rounded-xl items-center justify-center"
+            className="hidden md:inline-flex btn-sky-secondary p-2 rounded-xl items-center justify-center shrink-0"
           >
-            <LucideIcon name="bar-chart-3" size={16} />
+            <LucideIcon name="bar-chart-3" size={15} />
           </button>
 
           {/* Shared Calendars */}
@@ -261,9 +230,9 @@ export default function TopNavBar({ conflictCount, onFocusQuickCapture }: TopNav
             onClick={() => openModal('shared')}
             aria-label="多人共享日曆"
             title="多人共享日曆與邀請碼"
-            className="hidden md:inline-flex btn-sky-secondary p-2 rounded-xl items-center justify-center"
+            className="hidden md:inline-flex btn-sky-secondary p-2 rounded-xl items-center justify-center shrink-0"
           >
-            <LucideIcon name="users" size={16} />
+            <LucideIcon name="users" size={15} />
           </button>
 
           {/* ICS / Google Calendar Sync */}
@@ -273,63 +242,37 @@ export default function TopNavBar({ conflictCount, onFocusQuickCapture }: TopNav
             onClick={() => openModal('sync')}
             aria-label="日曆匯入匯出與同步"
             title=".ics 匯入匯出與 Google 日曆連動"
-            className="hidden lg:inline-flex btn-sky-secondary p-2 rounded-xl items-center justify-center"
+            className="hidden xl:inline-flex btn-sky-secondary p-2 rounded-xl items-center justify-center shrink-0"
           >
-            <LucideIcon name="refresh-cw" size={16} />
+            <LucideIcon name="refresh-cw" size={15} />
           </button>
 
-          {/* 3-Theme Switcher (Inline on 2xl+, plus Appearance Settings button) */}
-          <div
-            role="group"
-            aria-label="外觀主題快速切換"
-            className="hidden 2xl:inline-flex items-center gap-0.5 p-1 rounded-full border border-[var(--border-subtle)] bg-[var(--surface-subtle)]"
-          >
-            {DESIGN_THEME_OPTIONS.map((opt) => {
-              const active = preferences.designTheme === opt.id;
-              return (
-                <button
-                  key={opt.id}
-                  type="button"
-                  data-testid={`theme-switch-${opt.id}`}
-                  aria-pressed={active}
-                  onClick={() => handleSelectTheme(opt.id)}
-                  className={`px-2 py-1 rounded-full text-[11px] font-semibold transition-colors inline-flex items-center gap-1 ${
-                    active
-                      ? 'bg-sky-500 text-white'
-                      : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
-                  }`}
-                >
-                  <LucideIcon name={opt.icon} size={12} />
-                  <span>{opt.name}</span>
-                </button>
-              );
-            })}
-          </div>
-
+          {/* Appearance Settings Modal */}
           <button
             type="button"
             data-testid="open-appearance-modal-btn"
             onClick={() => openModal('appearance')}
             aria-label="外觀風格與偏好設定"
             title="切換三套視覺風格與工作時段設定"
-            className="btn-sky-secondary p-2 rounded-xl inline-flex items-center justify-center"
+            className="btn-sky-secondary p-1.5 sm:p-2 rounded-xl inline-flex items-center justify-center shrink-0"
           >
-            <LucideIcon name="palette" size={16} />
+            <LucideIcon name="palette" size={15} />
           </button>
 
+          {/* Color Mode Toggle */}
           <button
             type="button"
             data-testid="color-mode-toggle-btn"
             onClick={handleToggleColorMode}
             aria-label={resolvedColorMode === 'dark' ? '切換至亮色模式' : '切換至深色模式'}
             title={resolvedColorMode === 'dark' ? '切換至亮色模式' : '切換至深色模式'}
-            className="btn-sky-secondary p-2 rounded-xl inline-flex items-center justify-center"
+            className="btn-sky-secondary p-1.5 sm:p-2 rounded-xl inline-flex items-center justify-center shrink-0"
           >
-            <LucideIcon name={resolvedColorMode === 'dark' ? 'sun' : 'moon'} size={16} />
+            <LucideIcon name={resolvedColorMode === 'dark' ? 'sun' : 'moon'} size={15} />
           </button>
 
           {/* Undo / Redo */}
-          <div className="hidden sm:inline-flex items-center gap-1">
+          <div className="hidden md:inline-flex items-center gap-1 shrink-0">
             <button
               type="button"
               data-testid="header-undo-btn"
@@ -360,10 +303,10 @@ export default function TopNavBar({ conflictCount, onFocusQuickCapture }: TopNav
             data-testid="header-quick-add-btn"
             onClick={onFocusQuickCapture}
             title="新增行程 (C)"
-            className="hidden sm:inline-flex btn-sky-primary px-3 py-2 rounded-xl text-xs font-bold items-center gap-1"
+            className="hidden sm:inline-flex btn-sky-primary px-2.5 xl:px-3 py-2 rounded-xl text-xs font-bold items-center gap-1 whitespace-nowrap shrink-0"
           >
             <LucideIcon name="plus" size={15} />
-            <span className="hidden md:inline">新增</span>
+            <span className="hidden xl:inline">新增</span>
           </button>
 
           {/* Member Portal */}
@@ -371,9 +314,9 @@ export default function TopNavBar({ conflictCount, onFocusQuickCapture }: TopNav
             type="button"
             data-testid="header-member-portal-btn"
             onClick={() => openModal('member')}
-            className="btn-sky-primary px-2.5 sm:px-3 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 max-w-[116px] max-[429px]:max-w-[88px] sm:max-w-[170px]"
+            className="btn-sky-primary px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1 max-w-[78px] min-[375px]:max-w-[96px] sm:max-w-[160px] shrink-0"
           >
-            <LucideIcon name={currentMember ? 'user-check' : 'orbit'} size={15} />
+            <LucideIcon name={currentMember ? 'user-check' : 'orbit'} size={14} className="shrink-0" />
             <span className="truncate">
               {currentMember ? currentMember.displayName : '會員專區'}
             </span>
@@ -381,54 +324,102 @@ export default function TopNavBar({ conflictCount, onFocusQuickCapture }: TopNav
         </div>
       </div>
 
-      {/* Compact Secondary View Bar for Mobile/Tablet (< lg) */}
-      <div className="lg:hidden border-t border-[var(--border-subtle)] px-3 py-1.5 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
-        <div role="tablist" aria-label="行動端檢視切換" className="inline-flex items-center gap-1">
-          {VIEW_TABS.map((tab) => {
-            const active = viewMode === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                data-testid={`mobile-view-tab-${tab.id}`}
-                onClick={() => setViewMode(tab.id)}
-                className={`px-2.5 py-1 rounded-xl text-xs font-bold inline-flex items-center gap-1 shrink-0 transition-colors ${
-                  active
-                    ? 'bg-sky-500 text-white'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text-main)] bg-[var(--surface-subtle)]'
-                }`}
-              >
-                <LucideIcon name={tab.icon} size={13} />
-                <span>{tab.shortLabel}</span>
-              </button>
-            );
-          })}
-        </div>
+      {/* Tier 2: Dedicated Calendar Date Bar + Responsive View Tabs / Desktop 3-Theme Switcher */}
+      <div className="border-t border-[var(--border-subtle)] bg-[var(--surface-subtle)]/45">
+        <div className="narrow-compact-px max-w-[1600px] mx-auto px-2.5 sm:px-5 py-1.5 flex flex-col md:flex-row md:items-center md:justify-between gap-1.5">
+          {/* Date Controls (Zero overlap with BrandMark across 320px-1440px+) */}
+          <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
+            <button
+              type="button"
+              data-testid="nav-today-btn"
+              onClick={goToToday}
+              title="回到今天 (T)"
+              className="btn-sky-secondary px-2.5 py-1 rounded-xl text-xs font-bold whitespace-nowrap shrink-0"
+            >
+              今天
+            </button>
+            <button
+              type="button"
+              data-testid="nav-prev-btn"
+              onClick={() => navigateDate(-stepDays)}
+              aria-label="上一區間"
+              className="p-1 rounded-lg hover:bg-[var(--surface-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] shrink-0"
+            >
+              <LucideIcon name="chevron-left" size={16} />
+            </button>
+            <button
+              type="button"
+              data-testid="nav-next-btn"
+              onClick={() => navigateDate(stepDays)}
+              aria-label="下一區間"
+              className="p-1 rounded-lg hover:bg-[var(--surface-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] shrink-0"
+            >
+              <LucideIcon name="chevron-right" size={16} />
+            </button>
+            <h1
+              data-testid="current-date-heading"
+              className="ml-0.5 text-xs sm:text-sm font-extrabold text-[var(--text-main)] whitespace-nowrap truncate"
+            >
+              {formatHeaderDateRange(selectedDate, viewMode)}
+            </h1>
+          </div>
 
-        {/* Inline compact theme pills on mobile/tablet so all 3 theme buttons remain 1-tap accessible */}
-        <div className="inline-flex items-center gap-1 shrink-0">
-          {DESIGN_THEME_OPTIONS.map((opt) => {
-            const active = preferences.designTheme === opt.id;
-            return (
-              <button
-                key={opt.id}
-                type="button"
-                data-testid={`mobile-theme-switch-${opt.id}`}
-                onClick={() => handleSelectTheme(opt.id)}
-                aria-label={`切換為${opt.name}`}
-                title={opt.name}
-                className={`px-2 py-1 rounded-lg text-[11px] font-semibold border transition-colors ${
-                  active
-                    ? 'bg-sky-500 text-white border-sky-500'
-                    : 'border-[var(--border-subtle)] bg-[var(--surface-subtle)] text-[var(--text-muted)]'
-                }`}
-              >
-                {opt.name}
-              </button>
-            );
-          })}
+          {/* Mobile & Tablet (< lg): Full-Width 5-Mode View Switcher without cut-off pills */}
+          <div
+            role="tablist"
+            aria-label="行動端檢視切換"
+            className="lg:hidden grid grid-cols-5 md:inline-flex items-center gap-1 shrink-0"
+          >
+            {VIEW_TABS.map((tab) => {
+              const active = viewMode === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  data-testid={`mobile-view-tab-${tab.id}`}
+                  onClick={() => setViewMode(tab.id)}
+                  className={`px-1.5 md:px-2.5 py-1 rounded-xl text-[11px] sm:text-xs font-bold inline-flex items-center justify-center gap-1 whitespace-nowrap transition-colors ${
+                    active
+                      ? 'bg-sky-500 text-white'
+                      : 'text-[var(--text-muted)] hover:text-[var(--text-main)] bg-[var(--surface-glass)] border border-[var(--border-subtle)]'
+                  }`}
+                >
+                  <LucideIcon name={tab.icon} size={12} className="shrink-0" />
+                  <span>{tab.shortLabel}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Desktop (>= lg): 1-Click 3-Design-Theme Switcher directly visible at 1024px-1440px+ */}
+          <div
+            role="group"
+            aria-label="外觀主題快速切換"
+            className="hidden lg:inline-flex items-center gap-1 p-0.5 rounded-full border border-[var(--border-subtle)] bg-[var(--surface-glass)] shrink-0"
+          >
+            {DESIGN_THEME_OPTIONS.map((opt) => {
+              const active = preferences.designTheme === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  data-testid={`theme-switch-${opt.id}`}
+                  aria-pressed={active}
+                  onClick={() => handleSelectTheme(opt.id)}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap transition-colors inline-flex items-center gap-1 ${
+                    active
+                      ? 'bg-sky-500 text-white'
+                      : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
+                  }`}
+                >
+                  <LucideIcon name={opt.icon} size={12} />
+                  <span>{opt.name}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
     </header>

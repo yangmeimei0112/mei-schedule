@@ -597,7 +597,7 @@
   style.textContent = `
     #mei-studio-dock-root {
       position: fixed;
-      z-index: 2147483640;
+      z-index: 35;
       font-family: "Plus Jakarta Sans", "Noto Sans TC", -apple-system, BlinkMacSystemFont, sans-serif;
       user-select: none;
       -webkit-user-select: none;
@@ -627,7 +627,11 @@
       font-size: 13px;
       font-weight: 600;
       cursor: grab;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.25s ease;
+    }
+    .mei-dock-collapsed .mei-dock-capsule {
+      padding: 6px 8px;
+      gap: 5px;
     }
     .mei-dock-capsule:hover {
       border-color: rgba(56, 189, 248, 0.72);
@@ -646,6 +650,7 @@
       color: #0284C7;
       flex-shrink: 0;
       position: relative;
+      cursor: pointer;
     }
     .mei-dock-btn {
       display: inline-flex;
@@ -751,6 +756,49 @@
       background: #E0F2FE;
       color: #0284C7;
     }
+    /* Dark Mode Glass Adaptation */
+    html.dark .mei-dock-capsule {
+      background: rgba(15, 23, 42, 0.90);
+      border-color: rgba(56, 189, 248, 0.35);
+      box-shadow: 0 14px 36px -8px rgba(2, 8, 23, 0.72), 0 0 0 1px rgba(56, 189, 248, 0.15);
+      color: #F8FAFC;
+    }
+    html.dark #mei-dock-project-label {
+      color: #F8FAFC !important;
+    }
+    html.dark .mei-dock-badge {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(14, 165, 233, 0.10));
+      border-color: rgba(56, 189, 248, 0.40);
+      box-shadow: inset 0 1px 1px rgba(56, 189, 248, 0.22);
+      color: #38BDF8;
+    }
+    html.dark .mei-dock-icon-btn {
+      background: rgba(30, 41, 59, 0.90);
+      border-color: rgba(56, 189, 248, 0.30);
+      color: #7DD3FC;
+    }
+    html.dark .mei-dock-icon-btn:hover {
+      background: rgba(56, 189, 248, 0.22);
+    }
+    html.dark .mei-dock-collapse-btn {
+      background: rgba(56, 189, 248, 0.16);
+      color: #7DD3FC;
+    }
+    html.dark .mei-dock-popover {
+      background: rgba(15, 23, 42, 0.96);
+      border-color: rgba(56, 189, 248, 0.35);
+      box-shadow: 0 18px 42px -10px rgba(2, 8, 23, 0.8);
+    }
+    html.dark .mei-dock-popover-title {
+      color: #7DD3FC;
+    }
+    html.dark .mei-dock-popover-item {
+      color: #F1F5F9;
+    }
+    html.dark .mei-dock-popover-item:hover {
+      background: rgba(56, 189, 248, 0.18);
+      color: #7DD3FC;
+    }
     @media (max-width: 480px) {
       #mei-studio-dock-root.pos-bottom-right {
         right: 12px;
@@ -765,6 +813,10 @@
         padding: 6px 10px 6px 8px;
         gap: 6px;
       }
+      .mei-dock-collapsed .mei-dock-capsule {
+        padding: 5px 7px;
+        gap: 4px;
+      }
       #mei-dock-project-label {
         max-width: 82px !important;
       }
@@ -775,6 +827,10 @@
       }
     }
     @media (orientation: landscape) and (max-height: 500px) {
+      #mei-studio-dock-root.pos-bottom-left,
+      #mei-studio-dock-root.pos-bottom-right {
+        bottom: 12px !important;
+      }
       .mei-dock-popover {
         max-height: 70dvh;
         overflow-y: auto;
@@ -790,8 +846,12 @@
 
     const container = document.createElement('div');
     container.id = 'mei-studio-dock-root';
+    const shouldAutoCollapse =
+      (typeof window.innerWidth === 'number' && window.innerWidth <= 767) ||
+      (typeof window.innerHeight === 'number' && window.innerHeight <= 500);
     container.className =
-      positionAttr === 'bottom-left' ? 'pos-bottom-left' : 'pos-bottom-right';
+      (positionAttr === 'bottom-left' ? 'pos-bottom-left' : 'pos-bottom-right') +
+      (shouldAutoCollapse ? ' mei-dock-collapsed' : '');
 
     const quickProjects = getQuickProjects();
     const quickLinksHtml = quickProjects
@@ -814,7 +874,7 @@
         ${quickLinksHtml}
       </div>
       <div class="mei-dock-capsule" title="可拖曳移動位置">
-        <span class="mei-dock-badge" title="咩創意工作室">${LUCIDE_SVGS.cloud}</span>
+        <span class="mei-dock-badge" id="mei-dock-badge-btn" title="咩創意工作室（點擊展開／收合）">${LUCIDE_SVGS.cloud}</span>
         <div class="mei-dock-details" style="display:flex;align-items:center;gap:7px;">
           <div style="display:flex;flex-direction:column;line-height:1.2;padding-right:2px;">
             <span style="font-size:10px;color:#0284C7;font-weight:700;letter-spacing:0.03em;">MEI CREATIVE HUB</span>
@@ -836,9 +896,20 @@
 
     document.body.appendChild(container);
 
+    const badgeBtn = container.querySelector('#mei-dock-badge-btn');
     const toggleBtn = container.querySelector('#mei-dock-toggle-btn');
     const switcherBtn = container.querySelector('#mei-dock-switcher-btn');
     const popover = container.querySelector('#mei-dock-popover');
+
+    if (badgeBtn) {
+      badgeBtn.addEventListener('click', (e) => {
+        if (container.classList.contains('mei-dock-collapsed')) {
+          e.stopPropagation();
+          container.classList.remove('mei-dock-collapsed');
+          clampToViewport();
+        }
+      });
+    }
 
     if (toggleBtn) {
       toggleBtn.addEventListener('click', (e) => {

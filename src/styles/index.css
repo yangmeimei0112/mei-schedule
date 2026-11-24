@@ -750,7 +750,7 @@ body.tray-route #mei-studio-dock-root {
 /* 4. 手機橫向短高模式 (orientation: landscape and max-height: 500px) */
 @media (orientation: landscape) and (max-height: 500px) {
   .mobile-header-bar {
-    height: 3.125rem !important;
+    height: 3rem !important;
   }
 
   .mobile-bottom-nav {
@@ -774,7 +774,19 @@ body.tray-route #mei-studio-dock-root {
   .landscape-compact-modal {
     max-height: 94vh !important;
     max-height: 94dvh !important;
+  }
+
+  .bento-glass-card.landscape-compact-modal {
     padding: 0.875rem 1.25rem !important;
+  }
+
+  .landscape-compact-drawer-bar {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+
+  [data-testid="studio-toast"] {
+    bottom: 0.875rem !important;
   }
 }
 

@@ -239,7 +239,7 @@ export default function EventDetailDrawer() {
         className="landscape-compact-modal max-h-dvh-92 sm:max-h-none sm:h-full w-full sm:max-w-lg bg-[var(--surface-glass-strong)] border-t sm:border-t-0 sm:border-l border-[var(--border-subtle)] rounded-t-3xl sm:rounded-none shadow-2xl flex flex-col overflow-hidden"
       >
         {/* Header */}
-        <div className="px-5 py-4 border-b border-[var(--border-subtle)] flex items-center justify-between gap-2">
+        <div className="landscape-compact-drawer-bar px-4 sm:px-5 py-3.5 sm:py-4 border-b border-[var(--border-subtle)] flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <span
               className={`w-3 h-3 rounded-full shrink-0 ${
@@ -730,43 +730,45 @@ export default function EventDetailDrawer() {
         </div>
 
         {/* Footer Actions */}
-        <div className="px-5 py-3.5 border-t border-[var(--border-subtle)] bg-[var(--surface-subtle)]/70 flex items-center justify-between gap-2 flex-wrap pb-safe-bottom">
-          <div className="flex items-center gap-1.5">
+        <div className="landscape-compact-drawer-bar px-4 sm:px-5 py-3 border-t border-[var(--border-subtle)] bg-[var(--surface-subtle)]/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-safe-bottom">
+          <div className="flex items-center justify-between sm:justify-start gap-1.5 w-full sm:w-auto">
             {!isViewerOnly && (
               <button
                 type="button"
                 data-testid="event-detail-delete-btn"
                 onClick={handleDelete}
-                className="px-3 py-2 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-500/15 inline-flex items-center gap-1"
+                className="px-2.5 sm:px-3 py-2 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-500/15 inline-flex items-center gap-1 whitespace-nowrap shrink-0"
               >
-                <LucideIcon name="trash-2" size={14} />
+                <LucideIcon name="trash-2" size={14} className="shrink-0" />
                 <span>刪除</span>
               </button>
             )}
-            <button
-              type="button"
-              onClick={() => {
-                openModal('focus', { focusTargetEventId: event.id });
-                selectEvent(null);
-              }}
-              className="btn-sky-secondary px-3 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1"
-            >
-              <LucideIcon name="timer" size={14} />
-              <span>專注</span>
-            </button>
-            {event.status !== 'completed' && !isViewerOnly && (
+            <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={() => {
-                  completeEventEarly(event.id);
+                  openModal('focus', { focusTargetEventId: event.id });
                   selectEvent(null);
                 }}
-                className="btn-sky-secondary px-3 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1"
+                className="btn-sky-secondary px-2.5 sm:px-3 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1 whitespace-nowrap shrink-0"
               >
-                <LucideIcon name="zap" size={14} />
-                <span>提早完成</span>
+                <LucideIcon name="timer" size={14} className="shrink-0" />
+                <span>專注</span>
               </button>
-            )}
+              {event.status !== 'completed' && !isViewerOnly && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    completeEventEarly(event.id);
+                    selectEvent(null);
+                  }}
+                  className="btn-sky-secondary px-2.5 sm:px-3 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1 whitespace-nowrap shrink-0"
+                >
+                  <LucideIcon name="zap" size={14} className="shrink-0" />
+                  <span>提早完成</span>
+                </button>
+              )}
+            </div>
           </div>
 
           {!isViewerOnly && (
@@ -774,9 +776,9 @@ export default function EventDetailDrawer() {
               type="submit"
               form="event-detail-form"
               data-testid="event-detail-save-btn"
-              className="btn-sky-primary px-5 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5"
+              className="btn-sky-primary w-full sm:w-auto justify-center px-5 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 whitespace-nowrap shrink-0"
             >
-              <LucideIcon name="check" size={14} />
+              <LucideIcon name="check" size={14} className="shrink-0" />
               <span>儲存變更</span>
             </button>
           )}

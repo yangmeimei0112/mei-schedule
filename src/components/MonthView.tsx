@@ -75,7 +75,7 @@ export default function MonthView({ instances }: MonthViewProps) {
           {weekdayHeaders.map((label) => (
             <div
               key={label}
-              className="py-2 px-1 text-center text-[11px] font-bold text-[var(--text-muted)]"
+              className="py-1.5 sm:py-2 px-0.5 sm:px-1 text-center text-[10px] sm:text-[11px] font-bold text-[var(--text-muted)] whitespace-nowrap"
             >
               {label}
             </div>
@@ -104,7 +104,7 @@ export default function MonthView({ instances }: MonthViewProps) {
                     setSelectedDate(cell.dateKey);
                   }
                 }}
-                className={`min-h-[82px] sm:min-h-[108px] p-1 sm:p-1.5 flex flex-col gap-1 cursor-pointer transition-colors ${
+                className={`min-h-[76px] sm:min-h-[108px] p-0.5 sm:p-1.5 flex flex-col gap-0.5 sm:gap-1 cursor-pointer transition-colors ${
                   isSelected
                     ? 'bg-sky-500/12 ring-2 ring-inset ring-sky-400/70'
                     : cell.inCurrentMonth
@@ -114,7 +114,7 @@ export default function MonthView({ instances }: MonthViewProps) {
               >
                 <div className="flex items-center justify-between">
                   <span
-                    className={`w-6 h-6 rounded-full text-[11px] font-extrabold font-mono flex items-center justify-center ${
+                    className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full text-[10px] sm:text-[11px] font-extrabold font-mono flex items-center justify-center ${
                       isToday
                         ? 'bg-sky-500 text-white'
                         : isSelected
@@ -145,7 +145,7 @@ export default function MonthView({ instances }: MonthViewProps) {
                           setSelectedDate(cell.dateKey);
                           selectEvent(evt.masterEventId, evt.occurrenceDate);
                         }}
-                        className={`w-full text-left px-1 sm:px-1.5 py-0.5 rounded-md text-[10px] font-bold truncate flex items-center gap-1 border-l-2 ${palette.surfaceClass}`}
+                        className={`w-full text-left px-0.5 sm:px-1.5 py-0.5 rounded-[5px] sm:rounded-md text-[9px] sm:text-[10px] leading-tight font-bold truncate flex items-center gap-0.5 border-l-2 ${palette.surfaceClass}`}
                         style={{ borderLeftColor: palette.hex }}
                       >
                         <span className="truncate">{evt.title}</span>
@@ -153,7 +153,7 @@ export default function MonthView({ instances }: MonthViewProps) {
                     );
                   })}
                   {overflowCount > 0 && (
-                    <div className="text-[10px] font-bold text-sky-600 dark:text-sky-400 px-1">
+                    <div className="text-[9px] sm:text-[10px] font-bold text-sky-600 dark:text-sky-400 px-0.5 sm:px-1 whitespace-nowrap">
                       +{overflowCount} 筆
                     </div>
                   )}

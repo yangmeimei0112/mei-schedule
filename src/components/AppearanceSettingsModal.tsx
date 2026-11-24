@@ -215,6 +215,16 @@ export default function AppearanceSettingsModal() {
             </div>
           </div>
         </section>
+
+        <div className="pt-3 border-t border-[var(--border-subtle)] flex items-center justify-between gap-2 text-[11px] text-[var(--text-muted)]">
+          <span className="font-semibold">咩時光 MeiSchedule</span>
+          <span
+            data-testid="app-version-badge"
+            className="font-mono font-bold px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-400/25"
+          >
+            v1.1.0
+          </span>
+        </div>
       </div>
     </div>
   );

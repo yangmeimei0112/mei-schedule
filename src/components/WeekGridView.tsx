@@ -173,7 +173,7 @@ export default function WeekGridView({ mode, instances }: WeekGridViewProps) {
       className="bento-glass-card overflow-hidden flex flex-col"
     >
       <div className="overflow-x-auto">
-        <div className={mode === 'week' ? 'min-w-[680px]' : 'min-w-[340px]'}>
+        <div className={mode === 'week' ? 'min-w-[740px]' : 'min-w-[300px]'}>
           {/* Column Headers */}
           <div
             className="grid border-b border-[var(--border-subtle)] bg-[var(--surface-subtle)]/75"
@@ -181,7 +181,7 @@ export default function WeekGridView({ mode, instances }: WeekGridViewProps) {
               gridTemplateColumns: `56px repeat(${dayColumns.length}, minmax(0, 1fr))`
             }}
           >
-            <div className="p-2 text-[10px] font-bold text-[var(--text-muted)] flex items-center justify-center">
+            <div className="p-2 text-[10px] font-bold text-[var(--text-muted)] flex items-center justify-center whitespace-nowrap">
               時段
             </div>
             {dayColumns.map((col) => {
@@ -191,20 +191,20 @@ export default function WeekGridView({ mode, instances }: WeekGridViewProps) {
               return (
                 <div
                   key={col.dateKey}
-                  className={`p-2 border-l border-[var(--border-subtle)] space-y-1 ${
+                  className={`p-1.5 sm:p-2 border-l border-[var(--border-subtle)] space-y-1 ${
                     isToday ? 'bg-sky-500/10' : ''
                   }`}
                 >
                   <button
                     type="button"
                     onClick={() => setSelectedDate(col.dateKey)}
-                    className="w-full flex items-center justify-between gap-1 text-left"
+                    className="w-full flex items-center justify-between gap-1 text-left flex-nowrap"
                   >
-                    <span className="text-[11px] font-semibold text-[var(--text-muted)]">
+                    <span className="text-[11px] font-semibold text-[var(--text-muted)] whitespace-nowrap shrink-0">
                       {col.weekday}
                     </span>
                     <span
-                      className={`px-2 py-0.5 rounded-full text-xs font-extrabold font-mono ${
+                      className={`px-1.5 sm:px-2 py-0.5 rounded-full text-[11px] sm:text-xs font-extrabold font-mono whitespace-nowrap shrink-0 ${
                         isToday
                           ? 'bg-sky-500 text-white'
                           : isSelected

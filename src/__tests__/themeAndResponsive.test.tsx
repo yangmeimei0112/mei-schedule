@@ -279,4 +279,40 @@ describe('M1 Visual System: 3 Themes x 2 Modes, Sky-Blue Toast, dvh & 4 Aspect R
       expect(EMOJI_REGEX.test(text)).toBe(false);
     }
   });
+
+  it('v1.1.0 multi-device regressions: mobile defaults sidebar closed, mei-dock sits below modals & auto-collapses on mobile, and displays v1.1.0', async () => {
+    const origWidth = window.innerWidth;
+    Object.defineProperty(window, 'innerWidth', { value: 390, configurable: true, writable: true });
+
+    try {
+      const { unmount } = render(<App />);
+      // Mobile (<1024px) must NOT show full-screen blocking sidebar overlay on initial load
+      expect(screen.queryByTestId('mobile-sidebar-overlay')).toBeNull();
+
+      // Appearance settings modal exposes v1.1.0 release badge
+      fireEvent.click(screen.getByTestId('open-appearance-modal-btn'));
+      expect(await screen.findByTestId('app-version-badge')).toHaveTextContent('v1.1.0');
+      unmount();
+
+      // Verify mei-dock.js auto-collapses on mobile, stays below z-50 modals (z-index: 35), and adapts to dark mode
+      const dockCode = fs.readFileSync(path.join(ROOT_DIR, 'public/sdk/mei-dock.js'), 'utf8');
+      expect(dockCode).toContain('z-index: 35;');
+      expect(dockCode).toContain('html.dark .mei-dock-capsule');
+
+      window.location.hash = '';
+      delete window.__MEI_STUDIO_DOCK_MOUNTED__;
+      document.getElementById('mei-studio-dock-root')?.remove();
+      new Function(dockCode)();
+      const dockEl = document.getElementById('mei-studio-dock-root');
+      expect(dockEl).not.toBeNull();
+      expect(dockEl?.classList.contains('mei-dock-collapsed')).toBe(true);
+      dockEl?.remove();
+    } finally {
+      Object.defineProperty(window, 'innerWidth', {
+        value: origWidth,
+        configurable: true,
+        writable: true
+      });
+    }
+  });
 });

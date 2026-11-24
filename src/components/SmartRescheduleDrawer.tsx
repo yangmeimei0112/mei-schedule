@@ -94,7 +94,7 @@ export default function SmartRescheduleDrawer() {
         className="landscape-compact-modal max-h-dvh-92 sm:max-h-none sm:h-full w-full sm:max-w-lg bg-[var(--surface-glass-strong)] border-t sm:border-t-0 sm:border-l border-[var(--border-subtle)] rounded-t-3xl sm:rounded-none shadow-2xl flex flex-col overflow-hidden"
       >
         {/* Header */}
-        <div className="px-5 py-4 border-b border-[var(--border-subtle)] flex items-center justify-between gap-2">
+        <div className="landscape-compact-drawer-bar px-4 sm:px-5 py-3.5 sm:py-4 border-b border-[var(--border-subtle)] flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <LucideIcon name="wand-sparkles" size={18} className="text-sky-500" />
             <div>
@@ -267,11 +267,11 @@ export default function SmartRescheduleDrawer() {
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3.5 border-t border-[var(--border-subtle)] bg-[var(--surface-subtle)]/75 flex items-center justify-between gap-3 pb-safe-bottom">
+        <div className="landscape-compact-drawer-bar px-4 sm:px-5 py-3 border-t border-[var(--border-subtle)] bg-[var(--surface-subtle)]/75 flex items-center justify-between gap-2 pb-safe-bottom">
           <button
             type="button"
             onClick={closeModal}
-            className="btn-sky-secondary px-4 py-2 rounded-xl text-xs font-bold"
+            className="btn-sky-secondary px-3 sm:px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap shrink-0"
           >
             取消預覽
           </button>
@@ -280,9 +280,9 @@ export default function SmartRescheduleDrawer() {
             data-testid="smart-apply-proposals-btn"
             disabled={selectedCount === 0}
             onClick={handleApply}
-            className="btn-sky-primary px-5 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 disabled:opacity-45"
+            className="btn-sky-primary px-3.5 sm:px-5 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 disabled:opacity-45"
           >
-            <LucideIcon name="check" size={14} />
+            <LucideIcon name="check" size={14} className="shrink-0" />
             <span>套用 {selectedCount} 筆建議（可復原）</span>
           </button>
         </div>

@@ -132,6 +132,8 @@ function computeResolvedColorMode(mode: UserPreferences['colorMode']): 'light' |
 function buildInitialState(): ScheduleStoreState {
   const seed = createSeedScheduleData(new Date(), 'local-guest');
   const member = loadCurrentMember();
+  const isDesktopViewport =
+    typeof window === 'undefined' ? true : window.innerWidth >= 1024;
   return {
     hydrated: false,
     currentMember: member,
@@ -149,7 +151,7 @@ function buildInitialState(): ScheduleStoreState {
     selectedEventId: null,
     selectedInstanceDate: null,
     searchQuery: '',
-    sidebarOpen: true,
+    sidebarOpen: isDesktopViewport,
     activeModal: null,
     focusTargetEventId: null,
     focusTargetTaskId: null,

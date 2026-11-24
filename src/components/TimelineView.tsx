@@ -256,9 +256,9 @@ export default function TimelineView({ instances }: TimelineViewProps) {
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
         {/* Left/Main: Structured Visual Card Timeline */}
         <section className="xl:col-span-7 bento-glass-card p-4 sm:p-5 space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-extrabold text-[var(--text-main)] inline-flex items-center gap-1.5">
-              <LucideIcon name="milestone" size={16} className="text-sky-500" />
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+            <h2 className="text-sm font-extrabold text-[var(--text-main)] inline-flex items-center gap-1.5 whitespace-nowrap shrink-0">
+              <LucideIcon name="milestone" size={16} className="text-sky-500 shrink-0" />
               <span>視覺化今日時間軸</span>
             </h2>
             <span className="text-[11px] text-[var(--text-muted)]">
@@ -535,9 +535,9 @@ export default function TimelineView({ instances }: TimelineViewProps) {
 
         {/* Right: Hourly Interactive Drop Grid (06:00–23:00) */}
         <section className="xl:col-span-5 bento-glass-card p-4 sm:p-5 space-y-2">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-extrabold text-[var(--text-main)] inline-flex items-center gap-1.5">
-              <LucideIcon name="layout-dashboard" size={15} className="text-sky-500" />
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+            <h2 className="text-sm font-extrabold text-[var(--text-main)] inline-flex items-center gap-1.5 whitespace-nowrap shrink-0">
+              <LucideIcon name="layout-dashboard" size={15} className="text-sky-500 shrink-0" />
               <span>拖曳排程時段格</span>
             </h2>
             <span className="text-[11px] text-[var(--text-muted)]">拖入待辦或行程即可改期</span>
