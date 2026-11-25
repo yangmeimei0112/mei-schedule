@@ -360,7 +360,11 @@ function scheduleReducer(state: ScheduleStoreState, action: Action): ScheduleSto
       return {
         ...state,
         selectedEventId: action.eventId,
-        selectedInstanceDate: action.instanceDate ?? null
+        selectedInstanceDate: action.instanceDate ?? null,
+        activeModal:
+          action.eventId !== null && state.activeModal === 'event-create'
+            ? null
+            : state.activeModal
       };
 
     case 'SET_SEARCH_QUERY':
@@ -376,6 +380,8 @@ function scheduleReducer(state: ScheduleStoreState, action: Action): ScheduleSto
       return {
         ...state,
         activeModal: action.modal,
+        selectedEventId: action.modal === 'event-create' ? null : state.selectedEventId,
+        selectedInstanceDate: action.modal === 'event-create' ? null : state.selectedInstanceDate,
         focusTargetEventId:
           action.focusTargetEventId !== undefined ? action.focusTargetEventId : state.focusTargetEventId,
         focusTargetTaskId:

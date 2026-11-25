@@ -138,4 +138,87 @@ describe('Five Core Schedule Views, Quick Capture NLP, Month Title Bars & Comman
     fireEvent.keyDown(window, { key: 'i' });
     expect(await screen.findByTestId('task-inbox-drawer')).toBeInTheDocument();
   });
+
+  it('mobile bottom-right + FAB opens a completely blank EventDetailDrawer (not QuickCaptureBar), validates input, and creates events cleanly', async () => {
+    render(<App />);
+    await waitFor(() => expect(screen.getByTestId('timeline-view')).toBeInTheDocument());
+
+    const quickCaptureInput = screen.getByTestId('quick-capture-input');
+    const fab = screen.getByTestId('mobile-quick-add-fab');
+
+    // Tap bottom-right + button -> opens blank EventDetailDrawer in create mode (NEVER focuses QuickCaptureBar)
+    fireEvent.click(fab);
+    const drawer = await screen.findByTestId('event-detail-drawer');
+    expect(drawer).toHaveAttribute('data-drawer-mode', 'create');
+    expect(document.activeElement).not.toBe(quickCaptureInput);
+    expect(within(drawer).getByRole('heading', { name: '新增行程' })).toBeInTheDocument();
+
+    // Verify all inputs start completely blank / unfilled
+    const titleInput = within(drawer).getByTestId('event-detail-title-input') as HTMLInputElement;
+    const startInput = within(drawer).getByTestId('event-detail-start-input') as HTMLInputElement;
+    const endInput = within(drawer).getByTestId('event-detail-end-input') as HTMLInputElement;
+    const allDayCheckbox = within(drawer).getByTestId('event-detail-allday-checkbox') as HTMLInputElement;
+    const categoryInput = within(drawer).getByTestId('event-detail-category-input') as HTMLInputElement;
+
+    expect(titleInput.value).toBe('');
+    expect(startInput.value).toBe('');
+    expect(endInput.value).toBe('');
+    expect(allDayCheckbox.checked).toBe(false);
+    expect(categoryInput.value).toBe('');
+
+    // Edit-only elements (Google Calendar link, delete button, comments section) must NOT appear in create mode
+    expect(within(drawer).queryByText('Google 日曆')).toBeNull();
+    expect(within(drawer).queryByTestId('event-detail-delete-btn')).toBeNull();
+    expect(within(drawer).queryByTestId('event-comments-section')).toBeNull();
+    expect(within(drawer).getByTestId('event-detail-cancel-btn')).toBeInTheDocument();
+
+    // Cancel closes cleanly without creating any event
+    fireEvent.click(within(drawer).getByTestId('event-detail-cancel-btn'));
+    await waitFor(() => expect(screen.queryByTestId('event-detail-drawer')).toBeNull());
+
+    // Re-open via + FAB and verify validation when submitting empty form
+    fireEvent.click(fab);
+    const drawer2 = await screen.findByTestId('event-detail-drawer');
+    fireEvent.click(within(drawer2).getByTestId('event-detail-save-btn'));
+    expect(within(drawer2).getByTestId('event-detail-validation-error')).toHaveTextContent('請輸入行程標題');
+
+    // Fill title only -> requires start time (or all-day)
+    fireEvent.change(within(drawer2).getByTestId('event-detail-title-input'), {
+      target: { value: '設計師下午茶同步' }
+    });
+    fireEvent.click(within(drawer2).getByTestId('event-detail-save-btn'));
+    expect(within(drawer2).getByTestId('event-detail-validation-error')).toHaveTextContent('請選擇開始時間');
+
+    // Pick start time -> automatically suggests end time (+default duration) and saves cleanly
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    fireEvent.change(within(drawer2).getByTestId('event-detail-start-input'), {
+      target: { value: `${yyyy}-${mm}-${dd}T15:00` }
+    });
+    const endInput2 = within(drawer2).getByTestId('event-detail-end-input') as HTMLInputElement;
+    expect(endInput2.value).not.toBe('');
+
+    fireEvent.click(within(drawer2).getByTestId('event-detail-save-btn'));
+    await waitFor(() => {
+      expect(screen.queryByTestId('event-detail-drawer')).toBeNull();
+      expect(screen.getAllByText('設計師下午茶同步').length).toBeGreaterThan(0);
+    });
+
+    // Re-open via + FAB and create an All-Day event cleanly
+    fireEvent.click(fab);
+    const drawer3 = await screen.findByTestId('event-detail-drawer');
+    fireEvent.change(within(drawer3).getByTestId('event-detail-title-input'), {
+      target: { value: '全天團隊靈感日' }
+    });
+    fireEvent.click(within(drawer3).getByTestId('event-detail-allday-checkbox'));
+    expect(within(drawer3).getByTestId('event-detail-start-date-input')).toBeInTheDocument();
+    fireEvent.click(within(drawer3).getByTestId('event-detail-save-btn'));
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('event-detail-drawer')).toBeNull();
+      expect(screen.getAllByText('全天團隊靈感日').length).toBeGreaterThan(0);
+    });
+  });
 });

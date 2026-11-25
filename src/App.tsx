@@ -84,6 +84,7 @@ function MeiScheduleShell() {
     setViewMode,
     goToToday,
     selectEvent,
+    setSidebarOpen,
     setInboxDrawerOpen,
     openModal,
     closeModal,
@@ -119,6 +120,15 @@ function MeiScheduleShell() {
     quickCaptureInputRef.current?.focus();
     quickCaptureInputRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
   }, []);
+
+  const handleOpenCreateEvent = useCallback(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setSidebarOpen(false);
+    }
+    setInboxDrawerOpen(false);
+    selectEvent(null);
+    openModal('event-create');
+  }, [setSidebarOpen, setInboxDrawerOpen, selectEvent, openModal]);
 
   // Subscribe to Electron global shortcut Quick-Capture trigger (Cmd/Ctrl+Shift+Space)
   useEffect(() => {
@@ -356,11 +366,11 @@ function MeiScheduleShell() {
       <TaskInboxDrawer />
 
       {/* Mobile Bottom One-Handed Navigation */}
-      <MobileBottomNav onFocusQuickCapture={handleFocusQuickCapture} />
+      <MobileBottomNav onOpenCreateEvent={handleOpenCreateEvent} />
 
       {/* Conditionally-Mounted Lazy Modals & Drawers (Preloaded at startup -> 0ms open, 0 idle overhead) */}
       <Suspense fallback={null}>
-        {selectedEventId && <EventDetailDrawer />}
+        {(selectedEventId || activeModal === 'event-create') && <EventDetailDrawer />}
         {activeModal === 'focus' && <FocusTimerModal />}
         {activeModal === 'analytics' && <AnalyticsDashboard />}
         {activeModal === 'smart' && <SmartRescheduleDrawer />}

@@ -39,6 +39,7 @@ export default function CommandPalette() {
 
   const quickCommands = useMemo(
     () => [
+      { id: 'cmd-create-event', label: '新增空白行程（完整表單）', icon: 'calendar-plus', run: () => openModal('event-create') },
       { id: 'cmd-today', label: '跳轉回到今天', icon: 'calendar-check', run: () => goToToday() },
       {
         id: 'cmd-toggle-inbox',

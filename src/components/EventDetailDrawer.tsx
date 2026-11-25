@@ -1,11 +1,13 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { LucideIcon } from './BrandMark';
 import { COLOR_TOKEN_LIST, COLOR_TOKEN_PALETTE } from '../data/seedData';
 import { buildGoogleCalendarUrl } from '../services/icsService';
 import {
   applyRecurringDelete,
   applyRecurringEdit,
-  describeRecurrenceRule
+  describeRecurrenceRule,
+  parseLocalDateKey,
+  toLocalDateKey
 } from '../services/recurrenceEngine';
 import { generateUuidV4 } from '../services/scheduleSyncService';
 import { useScheduleStore } from '../store/useScheduleStore';
@@ -42,17 +44,23 @@ export default function EventDetailDrawer() {
     events,
     calendars,
     comments,
+    selectedDate,
     selectedEventId,
     selectedInstanceDate,
+    activeModal,
+    preferences,
     selectEvent,
+    createEvent,
     updateEvent,
     deleteEvent,
     replaceEventsAtomic,
     addEventComment,
     deleteEventComment,
     completeEventEarly,
+    setSelectedDate,
     getCurrentUserRoleForCalendar,
-    openModal
+    openModal,
+    closeModal
   } = useScheduleStore();
 
   const event = useMemo(
@@ -60,13 +68,33 @@ export default function EventDetailDrawer() {
     [events, selectedEventId]
   );
 
+  const isCreateMode = activeModal === 'event-create' && !event;
+
+  const defaultCreateCalendar = useMemo(() => {
+    const writable = calendars.filter((c) => getCurrentUserRoleForCalendar(c.id) !== 'viewer');
+    const activeSet = preferences.activeCalendarSet;
+    if (activeSet !== 'all') {
+      const setMatch = writable.find((c) => c.calendarSet === activeSet && c.visible !== false);
+      if (setMatch) return setMatch;
+    }
+    return writable.find((c) => c.visible !== false) || writable[0] || calendars[0] || null;
+  }, [calendars, getCurrentUserRoleForCalendar, preferences.activeCalendarSet]);
+
+  const defaultCreateCalendarRef = useRef(defaultCreateCalendar);
+  defaultCreateCalendarRef.current = defaultCreateCalendar;
+
+  const titleInputRef = useRef<HTMLInputElement>(null);
+  const startInputRef = useRef<HTMLInputElement>(null);
+
   const [title, setTitle] = useState('');
   const [calendarId, setCalendarId] = useState('');
   const [startLocal, setStartLocal] = useState('');
   const [endLocal, setEndLocal] = useState('');
+  const [allDayStartDate, setAllDayStartDate] = useState('');
+  const [allDayEndDate, setAllDayEndDate] = useState('');
   const [allDay, setAllDay] = useState(false);
   const [colorToken, setColorToken] = useState<ColorToken>('sky');
-  const [categoryTag, setCategoryTag] = useState('工作');
+  const [categoryTag, setCategoryTag] = useState('');
   const [location, setLocation] = useState('');
   const [notes, setNotes] = useState('');
   const [priority, setPriority] = useState<PriorityLevel>(2);
@@ -75,6 +103,10 @@ export default function EventDetailDrawer() {
   const [isFlexible, setIsFlexible] = useState(false);
   const [subtasks, setSubtasks] = useState<Subtask[]>([]);
   const [newSubtaskText, setNewSubtaskText] = useState('');
+  const [validationError, setValidationError] = useState<{
+    field: 'title' | 'start';
+    message: string;
+  } | null>(null);
 
   // Recurrence state
   const [recEnabled, setRecEnabled] = useState(false);
@@ -88,11 +120,42 @@ export default function EventDetailDrawer() {
   const [commentInput, setCommentInput] = useState('');
 
   useEffect(() => {
+    setValidationError(null);
+    if (isCreateMode) {
+      const defCal = defaultCreateCalendarRef.current;
+      setTitle('');
+      setCalendarId(defCal?.id || '');
+      setStartLocal('');
+      setEndLocal('');
+      setAllDayStartDate('');
+      setAllDayEndDate('');
+      setAllDay(false);
+      setColorToken(defCal?.colorToken || 'sky');
+      setCategoryTag('');
+      setLocation('');
+      setNotes('');
+      setPriority(2);
+      setBufferBeforeMin(0);
+      setBufferAfterMin(0);
+      setIsFlexible(false);
+      setSubtasks([]);
+      setNewSubtaskText('');
+      setRecEnabled(false);
+      setRecFreq('weekly');
+      setRecInterval(1);
+      setRecWeekdays([new Date().getDay()]);
+      setRecUntil('');
+      setEditScope('all');
+      return;
+    }
+
     if (!event) return;
     setTitle(event.title);
     setCalendarId(event.calendarId);
     setStartLocal(toLocalDateTimeInput(event.startAt));
     setEndLocal(toLocalDateTimeInput(event.endAt));
+    setAllDayStartDate(toLocalDateKey(new Date(event.startAt)));
+    setAllDayEndDate(toLocalDateKey(new Date(event.endAt)));
     setAllDay(event.allDay);
     setColorToken(event.colorToken);
     setCategoryTag(event.categoryTag);
@@ -103,6 +166,7 @@ export default function EventDetailDrawer() {
     setBufferAfterMin(event.bufferAfterMin);
     setIsFlexible(event.isFlexible);
     setSubtasks(event.subtasks || []);
+    setNewSubtaskText('');
     if (event.recurrenceRule) {
       setRecEnabled(true);
       setRecFreq(event.recurrenceRule.freq);
@@ -117,43 +181,153 @@ export default function EventDetailDrawer() {
       setRecUntil('');
     }
     setEditScope('all');
-  }, [event]);
+  }, [event, isCreateMode]);
 
-  if (!event) return null;
+  if (!event && !isCreateMode) return null;
 
-  const userRole = getCurrentUserRoleForCalendar(event.calendarId);
-  const isViewerOnly = userRole === 'viewer';
-  const eventComments = comments.filter((c) => c.eventId === event.id);
-  const occurrenceDate = selectedInstanceDate || event.startAt.slice(0, 10);
+  const userRole = event ? getCurrentUserRoleForCalendar(event.calendarId) : 'owner';
+  const isViewerOnly = !isCreateMode && userRole === 'viewer';
+  const eventComments = event ? comments.filter((c) => c.eventId === event.id) : [];
+  const occurrenceDate = selectedInstanceDate || (event ? event.startAt.slice(0, 10) : selectedDate);
+
+  const handleClose = () => {
+    if (isCreateMode) {
+      closeModal();
+    } else {
+      selectEvent(null);
+    }
+  };
+
+  const getReferenceDateForRule = (): Date => {
+    if (allDay && allDayStartDate) return parseLocalDateKey(allDayStartDate);
+    if (startLocal) {
+      const parsed = new Date(startLocal);
+      if (!Number.isNaN(parsed.getTime())) return parsed;
+    }
+    if (event) return new Date(event.startAt);
+    return parseLocalDateKey(selectedDate);
+  };
 
   const buildRulePayload = (): RecurrenceRule | null => {
     if (!recEnabled) return null;
+    const refDate = getReferenceDateForRule();
     const rule: RecurrenceRule = {
       freq: recFreq,
       interval: Math.max(1, recInterval),
       until: recUntil.trim() ? recUntil.trim() : null
     };
     if (recFreq === 'weekly') {
-      rule.byWeekday = recWeekdays.length > 0 ? recWeekdays : [new Date(event.startAt).getDay()];
+      rule.byWeekday = recWeekdays.length > 0 ? recWeekdays : [refDate.getDay()];
     }
     if (recFreq === 'monthly') {
-      rule.byMonthDay = new Date(startLocal || event.startAt).getDate();
+      rule.byMonthDay = refDate.getDate();
     }
     return rule;
+  };
+
+  const handleStartLocalChange = (nextStart: string) => {
+    setStartLocal(nextStart);
+    if (validationError?.field === 'start') setValidationError(null);
+    if (nextStart) {
+      const startMs = Date.parse(nextStart);
+      if (!Number.isNaN(startMs)) {
+        const endMs = endLocal ? Date.parse(endLocal) : Number.NaN;
+        if (Number.isNaN(endMs) || endMs <= startMs) {
+          const durationMin = Math.max(15, preferences.defaultEventMinutes || 60);
+          setEndLocal(toLocalDateTimeInput(new Date(startMs + durationMin * 60_000).toISOString()));
+        }
+      }
+    }
+  };
+
+  const handleAllDayToggle = (checked: boolean) => {
+    setAllDay(checked);
+    if (validationError?.field === 'start') setValidationError(null);
+    if (checked && !allDayStartDate) {
+      const derivedStart = startLocal ? startLocal.slice(0, 10) : selectedDate;
+      const derivedEnd =
+        endLocal && endLocal.slice(0, 10) >= derivedStart ? endLocal.slice(0, 10) : derivedStart;
+      setAllDayStartDate(derivedStart);
+      setAllDayEndDate(derivedEnd);
+    }
   };
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     if (isViewerOnly) return;
 
-    const startIso = startLocal ? new Date(startLocal).toISOString() : event.startAt;
-    let endIso = endLocal ? new Date(endLocal).toISOString() : event.endAt;
-    if (Date.parse(endIso) <= Date.parse(startIso)) {
-      endIso = new Date(Date.parse(startIso) + 30 * 60_000).toISOString();
+    const trimmedTitle = title.trim();
+    if (isCreateMode && !trimmedTitle) {
+      setValidationError({ field: 'title', message: '請輸入行程標題' });
+      titleInputRef.current?.focus();
+      return;
     }
 
+    let startIso = '';
+    let endIso = '';
+
+    if (allDay) {
+      if (isCreateMode && !allDayStartDate) {
+        setValidationError({ field: 'start', message: '請選擇行程日期' });
+        startInputRef.current?.focus();
+        return;
+      }
+      const startDateKey = allDayStartDate || (event ? toLocalDateKey(new Date(event.startAt)) : selectedDate);
+      const endDateKey =
+        allDayEndDate && allDayEndDate >= startDateKey ? allDayEndDate : startDateKey;
+      const startObj = parseLocalDateKey(startDateKey);
+      startObj.setHours(0, 0, 0, 0);
+      const endObj = parseLocalDateKey(endDateKey);
+      endObj.setHours(23, 59, 59, 0);
+      startIso = startObj.toISOString();
+      endIso = endObj.toISOString();
+    } else {
+      if (isCreateMode && !startLocal) {
+        setValidationError({ field: 'start', message: '請選擇開始時間，或勾選「全天行程」' });
+        startInputRef.current?.focus();
+        return;
+      }
+      startIso = startLocal ? new Date(startLocal).toISOString() : event!.startAt;
+      const defaultDurationMs = Math.max(15, preferences.defaultEventMinutes || 60) * 60_000;
+      endIso = endLocal
+        ? new Date(endLocal).toISOString()
+        : event
+          ? event.endAt
+          : new Date(Date.parse(startIso) + defaultDurationMs).toISOString();
+      if (Date.parse(endIso) <= Date.parse(startIso)) {
+        endIso = new Date(Date.parse(startIso) + 30 * 60_000).toISOString();
+      }
+    }
+
+    setValidationError(null);
+
+    if (isCreateMode) {
+      createEvent({
+        title: trimmedTitle,
+        calendarId: calendarId || defaultCreateCalendar?.id,
+        startAt: startIso,
+        endAt: endIso,
+        allDay,
+        colorToken,
+        categoryTag: categoryTag.trim() || '一般',
+        location: location.trim(),
+        notes: notes.trim(),
+        priority,
+        bufferBeforeMin: Math.max(0, bufferBeforeMin),
+        bufferAfterMin: Math.max(0, bufferAfterMin),
+        isFlexible,
+        subtasks,
+        recurrenceRule: buildRulePayload()
+      });
+      setSelectedDate(toLocalDateKey(new Date(startIso)));
+      closeModal();
+      return;
+    }
+
+    if (!event) return;
+
     const updates = {
-      title: title.trim() || event.title,
+      title: trimmedTitle || event.title,
       calendarId,
       startAt: startIso,
       endAt: endIso,
@@ -183,7 +357,7 @@ export default function EventDetailDrawer() {
   };
 
   const handleDelete = () => {
-    if (isViewerOnly) return;
+    if (isViewerOnly || !event) return;
     if (event.recurrenceRule && editScope !== 'all') {
       const nextEvents = applyRecurringDelete(events, event.id, occurrenceDate, editScope);
       replaceEventsAtomic(
@@ -199,8 +373,14 @@ export default function EventDetailDrawer() {
 
   const handleQuickShiftDuration = (deltaMinutes: number) => {
     if (isViewerOnly) return;
-    const s = new Date(startLocal || event.startAt).getTime();
-    const curE = new Date(endLocal || event.endAt).getTime();
+    const baseStart = startLocal || event?.startAt;
+    if (!baseStart) return;
+    const s = new Date(baseStart).getTime();
+    const curE = endLocal
+      ? new Date(endLocal).getTime()
+      : event
+        ? new Date(event.endAt).getTime()
+        : s + Math.max(15, preferences.defaultEventMinutes || 60) * 60_000;
     const nextE = Math.max(s + 15 * 60_000, curE + deltaMinutes * 60_000);
     setEndLocal(toLocalDateTimeInput(new Date(nextE).toISOString()));
   };
@@ -214,7 +394,7 @@ export default function EventDetailDrawer() {
 
   const handlePostComment = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!commentInput.trim()) return;
+    if (!event || !commentInput.trim()) return;
     addEventComment(event.id, commentInput.trim());
     setCommentInput('');
   };
@@ -228,13 +408,14 @@ export default function EventDetailDrawer() {
   return (
     <div
       data-testid="event-detail-drawer"
+      data-drawer-mode={isCreateMode ? 'create' : 'edit'}
       className="fixed inset-0 z-50 flex items-end sm:items-stretch sm:justify-end bg-slate-950/45 backdrop-blur-sm"
-      onClick={() => selectEvent(null)}
+      onClick={handleClose}
     >
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="行程詳情與即時留言"
+        aria-label={isCreateMode ? '新增行程' : '行程詳情與即時留言'}
         onClick={(e) => e.stopPropagation()}
         className="landscape-compact-modal max-h-dvh-92 sm:max-h-none sm:h-full w-full sm:max-w-lg bg-[var(--surface-glass-strong)] border-t sm:border-t-0 sm:border-l border-[var(--border-subtle)] rounded-t-3xl sm:rounded-none shadow-2xl flex flex-col overflow-hidden"
       >
@@ -247,24 +428,26 @@ export default function EventDetailDrawer() {
               }`}
             />
             <h2 className="text-base font-extrabold text-[var(--text-main)] truncate">
-              {isViewerOnly ? '檢視共享行程（唯讀）' : '編輯行程與討論'}
+              {isCreateMode ? '新增行程' : isViewerOnly ? '檢視共享行程（唯讀）' : '編輯行程與討論'}
             </h2>
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
-            <a
-              href={buildGoogleCalendarUrl(event)}
-              target="_blank"
-              rel="noopener noreferrer"
-              title="一鍵加入 Google 日曆"
-              className="btn-sky-secondary px-2.5 py-1.5 rounded-xl text-[11px] font-bold inline-flex items-center gap-1"
-            >
-              <LucideIcon name="external-link" size={12} />
-              <span>Google 日曆</span>
-            </a>
+            {!isCreateMode && event && (
+              <a
+                href={buildGoogleCalendarUrl(event)}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="一鍵加入 Google 日曆"
+                className="btn-sky-secondary px-2.5 py-1.5 rounded-xl text-[11px] font-bold inline-flex items-center gap-1"
+              >
+                <LucideIcon name="external-link" size={12} />
+                <span>Google 日曆</span>
+              </a>
+            )}
             <button
               type="button"
               data-testid="close-event-drawer-btn"
-              onClick={() => selectEvent(null)}
+              onClick={handleClose}
               aria-label="關閉抽屜"
               className="p-1.5 rounded-xl hover:bg-[var(--surface-subtle)] text-[var(--text-muted)]"
             >
@@ -282,47 +465,117 @@ export default function EventDetailDrawer() {
                 行程標題
               </label>
               <input
+                ref={titleInputRef}
                 type="text"
                 data-testid="event-detail-title-input"
                 value={title}
                 disabled={isViewerOnly}
-                onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl text-sm font-bold bg-[var(--surface-subtle)] border border-[var(--border-subtle)] text-[var(--text-main)] focus:outline-none focus:border-[var(--accent-primary)] disabled:opacity-65"
+                placeholder="請輸入行程標題..."
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  if (validationError?.field === 'title') setValidationError(null);
+                }}
+                className={`w-full px-3.5 py-2.5 rounded-xl text-sm font-bold bg-[var(--surface-subtle)] border text-[var(--text-main)] placeholder:text-[var(--text-muted)]/70 focus:outline-none focus:border-[var(--accent-primary)] disabled:opacity-65 ${
+                  validationError?.field === 'title' ? 'border-rose-500' : 'border-[var(--border-subtle)]'
+                }`}
               />
+              {validationError?.field === 'title' && (
+                <p
+                  role="alert"
+                  data-testid="event-detail-validation-error"
+                  className="mt-1 text-xs font-semibold text-rose-500"
+                >
+                  {validationError.message}
+                </p>
+              )}
             </div>
 
-            {/* Time Inputs + Mobile -15m/+15m */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-bold text-[var(--text-muted)] mb-1">開始時間</label>
-                <input
-                  type="datetime-local"
-                  value={startLocal}
-                  disabled={isViewerOnly || allDay}
-                  onChange={(e) => setStartLocal(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl text-xs font-mono bg-[var(--surface-subtle)] border border-[var(--border-subtle)] text-[var(--text-main)]"
-                />
+            {/* Time / Date Inputs + Mobile -15m/+15m */}
+            {allDay ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-[var(--text-muted)] mb-1">開始日期</label>
+                  <input
+                    ref={startInputRef}
+                    type="date"
+                    data-testid="event-detail-start-date-input"
+                    value={allDayStartDate}
+                    disabled={isViewerOnly}
+                    onChange={(e) => {
+                      const nextDate = e.target.value;
+                      setAllDayStartDate(nextDate);
+                      if (!allDayEndDate || allDayEndDate < nextDate) {
+                        setAllDayEndDate(nextDate);
+                      }
+                      if (validationError?.field === 'start') setValidationError(null);
+                    }}
+                    className={`w-full px-3 py-2 rounded-xl text-xs font-mono bg-[var(--surface-subtle)] border text-[var(--text-main)] ${
+                      validationError?.field === 'start' ? 'border-rose-500' : 'border-[var(--border-subtle)]'
+                    }`}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-[var(--text-muted)] mb-1">結束日期</label>
+                  <input
+                    type="date"
+                    data-testid="event-detail-end-date-input"
+                    value={allDayEndDate}
+                    min={allDayStartDate || undefined}
+                    disabled={isViewerOnly}
+                    onChange={(e) => setAllDayEndDate(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl text-xs font-mono bg-[var(--surface-subtle)] border border-[var(--border-subtle)] text-[var(--text-main)]"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-xs font-bold text-[var(--text-muted)] mb-1">結束時間</label>
-                <input
-                  type="datetime-local"
-                  value={endLocal}
-                  disabled={isViewerOnly || allDay}
-                  onChange={(e) => setEndLocal(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl text-xs font-mono bg-[var(--surface-subtle)] border border-[var(--border-subtle)] text-[var(--text-main)]"
-                />
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-[var(--text-muted)] mb-1">開始時間</label>
+                  <input
+                    ref={startInputRef}
+                    type="datetime-local"
+                    data-testid="event-detail-start-input"
+                    value={startLocal}
+                    disabled={isViewerOnly}
+                    onChange={(e) => handleStartLocalChange(e.target.value)}
+                    className={`w-full px-3 py-2 rounded-xl text-xs font-mono bg-[var(--surface-subtle)] border text-[var(--text-main)] ${
+                      validationError?.field === 'start' ? 'border-rose-500' : 'border-[var(--border-subtle)]'
+                    }`}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-[var(--text-muted)] mb-1">結束時間</label>
+                  <input
+                    type="datetime-local"
+                    data-testid="event-detail-end-input"
+                    value={endLocal}
+                    disabled={isViewerOnly}
+                    onChange={(e) => setEndLocal(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl text-xs font-mono bg-[var(--surface-subtle)] border border-[var(--border-subtle)] text-[var(--text-main)]"
+                  />
+                </div>
               </div>
-            </div>
+            )}
+
+            {validationError?.field === 'start' && (
+              <p
+                role="alert"
+                data-testid="event-detail-validation-error"
+                className="-mt-2 text-xs font-semibold text-rose-500"
+              >
+                {validationError.message}
+              </p>
+            )}
 
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <div className="flex items-center gap-3 text-xs">
                 <label className="inline-flex items-center gap-1.5 cursor-pointer font-semibold">
                   <input
                     type="checkbox"
+                    data-testid="event-detail-allday-checkbox"
                     checked={allDay}
                     disabled={isViewerOnly}
-                    onChange={(e) => setAllDay(e.target.checked)}
+                    onChange={(e) => handleAllDayToggle(e.target.checked)}
                     className="rounded theme-checkbox"
                   />
                   <span>全天行程</span>
@@ -339,7 +592,7 @@ export default function EventDetailDrawer() {
                 </label>
               </div>
 
-              {!isViewerOnly && !allDay && (
+              {!isViewerOnly && !allDay && Boolean(startLocal || event) && (
                 <div className="inline-flex items-center gap-1">
                   <button
                     type="button"
@@ -369,21 +622,26 @@ export default function EventDetailDrawer() {
                   onChange={(e) => setCalendarId(e.target.value)}
                   className="w-full px-2.5 py-2 rounded-xl text-xs bg-[var(--surface-subtle)] border border-[var(--border-subtle)] text-[var(--text-main)]"
                 >
-                  {calendars.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
+                  {calendars.map((c) => {
+                    const readOnly = isCreateMode && getCurrentUserRoleForCalendar(c.id) === 'viewer';
+                    return (
+                      <option key={c.id} value={c.id} disabled={readOnly}>
+                        {readOnly ? `${c.name}（唯讀）` : c.name}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
               <div>
                 <label className="block text-xs font-bold text-[var(--text-muted)] mb-1">分類標籤</label>
                 <input
                   type="text"
+                  data-testid="event-detail-category-input"
                   value={categoryTag}
                   disabled={isViewerOnly}
+                  placeholder="選填（如：工作）"
                   onChange={(e) => setCategoryTag(e.target.value)}
-                  className="w-full px-2.5 py-2 rounded-xl text-xs bg-[var(--surface-subtle)] border border-[var(--border-subtle)] text-[var(--text-main)]"
+                  className="w-full px-2.5 py-2 rounded-xl text-xs bg-[var(--surface-subtle)] border border-[var(--border-subtle)] text-[var(--text-main)] placeholder:text-[var(--text-muted)]/70"
                 />
               </div>
               <div className="col-span-2 sm:col-span-1">
@@ -413,7 +671,9 @@ export default function EventDetailDrawer() {
                     onClick={() => setColorToken(item.token)}
                     title={item.label}
                     className={`w-7 h-7 rounded-full flex items-center justify-center transition-transform ${item.dotClass} ${
-                      colorToken === item.token ? 'ring-2 ring-offset-2 ring-[var(--accent-primary)] scale-110' : 'opacity-75 hover:opacity-100'
+                      colorToken === item.token
+                        ? 'ring-2 ring-offset-2 ring-offset-[var(--surface-glass-strong)] ring-[var(--accent-primary)] scale-110'
+                        : 'opacity-75 hover:opacity-100'
                     }`}
                   >
                     {colorToken === item.token && <LucideIcon name="check" size={13} className="text-white" />}
@@ -539,7 +799,7 @@ export default function EventDetailDrawer() {
                 </div>
               )}
 
-              {event.recurrenceRule && !isViewerOnly && (
+              {!isCreateMode && event?.recurrenceRule && !isViewerOnly && (
                 <div className="pt-2 border-t border-[var(--border-subtle)] flex items-center gap-2 flex-wrap text-[11px]">
                   <span className="font-bold text-[var(--text-muted)]">修改／刪除範圍：</span>
                   {(
@@ -654,133 +914,168 @@ export default function EventDetailDrawer() {
             </div>
           </form>
 
-          {/* Shared Live Event Comments Thread */}
-          <section
-            data-testid="event-comments-section"
-            className="pt-4 border-t border-[var(--border-subtle)] space-y-3"
-          >
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-extrabold text-[var(--text-main)] inline-flex items-center gap-1.5">
-                <LucideIcon name="message-square" size={14} className="theme-accent-text" />
-                <span>單一行程即時留言串 ({eventComments.length})</span>
-              </h3>
-              <span className="text-[10px] text-[var(--text-muted)]">支援共享日曆即時討論</span>
-            </div>
+          {/* Shared Live Event Comments Thread (Edit Mode Only) */}
+          {!isCreateMode && event && (
+            <section
+              data-testid="event-comments-section"
+              className="pt-4 border-t border-[var(--border-subtle)] space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-extrabold text-[var(--text-main)] inline-flex items-center gap-1.5">
+                  <LucideIcon name="message-square" size={14} className="theme-accent-text" />
+                  <span>單一行程即時留言串 ({eventComments.length})</span>
+                </h3>
+                <span className="text-[10px] text-[var(--text-muted)]">支援共享日曆即時討論</span>
+              </div>
 
-            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-              {eventComments.length === 0 ? (
-                <p className="text-xs text-[var(--text-muted)]">尚無留言，發起這筆行程的討論吧。</p>
-              ) : (
-                eventComments.map((c) => (
-                  <div
-                    key={c.id}
-                    data-testid={`event-comment-${c.id}`}
-                    className="p-2.5 rounded-2xl bg-[var(--surface-subtle)] border border-[var(--border-subtle)] space-y-1"
-                  >
-                    <div className="flex items-center justify-between gap-2 text-[11px]">
-                      <span className="font-extrabold theme-accent-deep">
-                        {c.authorName}
-                      </span>
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-mono text-[10px] text-[var(--text-muted)]">
-                          {new Date(c.createdAt).toLocaleTimeString('zh-TW', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: false
-                          })}
+              <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                {eventComments.length === 0 ? (
+                  <p className="text-xs text-[var(--text-muted)]">尚無留言，發起這筆行程的討論吧。</p>
+                ) : (
+                  eventComments.map((c) => (
+                    <div
+                      key={c.id}
+                      data-testid={`event-comment-${c.id}`}
+                      className="p-2.5 rounded-2xl bg-[var(--surface-subtle)] border border-[var(--border-subtle)] space-y-1"
+                    >
+                      <div className="flex items-center justify-between gap-2 text-[11px]">
+                        <span className="font-extrabold theme-accent-deep">
+                          {c.authorName}
                         </span>
-                        <button
-                          type="button"
-                          onClick={() => deleteEventComment(c.id)}
-                          aria-label="刪除留言"
-                          className="text-[var(--text-muted)] hover:text-rose-500"
-                        >
-                          <LucideIcon name="trash-2" size={11} />
-                        </button>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-mono text-[10px] text-[var(--text-muted)]">
+                            {new Date(c.createdAt).toLocaleTimeString('zh-TW', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: false
+                            })}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => deleteEventComment(c.id)}
+                            aria-label="刪除留言"
+                            className="text-[var(--text-muted)] hover:text-rose-500"
+                          >
+                            <LucideIcon name="trash-2" size={11} />
+                          </button>
+                        </div>
                       </div>
+                      <p className="text-xs text-[var(--text-main)] leading-relaxed break-words">
+                        {c.body}
+                      </p>
                     </div>
-                    <p className="text-xs text-[var(--text-main)] leading-relaxed break-words">
-                      {c.body}
-                    </p>
-                  </div>
-                ))
-              )}
-            </div>
+                  ))
+                )}
+              </div>
 
-            <form onSubmit={handlePostComment} className="flex items-center gap-1.5">
-              <input
-                type="text"
-                data-testid="event-comment-input"
-                value={commentInput}
-                onChange={(e) => setCommentInput(e.target.value)}
-                placeholder="輸入留言與共享成員同步討論..."
-                className="flex-1 px-3 py-2 rounded-xl text-xs bg-[var(--surface-subtle)] border border-[var(--border-subtle)] text-[var(--text-main)]"
-              />
-              <button
-                type="submit"
-                data-testid="event-comment-submit-btn"
-                disabled={!commentInput.trim()}
-                className="btn-sky-primary px-3 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1 disabled:opacity-45"
-              >
-                <LucideIcon name="send" size={13} />
-                <span>送出</span>
-              </button>
-            </form>
-          </section>
+              <form onSubmit={handlePostComment} className="flex items-center gap-1.5">
+                <input
+                  type="text"
+                  data-testid="event-comment-input"
+                  value={commentInput}
+                  onChange={(e) => setCommentInput(e.target.value)}
+                  placeholder="輸入留言與共享成員同步討論..."
+                  className="flex-1 px-3 py-2 rounded-xl text-xs bg-[var(--surface-subtle)] border border-[var(--border-subtle)] text-[var(--text-main)]"
+                />
+                <button
+                  type="submit"
+                  data-testid="event-comment-submit-btn"
+                  disabled={!commentInput.trim()}
+                  className="btn-sky-primary px-3 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1 disabled:opacity-45"
+                >
+                  <LucideIcon name="send" size={13} />
+                  <span>送出</span>
+                </button>
+              </form>
+            </section>
+          )}
         </div>
 
         {/* Footer Actions */}
-        <div className="landscape-compact-drawer-bar px-4 sm:px-5 py-3 border-t border-[var(--border-subtle)] bg-[var(--surface-subtle)]/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-safe-bottom">
-          <div className="flex items-center justify-between sm:justify-start gap-1.5 w-full sm:w-auto">
-            {!isViewerOnly && (
+        <div
+          className={`landscape-compact-drawer-bar px-4 sm:px-5 py-3 border-t border-[var(--border-subtle)] bg-[var(--surface-subtle)]/70 pb-safe-bottom ${
+            isCreateMode
+              ? 'flex flex-row items-center justify-between gap-2.5'
+              : 'flex flex-col sm:flex-row sm:items-center justify-between gap-2'
+          }`}
+        >
+          {isCreateMode ? (
+            <>
               <button
                 type="button"
-                data-testid="event-detail-delete-btn"
-                onClick={handleDelete}
-                className="px-2.5 sm:px-3 py-2 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-500/15 inline-flex items-center gap-1 whitespace-nowrap shrink-0"
+                data-testid="event-detail-cancel-btn"
+                onClick={handleClose}
+                className="btn-sky-secondary px-4 py-2.5 sm:py-2 rounded-xl text-xs font-bold inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0"
               >
-                <LucideIcon name="trash-2" size={14} className="shrink-0" />
-                <span>刪除</span>
+                <LucideIcon name="x" size={14} className="shrink-0" />
+                <span>取消</span>
               </button>
-            )}
-            <div className="flex items-center gap-1.5">
               <button
-                type="button"
-                onClick={() => {
-                  openModal('focus', { focusTargetEventId: event.id });
-                  selectEvent(null);
-                }}
-                className="btn-sky-secondary px-2.5 sm:px-3 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1 whitespace-nowrap shrink-0"
+                type="submit"
+                form="event-detail-form"
+                data-testid="event-detail-save-btn"
+                className="btn-sky-primary flex-1 sm:flex-none justify-center px-5 py-2.5 sm:py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 whitespace-nowrap shrink-0"
               >
-                <LucideIcon name="timer" size={14} className="shrink-0" />
-                <span>專注</span>
+                <LucideIcon name="check" size={14} className="shrink-0" />
+                <span>新增行程</span>
               </button>
-              {event.status !== 'completed' && !isViewerOnly && (
+            </>
+          ) : (
+            <>
+              <div className="flex items-center justify-between sm:justify-start gap-1.5 w-full sm:w-auto">
+                {!isViewerOnly && (
+                  <button
+                    type="button"
+                    data-testid="event-detail-delete-btn"
+                    onClick={handleDelete}
+                    className="px-2.5 sm:px-3 py-2 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-500/15 inline-flex items-center gap-1 whitespace-nowrap shrink-0"
+                  >
+                    <LucideIcon name="trash-2" size={14} className="shrink-0" />
+                    <span>刪除</span>
+                  </button>
+                )}
+                <div className="flex items-center gap-1.5">
+                  {event && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        openModal('focus', { focusTargetEventId: event.id });
+                        selectEvent(null);
+                      }}
+                      className="btn-sky-secondary px-2.5 sm:px-3 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1 whitespace-nowrap shrink-0"
+                    >
+                      <LucideIcon name="timer" size={14} className="shrink-0" />
+                      <span>專注</span>
+                    </button>
+                  )}
+                  {event && event.status !== 'completed' && !isViewerOnly && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        completeEventEarly(event.id);
+                        selectEvent(null);
+                      }}
+                      className="btn-sky-secondary px-2.5 sm:px-3 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1 whitespace-nowrap shrink-0"
+                    >
+                      <LucideIcon name="zap" size={14} className="shrink-0" />
+                      <span>提早完成</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {!isViewerOnly && (
                 <button
-                  type="button"
-                  onClick={() => {
-                    completeEventEarly(event.id);
-                    selectEvent(null);
-                  }}
-                  className="btn-sky-secondary px-2.5 sm:px-3 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1 whitespace-nowrap shrink-0"
+                  type="submit"
+                  form="event-detail-form"
+                  data-testid="event-detail-save-btn"
+                  className="btn-sky-primary w-full sm:w-auto justify-center px-5 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 whitespace-nowrap shrink-0"
                 >
-                  <LucideIcon name="zap" size={14} className="shrink-0" />
-                  <span>提早完成</span>
+                  <LucideIcon name="check" size={14} className="shrink-0" />
+                  <span>儲存變更</span>
                 </button>
               )}
-            </div>
-          </div>
-
-          {!isViewerOnly && (
-            <button
-              type="submit"
-              form="event-detail-form"
-              data-testid="event-detail-save-btn"
-              className="btn-sky-primary w-full sm:w-auto justify-center px-5 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 whitespace-nowrap shrink-0"
-            >
-              <LucideIcon name="check" size={14} className="shrink-0" />
-              <span>儲存變更</span>
-            </button>
+            </>
           )}
         </div>
       </div>

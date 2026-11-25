@@ -3,10 +3,10 @@ import { LucideIcon } from './BrandMark';
 import { useScheduleStore } from '../store/useScheduleStore';
 
 export interface MobileBottomNavProps {
-  onFocusQuickCapture: () => void;
+  onOpenCreateEvent: () => void;
 }
 
-export default function MobileBottomNav({ onFocusQuickCapture }: MobileBottomNavProps) {
+export default function MobileBottomNav({ onOpenCreateEvent }: MobileBottomNavProps) {
   const {
     tasks,
     viewMode,
@@ -25,12 +25,13 @@ export default function MobileBottomNav({ onFocusQuickCapture }: MobileBottomNav
 
   return (
     <>
-      {/* Floating Quick-Add Action Button (Mobile Only) */}
+      {/* Floating Create-Event Action Button (Mobile Only -> opens blank EventDetailDrawer) */}
       <button
         type="button"
         data-testid="mobile-quick-add-fab"
-        onClick={onFocusQuickCapture}
-        aria-label="快速新增排程"
+        onClick={onOpenCreateEvent}
+        title="新增行程"
+        aria-label="新增行程"
         className="mobile-fab-float sm:hidden fixed right-4 z-30 w-12 h-12 rounded-2xl btn-sky-primary flex items-center justify-center shadow-lg"
       >
         <LucideIcon name="plus" size={22} />
