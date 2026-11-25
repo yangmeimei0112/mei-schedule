@@ -198,9 +198,9 @@ export default function CommandPalette() {
                     }}
                     className="w-full px-3 py-2 rounded-xl hover:bg-sky-500/10 flex items-center justify-between gap-2 text-left text-xs"
                   >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className={`w-2 h-2 rounded-full shrink-0 ${palette.dotClass}`} />
-                      <span className="font-bold text-[var(--text-main)] truncate">{evt.title}</span>
+                    <div className="flex items-start gap-2 min-w-0">
+                      <span className={`w-2 h-2 mt-1.5 rounded-full shrink-0 ${palette.dotClass}`} />
+                      <span className="font-bold text-[var(--text-main)] schedule-title-wrap">{evt.title}</span>
                     </div>
                     <span className="font-mono text-[11px] text-[var(--text-muted)] shrink-0">
                       {dKey}
@@ -225,15 +225,15 @@ export default function CommandPalette() {
                     toggleTaskComplete(task.id);
                     closeModal();
                   }}
-                  className="w-full px-3 py-2 rounded-xl hover:bg-sky-500/10 flex items-center justify-between gap-2 text-left text-xs"
+                  className="w-full px-3 py-2 rounded-xl hover:bg-sky-500/10 flex items-start justify-between gap-2 text-left text-xs"
                 >
-                  <div className="flex items-center gap-2 min-w-0">
+                  <div className="flex items-start gap-2 min-w-0">
                     <LucideIcon
                       name={task.completed ? 'check-square' : 'square'}
                       size={14}
-                      className="text-amber-500"
+                      className="text-amber-500 mt-0.5 shrink-0"
                     />
-                    <span className="font-semibold text-[var(--text-main)] truncate">{task.title}</span>
+                    <span className="font-semibold text-[var(--text-main)] schedule-title-wrap">{task.title}</span>
                   </div>
                   <span className="text-[10px] font-mono text-[var(--text-muted)] shrink-0">
                     {task.estimatedMinutes}m

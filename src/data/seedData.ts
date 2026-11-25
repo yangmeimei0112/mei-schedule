@@ -205,6 +205,7 @@ export function createDefaultPreferences(userId = 'local-guest'): UserPreference
     defaultEventMinutes: 45,
     weekStartsOn: 1,
     activeCalendarSet: 'all',
+    autoWrapTitles: true,
     updatedAt: new Date().toISOString()
   };
 }

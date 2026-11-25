@@ -131,7 +131,7 @@ function MonthView({ instances }: MonthViewProps) {
                   )}
                 </div>
 
-                {/* Colored Title Event Bars — readable even on mobile */}
+                {/* Colored Title Event Bars — automatic line wrap for full mobile legibility */}
                 <div className="space-y-0.5 flex-1 min-w-0">
                   {visiblePills.map((evt) => {
                     const palette = COLOR_TOKEN_PALETTE[evt.colorToken] || COLOR_TOKEN_PALETTE.sky;
@@ -145,10 +145,10 @@ function MonthView({ instances }: MonthViewProps) {
                           setSelectedDate(cell.dateKey);
                           selectEvent(evt.masterEventId, evt.occurrenceDate);
                         }}
-                        className={`w-full text-left px-0.5 sm:px-1.5 py-0.5 rounded-[5px] sm:rounded-md text-[9px] sm:text-[10px] leading-tight font-bold truncate flex items-center gap-0.5 border-l-2 ${palette.surfaceClass}`}
+                        className={`w-full text-left px-1 sm:px-1.5 py-0.5 rounded-[5px] sm:rounded-md text-[9.5px] sm:text-[10.5px] font-bold flex items-start gap-0.5 border-l-2 ${palette.surfaceClass}`}
                         style={{ borderLeftColor: palette.hex }}
                       >
-                        <span className="truncate">{evt.title}</span>
+                        <span className="schedule-title-wrap min-w-0 flex-1">{evt.title}</span>
                       </button>
                     );
                   })}
@@ -221,11 +221,11 @@ function MonthView({ instances }: MonthViewProps) {
                   key={evt.instanceId}
                   type="button"
                   onClick={() => selectEvent(evt.masterEventId, evt.occurrenceDate)}
-                  className={`p-3 rounded-2xl border text-left flex items-center gap-3 transition-transform hover:-translate-y-0.5 ${palette.surfaceClass} ${palette.borderClass}`}
+                  className={`p-3 rounded-2xl border text-left flex items-start gap-3 transition-transform hover:-translate-y-0.5 ${palette.surfaceClass} ${palette.borderClass}`}
                 >
                   <div className={`w-1 self-stretch rounded-full shrink-0 ${palette.accentBarClass}`} />
                   <div className="min-w-0 flex-1">
-                    <div className="text-xs font-extrabold truncate">{evt.title}</div>
+                    <div className="text-xs font-extrabold schedule-title-wrap">{evt.title}</div>
                     <div className="text-[11px] font-mono opacity-80 mt-0.5">
                       {evt.allDay ? '全天行程' : `${formatHM(evt.startAt)} – ${formatHM(evt.endAt)}`}
                     </div>

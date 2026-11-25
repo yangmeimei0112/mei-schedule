@@ -37,16 +37,24 @@ describe('Five Core Schedule Views, Quick Capture NLP, Month Title Bars & Comman
 
     fireEvent.click(screen.getByTestId('view-tab-3day'));
     expect(screen.getByTestId('three-day-view')).toBeInTheDocument();
+    const threeDayTitles = screen.getAllByTestId('week-event-title');
+    expect(threeDayTitles.length).toBeGreaterThan(0);
+    for (const titleNode of threeDayTitles) {
+      expect(titleNode.className).toContain('schedule-title-wrap');
+      expect(titleNode.className).not.toContain('truncate');
+    }
 
     fireEvent.click(screen.getByTestId('view-tab-week'));
     expect(screen.getByTestId('week-grid-view')).toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId('view-tab-month'));
     expect(screen.getByTestId('month-view')).toBeInTheDocument();
-    // Verify MonthView displays titled event pills (NEVER meaningless gray-dot-only cells)
+    // Verify MonthView displays titled event pills with automatic line wrap (NEVER gray-dot-only or ellipsis truncation)
     const monthPills = screen.getAllByTestId(`month-event-pill-${SEED_EVT_DEEP_WORK}`);
     expect(monthPills.length).toBeGreaterThan(0);
     expect(monthPills[0].textContent).toContain('介面原型設計與時間軸打磨');
+    expect(monthPills[0].querySelector('.schedule-title-wrap')).not.toBeNull();
+    expect(monthPills[0].className).not.toContain('truncate');
 
     fireEvent.click(screen.getByTestId('view-tab-agenda'));
     expect(screen.getByTestId('agenda-list-view')).toBeInTheDocument();

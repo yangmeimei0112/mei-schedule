@@ -87,7 +87,7 @@ export default function DesktopTrayWidget() {
                   />
                 </button>
                 <div className="min-w-0 flex-1">
-                  <div className={`text-xs font-extrabold truncate ${isDone ? 'line-through' : ''}`}>
+                  <div className={`text-xs font-extrabold schedule-title-wrap ${isDone ? 'line-through' : ''}`}>
                     {evt.title}
                   </div>
                   <div className="text-[10px] font-mono opacity-80">

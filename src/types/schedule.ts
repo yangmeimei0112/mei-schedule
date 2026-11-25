@@ -138,6 +138,7 @@ export interface UserPreferences {
   defaultEventMinutes: number;       // 15..240, default 45
   weekStartsOn: 0 | 1;               // 1=Monday (default), 0=Sunday
   activeCalendarSet: CalendarSetId;  // default 'all'
+  autoWrapTitles?: boolean;          // default true — wrap full schedule/task titles without ellipsis
   updatedAt: string;
 }
 

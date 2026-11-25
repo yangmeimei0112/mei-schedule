@@ -261,12 +261,12 @@ function TimelineView({ instances }: TimelineViewProps) {
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
         {/* Left/Main: Structured Visual Card Timeline */}
         <section className="xl:col-span-7 bento-glass-card p-4 sm:p-5 space-y-3">
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
             <h2 className="text-sm font-extrabold text-[var(--text-main)] inline-flex items-center gap-1.5 whitespace-nowrap shrink-0">
               <LucideIcon name="milestone" size={15} className="text-sky-500 shrink-0" />
               <span>今日行程時間軸</span>
             </h2>
-            <span className="text-[11px] text-[var(--text-muted)] truncate">
+            <span className="text-[11px] text-[var(--text-muted)] leading-snug">
               點擊標題檢視詳情或啟動專注
             </span>
           </div>
@@ -629,10 +629,10 @@ function TimelineView({ instances }: TimelineViewProps) {
                             key={evt.instanceId}
                             type="button"
                             onClick={() => selectEvent(evt.masterEventId, evt.occurrenceDate)}
-                            className={`w-full text-left px-2.5 py-1.5 rounded-xl border text-xs font-bold flex items-center justify-between gap-2 ${palette.surfaceClass} ${palette.borderClass}`}
+                            className={`w-full text-left px-2.5 py-1.5 rounded-xl border text-xs font-bold flex items-start justify-between gap-2 ${palette.surfaceClass} ${palette.borderClass}`}
                           >
-                            <span className="truncate">{evt.title}</span>
-                            <span className="text-[10px] font-mono opacity-75 shrink-0">
+                            <span className="schedule-title-wrap min-w-0 flex-1">{evt.title}</span>
+                            <span className="text-[10px] font-mono opacity-75 shrink-0 pt-0.5">
                               {formatTimeHM(evt.startAt)} ({dur}m)
                             </span>
                           </button>

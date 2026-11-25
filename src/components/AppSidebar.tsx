@@ -596,15 +596,15 @@ function AppSidebar({ conflictCount, onFocusQuickCapture }: AppSidebarProps) {
                         key={cal.id}
                         className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-xl hover:bg-[var(--surface-subtle)] cursor-pointer text-xs transition-colors"
                       >
-                        <div className="flex items-center gap-2 min-w-0">
+                        <div className="flex items-start gap-2 min-w-0">
                           <input
                             type="checkbox"
                             checked={visible}
                             onChange={() => toggleCalendarVisibility(cal.id)}
-                            className="rounded border-slate-300 text-sky-500 focus:ring-sky-400"
+                            className="mt-0.5 rounded border-slate-300 text-sky-500 focus:ring-sky-400"
                           />
-                          <span className={`w-2 h-2 rounded-full shrink-0 ${palette.dotClass}`} />
-                          <span className="font-medium text-[var(--text-main)] truncate">
+                          <span className={`w-2 h-2 mt-1.5 rounded-full shrink-0 ${palette.dotClass}`} />
+                          <span className="font-medium text-[var(--text-main)] schedule-title-wrap">
                             {cal.name}
                           </span>
                         </div>

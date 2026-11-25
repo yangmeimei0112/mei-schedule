@@ -8,7 +8,7 @@ import type { ExpandedEventInstance } from '../types/schedule';
 
 const GRID_START_HOUR = 7;
 const GRID_END_HOUR = 22;
-const HOUR_HEIGHT_PX = 52;
+const HOUR_HEIGHT_PX = 64;
 const WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六'];
 
 function formatHM(iso: string): string {
@@ -20,6 +20,7 @@ interface PositionedEvent {
   event: ExpandedEventInstance;
   topPx: number;
   heightPx: number;
+  maxExpandHeightPx: number;
   lane: number;
   totalLanes: number;
 }
@@ -62,12 +63,20 @@ function layoutDayOverlapLanes(events: ExpandedEventInstance[]): PositionedEvent
     const clampedStart = Math.max(GRID_START_HOUR * 60, item.startMin);
     const clampedEnd = Math.min((GRID_END_HOUR + 1) * 60, Math.max(clampedStart + 25, item.endMin));
     const topPx = ((clampedStart - GRID_START_HOUR * 60) / 60) * HOUR_HEIGHT_PX;
-    const heightPx = Math.max(26, ((clampedEnd - clampedStart) / 60) * HOUR_HEIGHT_PX);
+    const heightPx = Math.max(32, ((clampedEnd - clampedStart) / 60) * HOUR_HEIGHT_PX);
+
+    // Compute how far a short event card can safely grow downward to show wrapped title lines without colliding with the next event
+    const nextEventStartMin = temp
+      .filter((other) => other !== item && other.startMin >= item.endMin)
+      .reduce((minStart, other) => Math.min(minStart, other.startMin), (GRID_END_HOUR + 1) * 60);
+    const gapAwareHeightPx = ((nextEventStartMin - clampedStart) / 60) * HOUR_HEIGHT_PX - 2;
+    const maxExpandHeightPx = Math.max(heightPx, Math.min(gapAwareHeightPx, Math.max(heightPx, 86)));
 
     return {
       event: item.event,
       topPx,
       heightPx,
+      maxExpandHeightPx,
       lane: item.lane,
       totalLanes: maxLane
     };
@@ -222,7 +231,7 @@ function WeekGridView({ mode, instances }: WeekGridViewProps) {
                         key={ad.instanceId}
                         type="button"
                         onClick={() => selectEvent(ad.masterEventId, ad.occurrenceDate)}
-                        className={`w-full text-left px-1.5 py-0.5 rounded-md text-[10px] font-bold truncate border ${palette.surfaceClass} ${palette.borderClass}`}
+                        className={`w-full text-left px-1.5 py-0.5 rounded-md text-[10px] font-bold schedule-title-wrap border ${palette.surfaceClass} ${palette.borderClass}`}
                       >
                         {ad.title}
                       </button>
@@ -257,6 +266,7 @@ function WeekGridView({ mode, instances }: WeekGridViewProps) {
             {dayColumns.map((col) => {
               const colTimed = instances.filter((i) => i.occurrenceDate === col.dateKey && !i.allDay);
               const positioned = layoutDayOverlapLanes(colTimed);
+              const autoWrapEnabled = preferences.autoWrapTitles !== false;
 
               return (
                 <div
@@ -297,7 +307,7 @@ function WeekGridView({ mode, instances }: WeekGridViewProps) {
                   })}
 
                   {/* Positioned Event Blocks */}
-                  {positioned.map(({ event, topPx, heightPx, lane, totalLanes }) => {
+                  {positioned.map(({ event, topPx, heightPx, maxExpandHeightPx, lane, totalLanes }) => {
                     const palette = COLOR_TOKEN_PALETTE[event.colorToken] || COLOR_TOKEN_PALETTE.sky;
                     const widthPct = 100 / totalLanes;
                     const leftPct = lane * widthPct;
@@ -307,6 +317,7 @@ function WeekGridView({ mode, instances }: WeekGridViewProps) {
                       <button
                         key={event.instanceId}
                         type="button"
+                        data-testid={`week-event-block-${event.masterEventId}`}
                         draggable
                         onDragStart={(e) => {
                           e.dataTransfer.setData(
@@ -319,28 +330,41 @@ function WeekGridView({ mode, instances }: WeekGridViewProps) {
                           e.dataTransfer.effectAllowed = 'move';
                         }}
                         onClick={() => selectEvent(event.masterEventId, event.occurrenceDate)}
-                        style={{
-                          top: `${topPx + 1}px`,
-                          height: `${heightPx - 2}px`,
-                          left: `calc(${leftPct}% + 2px)`,
-                          width: `calc(${widthPct}% - 4px)`
-                        }}
-                        className={`absolute z-10 rounded-xl border px-1.5 py-1 text-left overflow-hidden shadow-sm transition-transform hover:z-20 hover:scale-[1.01] ${palette.surfaceClass} ${palette.borderClass} ${
+                        style={
+                          autoWrapEnabled
+                            ? {
+                                top: `${topPx + 1}px`,
+                                minHeight: `${heightPx - 2}px`,
+                                maxHeight: `${maxExpandHeightPx}px`,
+                                left: `calc(${leftPct}% + 2px)`,
+                                width: `calc(${widthPct}% - 4px)`
+                              }
+                            : {
+                                top: `${topPx + 1}px`,
+                                height: `${heightPx - 2}px`,
+                                left: `calc(${leftPct}% + 2px)`,
+                                width: `calc(${widthPct}% - 4px)`
+                              }
+                        }
+                        className={`absolute z-10 rounded-xl border px-1.5 py-1 text-left overflow-hidden shadow-sm transition-transform hover:z-30 hover:max-h-none hover:scale-[1.01] flex flex-col justify-start gap-0.5 ${palette.surfaceClass} ${palette.borderClass} ${
                           hasConflict ? 'ring-1 ring-rose-500' : ''
                         } ${event.status === 'completed' ? 'opacity-65' : ''}`}
                       >
-                        <div className="flex items-center gap-1 min-w-0">
-                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${palette.dotClass}`} />
+                        <div className="flex items-start gap-1 min-w-0">
                           <span
-                            className={`text-[11px] font-extrabold truncate ${
+                            className={`w-1.5 h-1.5 mt-[4px] rounded-full shrink-0 ${palette.dotClass}`}
+                          />
+                          <span
+                            data-testid="week-event-title"
+                            className={`text-[11px] font-extrabold schedule-title-wrap min-w-0 flex-1 ${
                               event.status === 'completed' ? 'line-through' : ''
                             }`}
                           >
                             {event.title}
                           </span>
                         </div>
-                        {heightPx >= 38 && (
-                          <div className="text-[10px] font-mono opacity-80 truncate flex items-center gap-1">
+                        {(maxExpandHeightPx >= 42 || heightPx >= 40) && (
+                          <div className="pl-2.5 text-[10px] font-mono opacity-80 flex items-center gap-1 flex-wrap">
                             <span>{formatHM(event.startAt)}</span>
                             {event.recurrenceRule && <LucideIcon name="repeat" size={9} />}
                           </div>

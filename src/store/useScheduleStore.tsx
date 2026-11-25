@@ -1934,6 +1934,12 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
   }, [state.preferences.designTheme, state.preferences.colorMode, state.resolvedColorMode]);
 
   useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const wrapMode = state.preferences.autoWrapTitles === false ? 'nowrap' : 'wrap';
+    document.documentElement.setAttribute('data-title-wrap', wrapMode);
+  }, [state.preferences.autoWrapTitles]);
+
+  useEffect(() => {
     return () => {
       if (themeTransitionTimerRef.current) {
         clearTimeout(themeTransitionTimerRef.current);

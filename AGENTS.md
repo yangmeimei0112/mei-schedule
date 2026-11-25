@@ -50,3 +50,8 @@
   10. `scripts/`、`supabase/`、`docs/`、`.github/workflows/`：靜態檢核腳本（`verify-schedule.mjs`）、隔離資料庫遷移腳本（`mei_schedule_migrations.sql`）、繁體中文架構與五端部署文件、五端自動化 CI/Release 管線。
 - **根目錄零雜物與清理紀律**：`.agents/` 必須納入 `.gitignore` 且永不提交至 Git；根目錄嚴禁殘留 `TEST_*.md`、`*_REPORT.md`、裸露 `.sql` 或一次性實驗腳本。
 - **全繁體中文交付規範**：所有向使用者呈現之文件、審查報告、驗收紀錄與提交摘要，一律使用繁體中文撰寫。
+
+## 7. 全站行程與內容自動換行閱讀規範 (Schedule Content Auto-Wrap & Zero-Ellipsis Rule)
+- **嚴禁以 `...` (`truncate`) 截斷行程與待辦標題**：三日視圖、週視圖、月總覽色條、時間軸時段格、待辦收件匣、智慧排程預覽、指令搜尋列與系統匣等所有使用者閱讀區之行程與任務標題，一律必須套用 `.schedule-title-wrap`（自動換行、`overflow-wrap: anywhere`、`word-break: break-word`），搭配 `items-start` 確保圓點／圖示對齊首行。
+- **短時長區塊智慧擴展防裁切**：於時間網格（`WeekGridView`）中，短時長排程在下方空檔允許範圍內自動微調高度以完整呈現換行文字，並透過 `preferences.autoWrapTitles`（預設 `true`，同步至 `<html data-title-wrap="wrap | nowrap">`）提供系統級控制。
+

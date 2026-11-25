@@ -190,7 +190,7 @@ export default function SharedCalendarModal() {
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           <LucideIcon name="user" size={13} className="text-sky-500 shrink-0" />
-                          <span className="font-semibold text-[var(--text-main)] truncate">
+                          <span className="font-semibold text-[var(--text-main)] schedule-title-wrap">
                             {member.displayName}
                           </span>
                         </div>

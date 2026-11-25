@@ -100,7 +100,7 @@ export default function FocusTimerModal() {
         {/* Target Event Label */}
         <div className="space-y-0.5">
           <p className="text-[11px] text-[var(--text-muted)]">目前專注目標</p>
-          <p className="text-sm sm:text-base font-extrabold text-[var(--text-main)] truncate">
+          <p className="text-sm sm:text-base font-extrabold text-[var(--text-main)] schedule-title-wrap">
             {targetTitle ? targetTitle : `自由專注（#${categoryTag}）`}
           </p>
         </div>
@@ -282,10 +282,10 @@ export default function FocusTimerModal() {
                     className={active ? 'text-sky-500 shrink-0' : 'shrink-0'}
                   />
                   <div className="min-w-0">
-                    <div className="text-[11px] font-extrabold text-[var(--text-main)] truncate">
+                    <div className="text-[11px] font-extrabold text-[var(--text-main)] schedule-title-wrap">
                       {track.name}
                     </div>
-                    <div className="text-[10px] text-[var(--text-muted)] truncate">
+                    <div className="text-[10px] text-[var(--text-muted)] whitespace-normal break-words leading-snug">
                       {track.subtitle}
                     </div>
                   </div>

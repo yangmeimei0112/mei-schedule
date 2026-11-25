@@ -877,6 +877,24 @@ html.color-mode-transitioning .squircle-icon-badge {
   transition: background-color 0.16s ease, color 0.16s ease, border-color 0.16s ease;
 }
 
+/* ==========================================================================
+   全站行程與內容自動換行閱讀系統 (.schedule-title-wrap)
+   - 預設自動換行不截斷省略號 (...)，完整呈現三日／週／月／時間軸與抽屜標題
+   - 可於偏好設定切換，即時連動 <html data-title-wrap="wrap | nowrap">
+   ========================================================================== */
+.schedule-title-wrap {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.28;
+}
+
+:root[data-title-wrap="nowrap"] .schedule-title-wrap {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Electron 系統匣迷你路由 (#/tray) 徹底隱藏 Studio Dock 與貼邊拉條 */
 body.tray-route #mei-studio-dock-root,
 body.tray-route #mei-dock-edge-tab {

@@ -322,6 +322,38 @@ export default function AppearanceSettingsModal() {
               </select>
             </div>
           </div>
+
+          {/* Site-Wide Auto-Wrap Titles Preference (Default ON) */}
+          <div className="pt-2.5 border-t border-[var(--border-subtle)] flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="text-xs font-bold text-[var(--text-main)]">
+                行程與待辦標題自動換行（不截斷省略號）
+              </div>
+              <p className="text-[11px] text-[var(--text-muted)] leading-snug mt-0.5">
+                開啟後於三日／週視圖、月總覽、時間軸與所有清單自動換行顯示完整標題，提升手機閱讀體驗。
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={preferences.autoWrapTitles !== false}
+              data-testid="toggle-auto-wrap-titles"
+              onClick={() =>
+                updatePreferences({ autoWrapTitles: preferences.autoWrapTitles === false })
+              }
+              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition-colors ${
+                preferences.autoWrapTitles !== false
+                  ? 'bg-sky-500 border-sky-500'
+                  : 'bg-slate-300/80 dark:bg-slate-700 border-[var(--border-subtle)]'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                  preferences.autoWrapTitles !== false ? 'translate-x-5' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
         </section>
 
         <div className="pt-3 border-t border-[var(--border-subtle)] flex items-center justify-between gap-2 text-[11px] text-[var(--text-muted)]">
@@ -333,7 +365,7 @@ export default function AppearanceSettingsModal() {
             data-testid="app-version-badge"
             className="font-mono font-bold px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-400/25"
           >
-            v1.5.0
+            v1.5.1
           </span>
         </div>
       </div>

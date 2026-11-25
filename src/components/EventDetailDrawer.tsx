@@ -611,7 +611,7 @@ export default function EventDetailDrawer() {
                         }
                         className="rounded text-sky-500"
                       />
-                      <span className={`truncate ${sub.done ? 'line-through opacity-60' : ''}`}>
+                      <span className={`schedule-title-wrap ${sub.done ? 'line-through opacity-60' : ''}`}>
                         {sub.title}
                       </span>
                     </label>

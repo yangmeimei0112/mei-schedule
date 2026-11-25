@@ -225,8 +225,8 @@ export default function SmartRescheduleDrawer() {
                     className="mt-1 rounded text-sky-500 focus:ring-sky-400"
                   />
                   <div className="min-w-0 flex-1 space-y-1.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs sm:text-sm font-extrabold text-[var(--text-main)] truncate">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-xs sm:text-sm font-extrabold text-[var(--text-main)] schedule-title-wrap">
                         {prop.title}
                       </span>
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/15 text-sky-700 dark:text-sky-300 shrink-0">
