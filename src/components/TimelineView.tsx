@@ -28,6 +28,7 @@ function TimelineView({ instances }: TimelineViewProps) {
     selectedDate,
     comments,
     preferences,
+    inboxDrawerOpen,
     selectEvent,
     moveOrResizeEvent,
     scheduleTaskToTimeBlock,
@@ -35,6 +36,7 @@ function TimelineView({ instances }: TimelineViewProps) {
     toggleEventComplete,
     completeEventEarly,
     createEvent,
+    setInboxDrawerOpen,
     openModal
   } = useScheduleStore();
 
@@ -182,12 +184,12 @@ function TimelineView({ instances }: TimelineViewProps) {
 
   return (
     <div data-testid="timeline-view" className="space-y-4">
-      {/* Top Status Strip: Conflict Warning + Released Free Time + Free Gaps */}
+      {/* Clean Top Status Strip */}
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs font-bold text-[var(--text-muted)] inline-flex items-center gap-1.5">
             <LucideIcon name="clock" size={14} className="text-sky-500" />
-            <span>今日共 {dayInstances.length} 筆排程</span>
+            <span>今日 {dayInstances.length} 筆排程</span>
           </span>
 
           {conflicts.length > 0 && (
@@ -198,7 +200,7 @@ function TimelineView({ instances }: TimelineViewProps) {
               className="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-400/30 inline-flex items-center gap-1"
             >
               <LucideIcon name="triangle-alert" size={13} />
-              <span>偵測到 {conflicts.length} 處時間／緩衝衝突，點此預覽重排</span>
+              <span>{conflicts.length} 處衝突，點此預覽重排</span>
             </button>
           )}
 
@@ -208,7 +210,7 @@ function TimelineView({ instances }: TimelineViewProps) {
               className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-400/30 inline-flex items-center gap-1"
             >
               <LucideIcon name="sparkles" size={13} />
-              <span>已提早釋放 {totalReleasedMinutes} 分鐘空檔</span>
+              <span>已釋放 {totalReleasedMinutes}m 空檔</span>
             </span>
           )}
         </div>
@@ -224,12 +226,15 @@ function TimelineView({ instances }: TimelineViewProps) {
         </button>
       </div>
 
-      {/* All-Day Banner Strip */}
+      {/* All-Day Banner Strip (Flat, sleek inline row) */}
       {allDayEvents.length > 0 && (
-        <div className="bento-glass-card p-3 space-y-1.5" data-testid="timeline-allday-strip">
-          <div className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider">
-            全天行程
-          </div>
+        <div
+          className="bento-glass-card px-3.5 py-2.5 flex items-center gap-2.5 flex-wrap"
+          data-testid="timeline-allday-strip"
+        >
+          <span className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider shrink-0">
+            全天
+          </span>
           <div className="flex flex-wrap gap-2">
             {allDayEvents.map((evt) => {
               const palette = COLOR_TOKEN_PALETTE[evt.colorToken] || COLOR_TOKEN_PALETTE.sky;
@@ -238,7 +243,7 @@ function TimelineView({ instances }: TimelineViewProps) {
                   key={evt.instanceId}
                   type="button"
                   onClick={() => selectEvent(evt.masterEventId, evt.occurrenceDate)}
-                  className={`px-3 py-1.5 rounded-xl border text-xs font-bold inline-flex items-center gap-2 transition-transform hover:-translate-y-0.5 ${palette.surfaceClass} ${palette.borderClass}`}
+                  className={`px-2.5 py-1 rounded-xl border text-xs font-bold inline-flex items-center gap-2 transition-transform hover:-translate-y-0.5 ${palette.surfaceClass} ${palette.borderClass}`}
                 >
                   <span className={`w-2 h-2 rounded-full ${palette.dotClass}`} />
                   <span>{evt.title}</span>
@@ -252,17 +257,17 @@ function TimelineView({ instances }: TimelineViewProps) {
         </div>
       )}
 
-      {/* Structured Visual Timeline Cards + Free Gap Slots */}
+      {/* Structured Visual Timeline Cards + Interactive Hourly Drop Grid */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
         {/* Left/Main: Structured Visual Card Timeline */}
         <section className="xl:col-span-7 bento-glass-card p-4 sm:p-5 space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+          <div className="flex items-center justify-between gap-2">
             <h2 className="text-sm font-extrabold text-[var(--text-main)] inline-flex items-center gap-1.5 whitespace-nowrap shrink-0">
-              <LucideIcon name="milestone" size={16} className="text-sky-500 shrink-0" />
-              <span>視覺化今日時間軸</span>
+              <LucideIcon name="milestone" size={15} className="text-sky-500 shrink-0" />
+              <span>今日行程時間軸</span>
             </h2>
-            <span className="text-[11px] text-[var(--text-muted)]">
-              可點擊子任務打勾、微調時長或啟動專注
+            <span className="text-[11px] text-[var(--text-muted)] truncate">
+              點擊標題檢視詳情或啟動專注
             </span>
           </div>
 
@@ -272,7 +277,7 @@ function TimelineView({ instances }: TimelineViewProps) {
               <div className="space-y-1">
                 <p className="text-sm font-bold text-[var(--text-main)]">這一天目前完全空閒</p>
                 <p className="text-xs text-[var(--text-muted)]">
-                  可使用上方自然語言輸入列新增，或從左側拖曳待辦進入右側時段格
+                  在上方直接輸入行程，或打開右上角「待辦」拖入右側時段格
                 </p>
               </div>
               <button
@@ -295,7 +300,7 @@ function TimelineView({ instances }: TimelineViewProps) {
               </button>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {timedEvents.map((evt) => {
                 const palette = COLOR_TOKEN_PALETTE[evt.colorToken] || COLOR_TOKEN_PALETTE.sky;
                 const durationMin = Math.max(
@@ -322,15 +327,15 @@ function TimelineView({ instances }: TimelineViewProps) {
                       );
                       e.dataTransfer.effectAllowed = 'move';
                     }}
-                    className={`schedule-time-block relative border p-3.5 sm:p-4 transition-all ${palette.surfaceClass} ${palette.borderClass} ${
+                    className={`schedule-time-block relative border p-3.5 transition-all ${palette.surfaceClass} ${palette.borderClass} ${
                       isCompleted ? 'opacity-70' : ''
                     } ${hasConflict ? 'ring-2 ring-rose-500/70' : ''}`}
                   >
                     <div className="flex items-start gap-3">
-                      <div className={`w-1.5 self-stretch rounded-full shrink-0 ${palette.accentBarClass}`} />
+                      <div className={`w-1 self-stretch rounded-full shrink-0 ${palette.accentBarClass}`} />
 
                       <div className="min-w-0 flex-1 space-y-2">
-                        {/* Top Row: Time + Title + Status Badges */}
+                        {/* Tier 1: Time + Title + Completion Check */}
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2 flex-wrap text-[11px] font-mono font-bold opacity-80">
@@ -339,7 +344,7 @@ function TimelineView({ instances }: TimelineViewProps) {
                               </span>
                               <span>({durationMin}m)</span>
                               {evt.recurrenceRule && (
-                                <span className="inline-flex items-center gap-0.5">
+                                <span className="inline-flex items-center gap-0.5 font-sans">
                                   <LucideIcon name="repeat" size={11} />
                                   重複
                                 </span>
@@ -360,7 +365,7 @@ function TimelineView({ instances }: TimelineViewProps) {
                             <button
                               type="button"
                               onClick={() => selectEvent(evt.masterEventId, evt.occurrenceDate)}
-                              className={`mt-0.5 text-left text-sm sm:text-base font-extrabold leading-snug hover:underline block w-full ${
+                              className={`mt-0.5 text-left text-sm sm:text-[15px] font-extrabold leading-snug hover:underline block w-full ${
                                 isCompleted ? 'line-through' : ''
                               }`}
                             >
@@ -373,7 +378,7 @@ function TimelineView({ instances }: TimelineViewProps) {
                             data-testid={`timeline-complete-btn-${evt.masterEventId}`}
                             onClick={() => toggleEventComplete(evt.masterEventId)}
                             aria-label={isCompleted ? '標記為未完成' : '標記為已完成'}
-                            className="p-1.5 rounded-xl bg-white/60 dark:bg-slate-900/50 hover:scale-105 transition-transform shrink-0"
+                            className="p-1.5 rounded-xl bg-white/55 dark:bg-slate-900/45 hover:scale-105 transition-transform shrink-0"
                           >
                             <LucideIcon
                               name={isCompleted ? 'circle-check' : 'circle'}
@@ -383,20 +388,20 @@ function TimelineView({ instances }: TimelineViewProps) {
                           </button>
                         </div>
 
-                        {/* Metadata Chips */}
+                        {/* Tier 2: Calm Metadata Row */}
                         <div className="flex items-center gap-2 flex-wrap text-[11px]">
                           <span className={`px-2 py-0.5 rounded-full font-bold ${palette.badgeClass}`}>
                             {evt.categoryTag}
                           </span>
                           {evt.location && (
-                            <span className="inline-flex items-center gap-1 opacity-80">
-                              <LucideIcon name="map-pin" size={12} />
+                            <span className="inline-flex items-center gap-1 opacity-75">
+                              <LucideIcon name="map-pin" size={11} />
                               {evt.location}
                             </span>
                           )}
                           {(evt.bufferBeforeMin > 0 || evt.bufferAfterMin > 0) && (
-                            <span className="inline-flex items-center gap-1 opacity-75">
-                              <LucideIcon name="shield-check" size={12} />
+                            <span className="inline-flex items-center gap-1 opacity-70">
+                              <LucideIcon name="shield-check" size={11} />
                               緩衝 {evt.bufferBeforeMin}/{evt.bufferAfterMin}m
                             </span>
                           )}
@@ -404,7 +409,7 @@ function TimelineView({ instances }: TimelineViewProps) {
                             <button
                               type="button"
                               onClick={() => selectEvent(evt.masterEventId, evt.occurrenceDate)}
-                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-700 dark:text-violet-300 font-bold"
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-sky-500/12 text-sky-700 dark:text-sky-300 font-bold"
                             >
                               <LucideIcon name="message-square" size={11} />
                               <span>{commentCount} 則留言</span>
@@ -412,7 +417,7 @@ function TimelineView({ instances }: TimelineViewProps) {
                           )}
                           {evt.releasedMinutes && evt.releasedMinutes > 0 && (
                             <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-200 font-bold">
-                              提早釋放 {evt.releasedMinutes}m
+                              已釋放 {evt.releasedMinutes}m
                             </span>
                           )}
                         </div>
@@ -420,8 +425,8 @@ function TimelineView({ instances }: TimelineViewProps) {
                         {/* Inline Subtasks Checklist */}
                         {evt.subtasks.length > 0 && (
                           <div className="pt-1.5 border-t border-current/10 space-y-1">
-                            <div className="text-[10px] font-bold opacity-75">
-                              子任務進度 ({doneSubtasks}/{evt.subtasks.length})
+                            <div className="text-[10px] font-bold opacity-70">
+                              子任務 ({doneSubtasks}/{evt.subtasks.length})
                             </div>
                             {evt.subtasks.map((sub) => (
                               <label
@@ -442,14 +447,15 @@ function TimelineView({ instances }: TimelineViewProps) {
                           </div>
                         )}
 
-                        {/* Quick Action Row (Mobile-Safe -15m/+15m Resize + Early Finish + Focus) */}
-                        <div className="pt-1.5 flex items-center justify-between gap-2 flex-wrap">
-                          <div className="inline-flex items-center gap-1">
+                        {/* Tier 3: Tidy Action Footer (Segmented -15m/+15m + Clear Primary/Secondary Actions) */}
+                        <div className="pt-2 border-t border-current/10 flex items-center justify-between gap-2 flex-wrap">
+                          <div className="inline-flex items-center rounded-lg overflow-hidden border border-current/15 bg-white/55 dark:bg-slate-900/45 divide-x divide-current/15">
                             <button
                               type="button"
                               data-testid={`resize-minus-15-${evt.masterEventId}`}
                               onClick={() => handleAdjustDuration(evt, -15)}
-                              className="px-2 py-1 rounded-lg text-[11px] font-mono font-bold bg-white/65 dark:bg-slate-900/50 border border-current/15 hover:bg-white dark:hover:bg-slate-800"
+                              title="縮短 15 分鐘"
+                              className="px-2 py-1 text-[11px] font-mono font-bold hover:bg-white dark:hover:bg-slate-800 transition-colors"
                             >
                               -15m
                             </button>
@@ -457,7 +463,8 @@ function TimelineView({ instances }: TimelineViewProps) {
                               type="button"
                               data-testid={`resize-plus-15-${evt.masterEventId}`}
                               onClick={() => handleAdjustDuration(evt, 15)}
-                              className="px-2 py-1 rounded-lg text-[11px] font-mono font-bold bg-white/65 dark:bg-slate-900/50 border border-current/15 hover:bg-white dark:hover:bg-slate-800"
+                              title="延長 15 分鐘"
+                              className="px-2 py-1 text-[11px] font-mono font-bold hover:bg-white dark:hover:bg-slate-800 transition-colors"
                             >
                               +15m
                             </button>
@@ -469,9 +476,9 @@ function TimelineView({ instances }: TimelineViewProps) {
                                 type="button"
                                 data-testid={`early-complete-btn-${evt.masterEventId}`}
                                 onClick={() => completeEventEarly(evt.masterEventId)}
-                                className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-200 hover:bg-emerald-500/25 inline-flex items-center gap-1"
+                                className="px-2 py-1 rounded-lg text-[11px] font-bold bg-white/60 dark:bg-slate-900/45 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/15 inline-flex items-center gap-1 transition-colors"
                               >
-                                <LucideIcon name="zap" size={12} />
+                                <LucideIcon name="zap" size={11} />
                                 <span>提早完成</span>
                               </button>
                             )}
@@ -479,7 +486,7 @@ function TimelineView({ instances }: TimelineViewProps) {
                               type="button"
                               data-testid={`start-focus-btn-${evt.masterEventId}`}
                               onClick={() => openModal('focus', { focusTargetEventId: evt.masterEventId })}
-                              className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-sky-500 text-white hover:bg-sky-600 inline-flex items-center gap-1"
+                              className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-sky-500 text-white hover:bg-sky-600 inline-flex items-center gap-1 transition-colors"
                             >
                               <LucideIcon name="play" size={11} />
                               <span>專注</span>
@@ -487,7 +494,7 @@ function TimelineView({ instances }: TimelineViewProps) {
                             <button
                               type="button"
                               onClick={() => selectEvent(evt.masterEventId, evt.occurrenceDate)}
-                              className="px-2 py-1 rounded-lg text-[11px] font-bold bg-white/65 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-800"
+                              className="px-2 py-1 rounded-lg text-[11px] font-semibold opacity-80 hover:opacity-100 hover:bg-white/60 dark:hover:bg-slate-800/60 transition-colors"
                             >
                               詳情
                             </button>
@@ -503,9 +510,9 @@ function TimelineView({ instances }: TimelineViewProps) {
               {freeGaps.length > 0 && (
                 <div className="pt-2 space-y-1.5">
                   <div className="text-[11px] font-bold text-[var(--text-muted)]">
-                    今日可用空檔（點擊快速建立時間塊）
+                    今日空檔（點擊快速建立時間塊）
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1.5">
                     {freeGaps.map((gap) => (
                       <button
                         key={gap.startMs}
@@ -516,14 +523,14 @@ function TimelineView({ instances }: TimelineViewProps) {
                             Math.min(gap.endMs, gap.startMs + 45 * 60_000)
                           )
                         }
-                        className="px-3 py-1.5 rounded-xl border border-dashed border-sky-400/50 bg-sky-500/5 hover:bg-sky-500/12 text-xs font-semibold text-sky-700 dark:text-sky-300 inline-flex items-center gap-1.5"
+                        className="px-2.5 py-1 rounded-xl border border-dashed border-sky-400/50 bg-sky-500/5 hover:bg-sky-500/12 text-xs font-semibold text-sky-700 dark:text-sky-300 inline-flex items-center gap-1.5 transition-colors"
                       >
                         <LucideIcon name="plus" size={12} />
                         <span className="font-mono">
                           {formatTimeHM(new Date(gap.startMs).toISOString())}–
                           {formatTimeHM(new Date(gap.endMs).toISOString())}
                         </span>
-                        <span className="opacity-75">({gap.minutes} 分鐘空檔)</span>
+                        <span className="opacity-75">({gap.minutes}m)</span>
                       </button>
                     ))}
                   </div>
@@ -534,13 +541,24 @@ function TimelineView({ instances }: TimelineViewProps) {
         </section>
 
         {/* Right: Hourly Interactive Drop Grid (06:00–23:00) */}
-        <section className="xl:col-span-5 bento-glass-card p-4 sm:p-5 space-y-2">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+        <section className="xl:col-span-5 bento-glass-card p-4 sm:p-5 space-y-2.5">
+          <div className="flex items-center justify-between gap-2">
             <h2 className="text-sm font-extrabold text-[var(--text-main)] inline-flex items-center gap-1.5 whitespace-nowrap shrink-0">
               <LucideIcon name="layout-dashboard" size={15} className="text-sky-500 shrink-0" />
-              <span>拖曳排程時段格</span>
+              <span>時段格</span>
             </h2>
-            <span className="text-[11px] text-[var(--text-muted)]">拖入待辦或行程即可改期</span>
+            {!inboxDrawerOpen ? (
+              <button
+                type="button"
+                onClick={() => setInboxDrawerOpen(true)}
+                className="text-[11px] font-bold text-sky-600 dark:text-sky-400 hover:underline inline-flex items-center gap-1"
+              >
+                <LucideIcon name="inbox" size={12} />
+                <span>展開待辦拖入</span>
+              </button>
+            ) : (
+              <span className="text-[11px] text-[var(--text-muted)]">可拖入右側待辦改期</span>
+            )}
           </div>
 
           <div className="relative divide-y divide-[var(--border-subtle)] border border-[var(--border-subtle)] rounded-2xl overflow-hidden bg-[var(--surface-subtle)]/50">

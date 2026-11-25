@@ -102,6 +102,7 @@ export interface ScheduleStoreState {
   selectedInstanceDate: string | null;
   searchQuery: string;
   sidebarOpen: boolean;
+  inboxDrawerOpen: boolean;
   activeModal: ActiveModalType;
   focusTargetEventId: string | null;
   focusTargetTaskId: string | null;
@@ -196,6 +197,7 @@ function buildInitialState(): ScheduleStoreState {
     selectedInstanceDate: null,
     searchQuery: '',
     sidebarOpen: isDesktopViewport,
+    inboxDrawerOpen: false,
     activeModal: null,
     focusTargetEventId: null,
     focusTargetTaskId: null,
@@ -244,6 +246,7 @@ type Action =
   | { type: 'SELECT_EVENT'; eventId: string | null; instanceDate?: string | null }
   | { type: 'SET_SEARCH_QUERY'; query: string }
   | { type: 'SET_SIDEBAR_OPEN'; open: boolean }
+  | { type: 'SET_INBOX_DRAWER_OPEN'; open: boolean }
   | {
       type: 'OPEN_MODAL';
       modal: ActiveModalType;
@@ -366,6 +369,9 @@ function scheduleReducer(state: ScheduleStoreState, action: Action): ScheduleSto
     case 'SET_SIDEBAR_OPEN':
       return { ...state, sidebarOpen: action.open };
 
+    case 'SET_INBOX_DRAWER_OPEN':
+      return { ...state, inboxDrawerOpen: action.open };
+
     case 'OPEN_MODAL':
       return {
         ...state,
@@ -459,6 +465,7 @@ export interface ScheduleStoreContextValue {
   selectedInstanceDate: string | null;
   searchQuery: string;
   sidebarOpen: boolean;
+  inboxDrawerOpen: boolean;
   activeModal: ActiveModalType;
   focusTargetEventId: string | null;
   focusTargetTaskId: string | null;
@@ -521,6 +528,7 @@ export interface ScheduleStoreContextValue {
   selectEvent: (eventId: string | null, instanceDate?: string | null) => void;
   setSearchQuery: (q: string) => void;
   setSidebarOpen: (open: boolean) => void;
+  setInboxDrawerOpen: (open: boolean) => void;
   openModal: (
     modal: ActiveModalType,
     ctx?: { focusTargetEventId?: string | null; focusTargetTaskId?: string | null }
@@ -560,12 +568,19 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
   const [state, rawDispatch] = useReducer(scheduleReducer, undefined, buildInitialState);
   const stateRef = useRef<ScheduleStoreState>(state);
   stateRef.current = state;
+  const mutatedBeforeHydrateRef = useRef(false);
 
   // Isolated Toast & Theme Transition states prevent full-tree re-renders
   const [toastState, setToastState] = useState<ToastState | null>(null);
   const [themeTransition, setThemeTransition] = useState<ThemeTransitionPayload | null>(null);
 
   const dispatch = useCallback((action: Action) => {
+    if (
+      !stateRef.current.hydrated &&
+      (action.type === 'COMMIT_SNAPSHOT' || action.type === 'REPLACE_SNAPSHOT_SILENT')
+    ) {
+      mutatedBeforeHydrateRef.current = true;
+    }
     stateRef.current = scheduleReducer(stateRef.current, action);
     rawDispatch(action);
   }, []);
@@ -1784,6 +1799,10 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'SET_SIDEBAR_OPEN', open });
   }, []);
 
+  const setInboxDrawerOpen = useCallback((open: boolean) => {
+    dispatch({ type: 'SET_INBOX_DRAWER_OPEN', open });
+  }, []);
+
   const openModal = useCallback(
     (
       modal: ActiveModalType,
@@ -1815,9 +1834,12 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
       )
       .then((res) => {
         if (cancelled) return;
+        const effectiveSnapshot = mutatedBeforeHydrateRef.current
+          ? stateRef.current.present
+          : res.snapshot;
         dispatch({
           type: 'HYDRATE',
-          snapshot: res.snapshot,
+          snapshot: effectiveSnapshot,
           preferences: res.preferences || createDefaultPreferences(),
           syncQueue: res.syncQueue,
           lastSyncedAt: res.lastSyncedAt
@@ -2045,6 +2067,7 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
       selectedInstanceDate: state.selectedInstanceDate,
       searchQuery: state.searchQuery,
       sidebarOpen: state.sidebarOpen,
+      inboxDrawerOpen: state.inboxDrawerOpen,
       activeModal: state.activeModal,
       focusTargetEventId: state.focusTargetEventId,
       focusTargetTaskId: state.focusTargetTaskId,
@@ -2090,6 +2113,7 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
       selectEvent,
       setSearchQuery,
       setSidebarOpen,
+      setInboxDrawerOpen,
       openModal,
       closeModal,
       showToast,
@@ -2135,6 +2159,7 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
       selectEvent,
       setSearchQuery,
       setSidebarOpen,
+      setInboxDrawerOpen,
       openModal,
       closeModal,
       showToast,

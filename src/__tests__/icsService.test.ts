@@ -61,7 +61,7 @@ describe('icsService — RFC 5545 Roundtrip Import/Export & Google Calendar URL'
 
     const ics = exportEventsToIcs(sampleEvents, '咩時光測試日曆');
     expect(ics).toContain('BEGIN:VCALENDAR');
-    expect(ics).toContain('PRODID:-//Mei Creative Studio//MeiSchedule v1.4//ZH');
+    expect(ics).toContain('PRODID:-//Mei Creative Studio//MeiSchedule v1.5//ZH');
     expect(ics).toContain('RRULE:FREQ=WEEKLY;BYDAY=MO,WE,FR');
     expect(ics).toContain('DTSTART;VALUE=DATE:');
 

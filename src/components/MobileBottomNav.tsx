@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { LucideIcon } from './BrandMark';
 import { useScheduleStore } from '../store/useScheduleStore';
 
@@ -7,7 +7,21 @@ export interface MobileBottomNavProps {
 }
 
 export default function MobileBottomNav({ onFocusQuickCapture }: MobileBottomNavProps) {
-  const { viewMode, sidebarOpen, setViewMode, setSidebarOpen, openModal } = useScheduleStore();
+  const {
+    tasks,
+    viewMode,
+    sidebarOpen,
+    inboxDrawerOpen,
+    setViewMode,
+    setSidebarOpen,
+    setInboxDrawerOpen,
+    openModal
+  } = useScheduleStore();
+
+  const unscheduledCount = useMemo(
+    () => tasks.filter((t) => !t.completed && !t.scheduledEventId).length,
+    [tasks]
+  );
 
   return (
     <>
@@ -34,10 +48,13 @@ export default function MobileBottomNav({ onFocusQuickCapture }: MobileBottomNav
             data-testid="bottom-nav-timeline"
             onClick={() => {
               setSidebarOpen(false);
+              setInboxDrawerOpen(false);
               setViewMode('day');
             }}
             className={`flex flex-col items-center justify-center gap-0.5 text-[10px] font-bold ${
-              viewMode === 'day' && !sidebarOpen ? 'text-sky-600 dark:text-sky-400' : 'text-[var(--text-muted)]'
+              viewMode === 'day' && !sidebarOpen && !inboxDrawerOpen
+                ? 'text-sky-600 dark:text-sky-400'
+                : 'text-[var(--text-muted)]'
             }`}
           >
             <LucideIcon name="clock" size={18} />
@@ -49,10 +66,11 @@ export default function MobileBottomNav({ onFocusQuickCapture }: MobileBottomNav
             data-testid="bottom-nav-month"
             onClick={() => {
               setSidebarOpen(false);
+              setInboxDrawerOpen(false);
               setViewMode(viewMode === 'month' ? 'week' : 'month');
             }}
             className={`flex flex-col items-center justify-center gap-0.5 text-[10px] font-bold ${
-              (viewMode === 'month' || viewMode === 'week') && !sidebarOpen
+              (viewMode === 'month' || viewMode === 'week') && !sidebarOpen && !inboxDrawerOpen
                 ? 'text-sky-600 dark:text-sky-400'
                 : 'text-[var(--text-muted)]'
             }`}
@@ -64,19 +82,33 @@ export default function MobileBottomNav({ onFocusQuickCapture }: MobileBottomNav
           <button
             type="button"
             data-testid="bottom-nav-inbox"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className={`flex flex-col items-center justify-center gap-0.5 text-[10px] font-bold ${
-              sidebarOpen ? 'text-sky-600 dark:text-sky-400' : 'text-[var(--text-muted)]'
+            onClick={() => {
+              setSidebarOpen(false);
+              setInboxDrawerOpen(!inboxDrawerOpen);
+            }}
+            className={`relative flex flex-col items-center justify-center gap-0.5 text-[10px] font-bold ${
+              inboxDrawerOpen ? 'text-sky-600 dark:text-sky-400' : 'text-[var(--text-muted)]'
             }`}
           >
-            <LucideIcon name="inbox" size={18} />
+            <span className="relative inline-flex">
+              <LucideIcon name="inbox" size={18} />
+              {unscheduledCount > 0 && (
+                <span className="absolute -top-1 -right-2 min-w-[14px] h-3.5 px-1 rounded-full bg-amber-500 text-white text-[9px] font-bold flex items-center justify-center">
+                  {unscheduledCount}
+                </span>
+              )}
+            </span>
             <span>收件匣</span>
           </button>
 
           <button
             type="button"
             data-testid="bottom-nav-focus"
-            onClick={() => openModal('focus')}
+            onClick={() => {
+              setSidebarOpen(false);
+              setInboxDrawerOpen(false);
+              openModal('focus');
+            }}
             className="flex flex-col items-center justify-center gap-0.5 text-[10px] font-bold text-[var(--text-muted)] hover:text-sky-500"
           >
             <LucideIcon name="timer" size={18} />
@@ -86,11 +118,16 @@ export default function MobileBottomNav({ onFocusQuickCapture }: MobileBottomNav
           <button
             type="button"
             data-testid="bottom-nav-tools"
-            onClick={() => openModal('analytics')}
-            className="flex flex-col items-center justify-center gap-0.5 text-[10px] font-bold text-[var(--text-muted)] hover:text-sky-500"
+            onClick={() => {
+              setInboxDrawerOpen(false);
+              setSidebarOpen(!sidebarOpen);
+            }}
+            className={`flex flex-col items-center justify-center gap-0.5 text-[10px] font-bold ${
+              sidebarOpen ? 'text-sky-600 dark:text-sky-400' : 'text-[var(--text-muted)]'
+            }`}
           >
-            <LucideIcon name="bar-chart-3" size={18} />
-            <span>統計</span>
+            <LucideIcon name="layout-grid" size={18} />
+            <span>選單</span>
           </button>
         </div>
       </nav>

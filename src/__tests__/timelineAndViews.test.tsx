@@ -81,4 +81,53 @@ describe('Five Core Schedule Views, Quick Capture NLP, Month Title Bars & Comman
     expect(screen.getByText('咩時光今日快覽')).toBeInTheDocument();
     window.history.replaceState(null, '', '/');
   });
+
+  it('v1.5.0 unified AppSidebar toggles to 64px Mini Rail and opens/closes the Right TaskInboxDrawer with task creation', async () => {
+    render(<App />);
+    await waitFor(() => expect(screen.getByTestId('timeline-view')).toBeInTheDocument());
+
+    // Unified left sidebar starts expanded on desktop with labeled tool navigation
+    const sidebar = screen.getByTestId('app-sidebar');
+    expect(sidebar).toHaveAttribute('data-sidebar-mode', 'expanded');
+    expect(within(sidebar).getByText('智慧排程助手')).toBeInTheDocument();
+    expect(within(sidebar).getByText('專注番茄鐘')).toBeInTheDocument();
+    expect(within(sidebar).getByText('時間統計')).toBeInTheDocument();
+    expect(within(sidebar).getByText('多人共享日曆')).toBeInTheDocument();
+
+    // Collapse desktop sidebar -> switches smoothly into 64px Mini Rail
+    fireEvent.click(screen.getByTestId('sidebar-collapse-btn'));
+    expect(screen.getByTestId('app-sidebar')).toHaveAttribute('data-sidebar-mode', 'rail');
+
+    // Expand back from Mini Rail
+    fireEvent.click(screen.getByTestId('sidebar-expand-rail-btn'));
+    expect(screen.getByTestId('app-sidebar')).toHaveAttribute('data-sidebar-mode', 'expanded');
+
+    // Right Task Inbox starts collapsed for a wide breathing calendar canvas
+    expect(screen.queryByTestId('task-inbox-drawer')).toBeNull();
+    expect(screen.getByTestId('toggle-inbox-drawer-btn')).toBeInTheDocument();
+
+    // Toggle Right Task Inbox Wing open via header pill
+    fireEvent.click(screen.getByTestId('toggle-inbox-drawer-btn'));
+    const inboxDrawer = await screen.findByTestId('task-inbox-drawer');
+    expect(inboxDrawer).toBeInTheDocument();
+
+    // Add a new task inside the Right Task Inbox Drawer
+    fireEvent.change(screen.getByTestId('inbox-add-task-input'), {
+      target: { value: '檢視新版側欄與右側收件匣動線' }
+    });
+    fireEvent.click(screen.getByTestId('inbox-add-task-btn'));
+    await waitFor(() => {
+      expect(within(inboxDrawer).getByText('檢視新版側欄與右側收件匣動線')).toBeInTheDocument();
+    });
+
+    // Close Right Task Inbox via Escape key
+    fireEvent.keyDown(window, { key: 'Escape' });
+    await waitFor(() => {
+      expect(screen.queryByTestId('task-inbox-drawer')).toBeNull();
+    });
+
+    // Re-open with keyboard shortcut I
+    fireEvent.keyDown(window, { key: 'i' });
+    expect(await screen.findByTestId('task-inbox-drawer')).toBeInTheDocument();
+  });
 });

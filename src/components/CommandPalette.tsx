@@ -11,8 +11,12 @@ export default function CommandPalette() {
     events,
     tasks,
     resolvedColorMode,
+    sidebarOpen,
+    inboxDrawerOpen,
     setViewMode,
     setSelectedDate,
+    setSidebarOpen,
+    setInboxDrawerOpen,
     goToToday,
     selectEvent,
     toggleTaskComplete,
@@ -36,6 +40,18 @@ export default function CommandPalette() {
   const quickCommands = useMemo(
     () => [
       { id: 'cmd-today', label: '跳轉回到今天', icon: 'calendar-check', run: () => goToToday() },
+      {
+        id: 'cmd-toggle-inbox',
+        label: inboxDrawerOpen ? '收合右側待辦收件匣 (I)' : '展開右側待辦收件匣 (I)',
+        icon: 'inbox',
+        run: () => setInboxDrawerOpen(!inboxDrawerOpen)
+      },
+      {
+        id: 'cmd-toggle-sidebar',
+        label: sidebarOpen ? '將左側側欄縮為精簡圖示軌' : '展開完整左側導覽側欄',
+        icon: sidebarOpen ? 'panel-left-close' : 'panel-left-open',
+        run: () => setSidebarOpen(!sidebarOpen)
+      },
       { id: 'cmd-view-day', label: '切換至單日時間軸視角', icon: 'clock', run: () => setViewMode('day') },
       { id: 'cmd-view-week', label: '切換至週視圖時間網格', icon: 'calendar-range', run: () => setViewMode('week') },
       { id: 'cmd-view-month', label: '切換至月總覽', icon: 'calendar-days', run: () => setViewMode('month') },
@@ -82,7 +98,20 @@ export default function CommandPalette() {
       { id: 'cmd-undo', label: '復原上一步操作 (Undo)', icon: 'undo-2', run: () => undo() },
       { id: 'cmd-redo', label: '重做操作 (Redo)', icon: 'redo-2', run: () => redo() }
     ],
-    [goToToday, setViewMode, openModal, resolvedColorMode, updatePreferences, showToast, undo, redo]
+    [
+      goToToday,
+      inboxDrawerOpen,
+      setInboxDrawerOpen,
+      sidebarOpen,
+      setSidebarOpen,
+      setViewMode,
+      openModal,
+      resolvedColorMode,
+      updatePreferences,
+      showToast,
+      undo,
+      redo
+    ]
   );
 
   const q = query.trim().toLowerCase();

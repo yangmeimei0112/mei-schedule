@@ -27,7 +27,7 @@
 ## 三、Windows (`.exe`) 與 macOS (`.dmg`) 桌面軟體打包
 
 ### 方式 A：GitHub Actions 全自動編譯（推薦）
-推送版本標籤（例如 `git tag v1.4.0 && git push origin v1.4.0`）或於 GitHub Actions 頁面手動執行 **MeiSchedule Five-Platform CI & Release** (`workflow_dispatch`)，系統將自動於雲端產出以下下載產物：
+推送版本標籤（例如 `git tag v1.5.0 && git push origin v1.5.0`）或於 GitHub Actions 頁面手動執行 **MeiSchedule Five-Platform CI & Release** (`workflow_dispatch`)，系統將自動於雲端產出以下下載產物：
 - `meischedule-windows-exe`：Windows 64 位元 NSIS 安裝程式 (`.exe`)
 - `meischedule-macos-dmg`：macOS Apple Silicon (`arm64`) 與 Intel (`x64`) 映像檔 (`.dmg`)
 

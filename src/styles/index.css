@@ -844,7 +844,9 @@ html.color-mode-transitioning .squircle-icon-badge {
   }
 }
 
-/* 行動端 (<768px) 抬升 mei-dock.js 膠囊與貼邊微露拉條，避免遮擋底部單手導覽列 */
+/* 行動端 (<768px) 智慧避讓 mei-dock.js 膠囊與貼邊微露拉條：
+   - 桌機/平板 (>=640px) 靠右下角，100% 避開全高左側導覽側欄底部
+   - 手機 (<640px) 自動切回左下角並抬升於底部導覽列上方，避開右下角「+」懸浮鍵 */
 @media (max-width: 767px) {
   #mei-studio-dock-root.pos-bottom-left,
   #mei-studio-dock-root.pos-bottom-right {
@@ -853,8 +855,26 @@ html.color-mode-transitioning .squircle-icon-badge {
 
   #mei-dock-edge-tab.pos-bottom-left,
   #mei-dock-edge-tab.pos-bottom-right {
-    bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px)) !important;
+    bottom: calc(8.75rem + env(safe-area-inset-bottom, 0px)) !important;
   }
+}
+
+@media (max-width: 639px) {
+  #mei-studio-dock-root.pos-bottom-right {
+    right: auto !important;
+    left: 12px !important;
+  }
+}
+
+/* 統一全高左側側欄與右側待辦翼板質感（三套主題 x 亮深雙模式自適應） */
+.app-sidebar-surface,
+.app-right-wing-surface {
+  background: var(--surface-glass-strong);
+  contain: layout style;
+}
+
+.sidebar-nav-item {
+  transition: background-color 0.16s ease, color 0.16s ease, border-color 0.16s ease;
 }
 
 /* Electron 系統匣迷你路由 (#/tray) 徹底隱藏 Studio Dock 與貼邊拉條 */

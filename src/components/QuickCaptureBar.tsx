@@ -90,14 +90,18 @@ const QuickCaptureBar = forwardRef<HTMLInputElement, QuickCaptureBarProps>(funct
     setInputValue('');
   };
 
+  const quickExamples = captureAsTask
+    ? ['整理週報簡報 45分鐘 #工作 !高', '預約牙醫回診 30m #個人']
+    : ['明天下午3點團隊同步 60分鐘 #工作', '今晚8點深讀系統架構 45m #學習'];
+
   return (
     <div
       data-testid="quick-capture-bar"
-      className={`bento-glass-card ${compact ? 'p-2.5' : 'p-3 sm:p-3.5'} transition-all`}
+      className={`bento-glass-card ${compact ? 'p-2.5' : 'px-3 py-2.5 sm:px-3.5 sm:py-3'} focus-within:border-sky-400/75 transition-colors`}
     >
       <form onSubmit={handleSubmit} className="flex items-center gap-2">
         <div className="w-8 h-8 rounded-xl squircle-icon-badge flex items-center justify-center shrink-0">
-          <LucideIcon name={captureAsTask ? 'inbox' : 'sparkles'} size={16} />
+          <LucideIcon name={captureAsTask ? 'inbox' : 'sparkles'} size={15} />
         </div>
 
         <input
@@ -110,8 +114,8 @@ const QuickCaptureBar = forwardRef<HTMLInputElement, QuickCaptureBarProps>(funct
             compact
               ? '快輸：下午3點開會 30m #工作'
               : captureAsTask
-                ? '輸入待辦事項，例如：完成週報 45分鐘 #工作 !高'
-                : '自然語言快輸：明天下午3點半跟團隊開會 90分鐘 #工作 每週三 !高'
+                ? '直接輸入待辦，例如：完成週報 45分鐘 #工作 !高'
+                : '直接輸入時間與標題，例如：明天下午3點開會 60分鐘 #工作'
           }
           aria-label="自然語言快速新增排程或待辦"
           className="flex-1 min-w-0 bg-transparent text-sm text-[var(--text-main)] placeholder:text-[var(--text-muted)] focus:outline-none"
@@ -121,8 +125,8 @@ const QuickCaptureBar = forwardRef<HTMLInputElement, QuickCaptureBarProps>(funct
           type="button"
           data-testid="quick-capture-mode-toggle"
           onClick={() => setCaptureAsTask((prev) => !prev)}
-          title={captureAsTask ? '目前模式：加入待辦收件匣' : '目前模式：直接排入時間軸'}
-          className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold border border-[var(--border-subtle)] bg-[var(--surface-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] shrink-0"
+          title={captureAsTask ? '目前模式：加入待辦收件匣（點此切換）' : '目前模式：直接排入時間軸（點此切換）'}
+          className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold border border-[var(--border-subtle)] bg-[var(--surface-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] shrink-0 transition-colors"
         >
           <LucideIcon name={captureAsTask ? 'inbox' : 'calendar-plus'} size={13} />
           <span>{captureAsTask ? '收件匣' : '時間塊'}</span>
@@ -138,6 +142,23 @@ const QuickCaptureBar = forwardRef<HTMLInputElement, QuickCaptureBarProps>(funct
           <span>{captureAsTask ? '記待辦' : '排入'}</span>
         </button>
       </form>
+
+      {/* Subtle 1-Glance Quick Example Chips when input is empty (Desktop only) */}
+      {!compact && !parsed && (
+        <div className="hidden md:flex items-center gap-2 mt-2 pt-1.5 border-t border-[var(--border-subtle)]/60 text-[11px] text-[var(--text-muted)]">
+          <span className="shrink-0 opacity-75">快速試用：</span>
+          {quickExamples.map((sample) => (
+            <button
+              key={sample}
+              type="button"
+              onClick={() => setInputValue(sample)}
+              className="px-2 py-0.5 rounded-lg bg-[var(--surface-subtle)] hover:bg-sky-500/12 hover:text-sky-700 dark:hover:text-sky-300 transition-colors truncate max-w-[260px]"
+            >
+              {sample}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Instant Live NLP Token Preview Pills */}
       {parsed && (
@@ -164,7 +185,13 @@ const QuickCaptureBar = forwardRef<HTMLInputElement, QuickCaptureBarProps>(funct
           ))}
           {parsed.tokensDetected.length === 0 && (
             <span className="text-[var(--text-muted)]">
-              預設安排於 {new Date(parsed.startAt).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false })}（{parsed.durationMinutes} 分鐘）
+              預設安排於{' '}
+              {new Date(parsed.startAt).toLocaleTimeString('zh-TW', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+              })}
+              （{parsed.durationMinutes} 分鐘）
             </span>
           )}
         </div>

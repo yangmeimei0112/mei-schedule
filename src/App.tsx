@@ -1,11 +1,12 @@
 import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import AgendaListView from './components/AgendaListView';
 import AppPreloaderOverlay, { ThemeCrossfadeVeil } from './components/AppPreloaderOverlay';
+import AppSidebar from './components/AppSidebar';
 import MobileBottomNav from './components/MobileBottomNav';
 import MonthView from './components/MonthView';
 import QuickCaptureBar from './components/QuickCaptureBar';
 import StudioToast from './components/StudioToast';
-import TaskInboxSidebar from './components/TaskInboxSidebar';
+import TaskInboxDrawer from './components/TaskInboxDrawer';
 import TimelineView from './components/TimelineView';
 import TopNavBar from './components/TopNavBar';
 import WeekGridView from './components/WeekGridView';
@@ -77,13 +78,13 @@ function MeiScheduleShell() {
     viewMode,
     selectedDate,
     selectedEventId,
-    sidebarOpen,
+    inboxDrawerOpen,
     activeModal,
     setCurrentMember,
     setViewMode,
     goToToday,
     selectEvent,
-    setSidebarOpen,
+    setInboxDrawerOpen,
     openModal,
     closeModal,
     showToast,
@@ -127,7 +128,7 @@ function MeiScheduleShell() {
     });
   }, [handleFocusQuickCapture]);
 
-  // Global keyboard shortcuts (Cmd/Ctrl+K, Cmd/Ctrl+Z, C, T, 1-5, F, /, Escape)
+  // Global keyboard shortcuts (Cmd/Ctrl+K, Cmd/Ctrl+Z, C, T, I, 1-5, F, /, Escape)
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
@@ -161,6 +162,7 @@ function MeiScheduleShell() {
       if (e.key === 'Escape') {
         if (activeModal) closeModal();
         else if (selectedEventId) selectEvent(null);
+        else if (inboxDrawerOpen) setInboxDrawerOpen(false);
         return;
       }
 
@@ -173,6 +175,9 @@ function MeiScheduleShell() {
       } else if (lower === 't') {
         e.preventDefault();
         goToToday();
+      } else if (lower === 'i') {
+        e.preventDefault();
+        setInboxDrawerOpen(!inboxDrawerOpen);
       } else if (lower === 'f') {
         e.preventDefault();
         openModal('focus');
@@ -197,9 +202,11 @@ function MeiScheduleShell() {
   }, [
     activeModal,
     selectedEventId,
+    inboxDrawerOpen,
     closeModal,
     openModal,
     selectEvent,
+    setInboxDrawerOpen,
     undo,
     redo,
     goToToday,
@@ -226,9 +233,7 @@ function MeiScheduleShell() {
     [events, visibleCalendarIds]
   );
 
-  // Anchored 65-day recurrence expansion cache:
-  // Switching between Day / 3-Day / Week / Month / Agenda or stepping nearby dates
-  // reuses the exact cached expanded array with ZERO recurrence recomputation!
+  // Anchored 65-day recurrence expansion cache
   const [cacheAnchorDate, setCacheAnchorDate] = useState<string>(selectedDate);
 
   useEffect(() => {
@@ -270,8 +275,12 @@ function MeiScheduleShell() {
     }
     if (viewMode === 'agenda') {
       const base = parseLocalDateKey(selectedDate);
-      const startKey = toLocalDateKey(new Date(base.getFullYear(), base.getMonth(), base.getDate() - 3));
-      const endKey = toLocalDateKey(new Date(base.getFullYear(), base.getMonth(), base.getDate() + 21));
+      const startKey = toLocalDateKey(
+        new Date(base.getFullYear(), base.getMonth(), base.getDate() - 3)
+      );
+      const endKey = toLocalDateKey(
+        new Date(base.getFullYear(), base.getMonth(), base.getDate() + 21)
+      );
       if (startKey >= cacheStartKey && endKey <= cacheEndKey) {
         return cachedExpandedInstances.filter(
           (i) => i.occurrenceDate >= startKey && i.occurrenceDate <= endKey
@@ -280,7 +289,14 @@ function MeiScheduleShell() {
       return expandRecurringEvents(filteredMasterEvents, startKey, endKey);
     }
     return cachedExpandedInstances;
-  }, [viewMode, selectedDate, cacheStartKey, cacheEndKey, cachedExpandedInstances, filteredMasterEvents]);
+  }, [
+    viewMode,
+    selectedDate,
+    cacheStartKey,
+    cacheEndKey,
+    cachedExpandedInstances,
+    filteredMasterEvents
+  ]);
 
   const selectedDayConflicts = useMemo(() => {
     const dayOnly = cachedExpandedInstances.filter((i) => i.occurrenceDate === selectedDate);
@@ -310,56 +326,22 @@ function MeiScheduleShell() {
   return (
     <div
       data-testid="mei-schedule-app"
-      className="min-h-dvh-screen sky-ambient-bg flex flex-col"
+      className="min-h-dvh-screen sky-ambient-bg flex items-stretch"
     >
       {/* Hybrid Mode 2 Preloader (First-visit brand splash / Revisit 0ms instant + silent warm-up) */}
       <AppPreloaderOverlay hydrated={hydrated} disabled={isTrayRoute} />
 
-      <TopNavBar
+      {/* Left Zone: Unified Full-Height App Sidebar (264px Expanded <-> 64px Mini Rail | Mobile Slide-Over) */}
+      <AppSidebar
         conflictCount={selectedDayConflicts.length}
         onFocusQuickCapture={handleFocusQuickCapture}
       />
 
-      {/* Main Responsive Workspace Container */}
-      <main className="narrow-compact-px flex-1 max-w-[1600px] w-full mx-auto px-3 sm:px-5 py-4 sm:py-5 pb-28 sm:pb-10 flex flex-col lg:flex-row gap-4 items-start">
-        {/* Left Sidebar (Desktop collapsible + Mobile Drawer Overlay) */}
-        {sidebarOpen && (
-          <>
-            <div className="hidden lg:block sticky top-28 pb-20">
-              <TaskInboxSidebar />
-            </div>
-            {/* Mobile Slide-Over Sidebar */}
-            <div
-              data-testid="mobile-sidebar-overlay"
-              className="lg:hidden fixed inset-0 z-40 bg-slate-950/45 backdrop-blur-sm flex"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <div
-                onClick={(e) => e.stopPropagation()}
-                className="w-[88vw] max-w-[330px] h-full overflow-y-auto bg-[var(--bg-primary)] p-3.5 shadow-2xl pb-24 space-y-3"
-              >
-                <div className="flex items-center justify-between px-1 pb-2 border-b border-[var(--border-subtle)]">
-                  <span className="text-xs font-extrabold text-[var(--text-main)]">
-                    行事曆與待辦收件匣
-                  </span>
-                  <button
-                    type="button"
-                    data-testid="close-mobile-sidebar-btn"
-                    onClick={() => setSidebarOpen(false)}
-                    aria-label="關閉側邊欄"
-                    className="btn-sky-secondary px-2.5 py-1 rounded-xl text-[11px] font-bold"
-                  >
-                    收合
-                  </button>
-                </div>
-                <TaskInboxSidebar />
-              </div>
-            </div>
-          </>
-        )}
+      {/* Center Zone: Slim Single-Row Header + Breathable Main Calendar Workspace */}
+      <div className="flex-1 min-w-0 flex flex-col">
+        <TopNavBar />
 
-        {/* Primary Schedule Workspace */}
-        <div className="flex-1 min-w-0 w-full space-y-4">
+        <main className="narrow-compact-px flex-1 max-w-[1380px] w-full mx-auto px-3 sm:px-5 lg:px-6 py-4 sm:py-5 pb-28 sm:pb-20 space-y-4">
           <QuickCaptureBar ref={quickCaptureInputRef} />
 
           {viewMode === 'day' && <TimelineView instances={viewInstances} />}
@@ -367,8 +349,11 @@ function MeiScheduleShell() {
           {viewMode === 'week' && <WeekGridView mode="week" instances={viewInstances} />}
           {viewMode === 'month' && <MonthView instances={viewInstances} />}
           {viewMode === 'agenda' && <AgendaListView instances={viewInstances} />}
-        </div>
-      </main>
+        </main>
+      </div>
+
+      {/* Right Zone: Dedicated Collapsible Task Inbox Wing (Desktop Docked | Mobile Slide-Over) */}
+      <TaskInboxDrawer />
 
       {/* Mobile Bottom One-Handed Navigation */}
       <MobileBottomNav onFocusQuickCapture={handleFocusQuickCapture} />
