@@ -425,9 +425,14 @@
    ========================================================================== */
 
 html {
+  color-scheme: light;
   scroll-behavior: smooth;
   -webkit-tap-highlight-color: transparent;
   accent-color: var(--accent-primary);
+}
+
+html.dark {
+  color-scheme: dark;
 }
 
 ::selection {
@@ -442,8 +447,11 @@ body {
   min-height: 100vh;
   min-height: 100dvh;
   overflow-x: hidden;
-  transition: background-color 350ms cubic-bezier(0.4, 0, 0.2, 1),
-              color 350ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.timeline-hour-slot {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 48px;
 }
 
 h1, .font-heading-lg, .font-title-lg {
@@ -766,11 +774,53 @@ h4, h5, h6, p, span, button, input, textarea, select, label, .font-heading-sm, .
 }
 
 /* ==========================================================================
-   風格 B：電影交叉淡融轉場系統
-   - 主題風格切換 (theme-transitioning): 450ms 絲滑交叉淡融
-   - 深色／亮色切換 (color-mode-transitioning): 680ms 慢速柔緩日出／日落淡融
+   零卡頓雙軌主題轉場引擎 (Zero-Jank Theme Transition Engine v1.5.4)
+   1. 現代瀏覽器 (Android Chrome / iOS Safari 18+ / Desktop Chrome)：
+      採用原生 GPU 合成 View Transitions API (::view-transition-old/new(root))
+      - 單幀靜態快照 + GPU 合成執行緒 60/120fps 交叉淡融，0 逐幀 DOM 重繪、0 毛玻璃重算
+   2. 舊版行動端／不支援 View Transitions 的退路：
+      - 桌機維持 450ms (theme-transitioning) 與 680ms (color-mode-transitioning)
+      - 手機端 (<768px) 嚴格禁止對上百個按鈕／卡片執行 box-shadow / fill / stroke 逐幀重繪，
+        並於轉場期間暫停多層 backdrop-filter 以消除行動 GPU 頓挫
    ========================================================================== */
 
+/* 1. Native GPU-Composited View Transitions (zero universal * selector cost) */
+html.vt-active body,
+html.vt-active .bento-glass-card,
+html.vt-active .schedule-surface-card,
+html.vt-active .schedule-time-block,
+html.vt-active .btn-sky-primary,
+html.vt-active .btn-sky-secondary,
+html.vt-active .sidebar-nav-item {
+  transition: none !important;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 360ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  mix-blend-mode: normal;
+}
+
+html[data-vt-kind="theme"]::view-transition-old(root),
+html[data-vt-kind="theme"]::view-transition-new(root) {
+  animation-duration: 280ms;
+}
+
+@media (max-width: 767px) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 260ms;
+    animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1);
+  }
+
+  html[data-vt-kind="theme"]::view-transition-old(root),
+  html[data-vt-kind="theme"]::view-transition-new(root) {
+    animation-duration: 220ms;
+  }
+}
+
+/* 2. Fallback Cross-Dissolve (Desktop & Browsers without View Transitions) */
 html.theme-transitioning,
 html.theme-transitioning body,
 html.theme-transitioning header,
@@ -787,7 +837,7 @@ html.theme-transitioning .bento-glass-card,
 html.theme-transitioning .schedule-surface-card,
 html.theme-transitioning .schedule-time-block,
 html.theme-transitioning .squircle-icon-badge {
-  transition-property: background-color, border-color, color, box-shadow, border-radius, fill, stroke !important;
+  transition-property: background-color, border-color, color, border-radius !important;
   transition-duration: 450ms !important;
   transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
@@ -808,7 +858,7 @@ html.color-mode-transitioning .bento-glass-card,
 html.color-mode-transitioning .schedule-surface-card,
 html.color-mode-transitioning .schedule-time-block,
 html.color-mode-transitioning .squircle-icon-badge {
-  transition-property: background-color, border-color, color, box-shadow, fill, stroke !important;
+  transition-property: background-color, border-color, color !important;
   transition-duration: 680ms !important;
   transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
@@ -843,6 +893,8 @@ html.color-mode-transitioning .squircle-icon-badge {
   z-index: 55;
   pointer-events: none;
   will-change: opacity;
+  transform: translateZ(0);
+  contain: strict;
 }
 
 .theme-crossfade-veil-slow {
@@ -867,16 +919,78 @@ html.color-mode-transitioning .squircle-icon-badge {
   will-change: transform;
 }
 
-/* 行動端智慧分層毛玻璃降載：頂底導覽列精簡至 blur(10px) 保持 60fps 捲動並呈現穿透內容質感 */
+/* 行動端智慧分層毛玻璃降載 + 退路轉場零卡頓防護 (<768px) */
 @media (max-width: 767px) {
   [data-testid="top-nav-bar"] {
-    backdrop-filter: blur(10px) !important;
-    -webkit-backdrop-filter: blur(10px) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
   }
 
   [data-testid="mobile-bottom-nav"] {
-    backdrop-filter: blur(10px) saturate(165%) !important;
-    -webkit-backdrop-filter: blur(10px) saturate(165%) !important;
+    backdrop-filter: blur(10px) saturate(155%) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(155%) !important;
+  }
+
+  /* 舊版無 View Transitions 行動瀏覽器退路：完全交由純 GPU opacity 柔霧層 (ThemeCrossfadeVeil) 淡融，
+     嚴禁對 html/body/descendants 執行動畫化的繼承 color 過渡（可避免每幀 1000+ 節點 RecalcStyle） */
+  html.color-mode-transitioning,
+  html.color-mode-transitioning body,
+  html.color-mode-transitioning header,
+  html.color-mode-transitioning nav,
+  html.color-mode-transitioning main,
+  html.color-mode-transitioning aside,
+  html.color-mode-transitioning section,
+  html.color-mode-transitioning article,
+  html.color-mode-transitioning button,
+  html.color-mode-transitioning input,
+  html.color-mode-transitioning select,
+  html.color-mode-transitioning textarea,
+  html.color-mode-transitioning .bento-glass-card,
+  html.color-mode-transitioning .schedule-surface-card,
+  html.color-mode-transitioning .schedule-time-block,
+  html.color-mode-transitioning .squircle-icon-badge,
+  html.theme-transitioning,
+  html.theme-transitioning body,
+  html.theme-transitioning header,
+  html.theme-transitioning nav,
+  html.theme-transitioning main,
+  html.theme-transitioning aside,
+  html.theme-transitioning section,
+  html.theme-transitioning article,
+  html.theme-transitioning button,
+  html.theme-transitioning input,
+  html.theme-transitioning select,
+  html.theme-transitioning textarea,
+  html.theme-transitioning .bento-glass-card,
+  html.theme-transitioning .schedule-surface-card,
+  html.theme-transitioning .schedule-time-block,
+  html.theme-transitioning .squircle-icon-badge {
+    transition: none !important;
+  }
+
+  .theme-crossfade-veil-slow {
+    animation-duration: 300ms;
+  }
+
+  .theme-crossfade-veil-fast {
+    animation-duration: 240ms;
+  }
+
+  /* 退路轉場瞬間暫停多層 backdrop-filter，徹底消除行動端逐幀 GPU 回讀高斯模糊 */
+  html.color-mode-transitioning [data-testid="top-nav-bar"],
+  html.color-mode-transitioning [data-testid="mobile-bottom-nav"],
+  html.color-mode-transitioning [data-testid="mobile-sidebar-overlay"],
+  html.color-mode-transitioning [data-testid="appearance-settings-modal"],
+  html.color-mode-transitioning [data-testid="studio-toast"],
+  html.color-mode-transitioning .mei-dock-capsule,
+  html.theme-transitioning [data-testid="top-nav-bar"],
+  html.theme-transitioning [data-testid="mobile-bottom-nav"],
+  html.theme-transitioning [data-testid="mobile-sidebar-overlay"],
+  html.theme-transitioning [data-testid="appearance-settings-modal"],
+  html.theme-transitioning [data-testid="studio-toast"],
+  html.theme-transitioning .mei-dock-capsule {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 }
 
@@ -890,6 +1004,8 @@ html.color-mode-transitioning .squircle-icon-badge {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root),
   html.theme-transitioning,
   html.theme-transitioning body,
   html.theme-transitioning *,

@@ -353,10 +353,10 @@ describe('M1 Visual System: 3 Themes x 2 Modes, Sky-Blue Toast, dvh & 4 Aspect R
       // Mobile (<1024px) must NOT show full-screen blocking sidebar overlay on initial load
       expect(screen.queryByTestId('mobile-sidebar-overlay')).toBeNull();
 
-      // Appearance settings modal exposes v1.5.2 release badge, Studio Dock visibility control & Auto-Wrap Titles switch
+      // Appearance settings modal exposes v1.5.4 release badge, Studio Dock visibility control & Auto-Wrap Titles switch
       expect(document.documentElement.getAttribute('data-title-wrap')).toBe('wrap');
       fireEvent.click(screen.getByTestId('open-appearance-modal-btn'));
-      expect(await screen.findByTestId('app-version-badge')).toHaveTextContent('v1.5.2');
+      expect(await screen.findByTestId('app-version-badge')).toHaveTextContent('v1.5.4');
       expect(screen.getByTestId('dock-visibility-control')).toBeInTheDocument();
       const autoWrapSwitch = screen.getByTestId('toggle-auto-wrap-titles');
       expect(autoWrapSwitch).toHaveAttribute('aria-checked', 'true');
@@ -389,8 +389,12 @@ describe('M1 Visual System: 3 Themes x 2 Modes, Sky-Blue Toast, dvh & 4 Aspect R
       fireEvent.click(screen.getByTestId('color-mode-toggle-btn'));
       unmount();
 
-      // Verify CSS defines 450ms theme transition, slower 680ms color-mode transition, and GPU containment
+      // Verify CSS defines hardware GPU View Transitions (::view-transition-old/new(root)), mobile zero-jank fallback, and GPU containment
       const css = fs.readFileSync(path.join(ROOT_DIR, 'src/styles/index.css'), 'utf8');
+      expect(css).toContain('::view-transition-old(root)');
+      expect(css).toContain('::view-transition-new(root)');
+      expect(css).toContain('html.vt-active');
+      expect(css).toContain('backdrop-filter: none !important;');
       expect(css).toContain('html.theme-transitioning');
       expect(css).toContain('transition-duration: 450ms !important;');
       expect(css).toContain('html.color-mode-transitioning');

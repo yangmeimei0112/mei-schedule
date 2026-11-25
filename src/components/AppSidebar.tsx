@@ -8,7 +8,7 @@ import {
 } from '../data/seedData';
 import { parseLocalDateKey, toLocalDateKey } from '../services/recurrenceEngine';
 import { useFocusSession } from '../store/FocusSessionContext';
-import { useScheduleStore } from '../store/useScheduleStore';
+import { useScheduleStore, useVisualTheme } from '../store/useScheduleStore';
 import type { CalendarSetId, DesignTheme } from '../types/schedule';
 
 export interface AppSidebarProps {
@@ -38,13 +38,113 @@ const SidebarFocusRailDot = React.memo(function SidebarFocusRailDot() {
   );
 });
 
+/**
+ * Isolated Visual Theme & Dark/Light Controls subscriber:
+ * Toggling Dark/Light mode or switching between the 3 design themes re-renders ONLY these 4 buttons (~0.3ms),
+ * NEVER re-rendering AppSidebar's 42-day mini calendar or the main calendar workspace.
+ */
+const SidebarVisualControls = React.memo(function SidebarVisualControls({
+  isRailDesktop,
+  hideOnRail,
+  onOpenAppearance
+}: {
+  isRailDesktop: boolean;
+  hideOnRail: string;
+  onOpenAppearance: () => void;
+}) {
+  const { designTheme, resolvedColorMode } = useVisualTheme();
+  const { updatePreferences, showToast } = useScheduleStore();
+
+  const handleSelectTheme = (theme: DesignTheme) => {
+    updatePreferences({ designTheme: theme });
+    const label = DESIGN_THEME_OPTIONS.find((t) => t.id === theme)?.name || theme;
+    showToast(`已切換外觀風格：${label}`, { icon: 'palette' });
+  };
+
+  const handleToggleColorMode = () => {
+    const nextMode = resolvedColorMode === 'dark' ? 'light' : 'dark';
+    updatePreferences({ colorMode: nextMode });
+    showToast(nextMode === 'dark' ? '已切換至深色模式' : '已切換至亮色模式', {
+      icon: nextMode === 'dark' ? 'moon' : 'sun'
+    });
+  };
+
+  return (
+    <>
+      {/* 3-Design-Theme Quick Switcher (Expanded & Mobile Drawer) */}
+      <div
+        role="group"
+        aria-label="外觀主題快速切換"
+        className={`grid grid-cols-3 gap-1 p-1 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-subtle)] ${hideOnRail}`}
+      >
+        {DESIGN_THEME_OPTIONS.map((opt) => {
+          const active = designTheme === opt.id;
+          return (
+            <button
+              key={opt.id}
+              type="button"
+              data-testid={`theme-switch-${opt.id}`}
+              aria-pressed={active}
+              onClick={() => handleSelectTheme(opt.id)}
+              className={`py-1 px-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition-colors inline-flex items-center justify-center gap-1 ${
+                active
+                  ? 'theme-accent-solid shadow-sm'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
+              }`}
+            >
+              <LucideIcon name={opt.icon} size={11} />
+              <span>{opt.name}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Dark/Light Mode + Appearance Preferences Row */}
+      <div
+        className={`flex items-center gap-1.5 ${
+          isRailDesktop ? 'flex-row lg:flex-col' : 'flex-row'
+        }`}
+      >
+        <button
+          type="button"
+          data-testid="color-mode-toggle-btn"
+          onClick={handleToggleColorMode}
+          aria-label={resolvedColorMode === 'dark' ? '切換至亮色模式' : '切換至深色模式'}
+          title={resolvedColorMode === 'dark' ? '切換至亮色模式' : '切換至深色模式'}
+          className={`sidebar-nav-item rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-subtle)] hover:border-[var(--border-hover)] text-xs font-semibold text-[var(--text-main)] inline-flex items-center justify-center gap-1.5 ${
+            isRailDesktop ? 'flex-1 py-1.5 px-2 lg:w-10 lg:h-9 lg:p-0 lg:flex-none' : 'flex-1 py-1.5 px-2'
+          }`}
+        >
+          <LucideIcon name={resolvedColorMode === 'dark' ? 'sun' : 'moon'} size={14} />
+          <span className={hideOnRail}>
+            {resolvedColorMode === 'dark' ? '亮色' : '深色'}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          data-testid="open-appearance-modal-btn"
+          onClick={onOpenAppearance}
+          aria-label="外觀風格與偏好設定"
+          title="偏好設定、工作時段與大廳膠囊管理"
+          className={`sidebar-nav-item rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-subtle)] hover:border-[var(--border-hover)] text-xs font-semibold text-[var(--text-main)] inline-flex items-center justify-center gap-1.5 ${
+            isRailDesktop ? 'flex-1 py-1.5 px-2 lg:w-10 lg:h-9 lg:p-0 lg:flex-none' : 'flex-1 py-1.5 px-2'
+          }`}
+        >
+          <LucideIcon name="sliders-horizontal" size={14} />
+          <span className={hideOnRail}>偏好設定</span>
+        </button>
+      </div>
+    </>
+  );
+});
+
 function AppSidebar({ conflictCount, onFocusQuickCapture }: AppSidebarProps) {
   const {
     calendars,
     events,
     selectedDate,
     preferences,
-    resolvedColorMode,
     currentMember,
     syncStatus,
     syncStatusMessage,
@@ -54,9 +154,7 @@ function AppSidebar({ conflictCount, onFocusQuickCapture }: AppSidebarProps) {
     toggleCalendarVisibility,
     setActiveCalendarSet,
     setSidebarOpen,
-    updatePreferences,
-    openModal,
-    showToast
+    openModal
   } = useScheduleStore();
 
   const [miniMonthOffset, setMiniMonthOffset] = useState(0);
@@ -142,20 +240,6 @@ function AppSidebar({ conflictCount, onFocusQuickCapture }: AppSidebarProps) {
     onFocusQuickCapture();
   };
 
-  const handleSelectTheme = (theme: DesignTheme) => {
-    updatePreferences({ designTheme: theme });
-    const label = DESIGN_THEME_OPTIONS.find((t) => t.id === theme)?.name || theme;
-    showToast(`已切換外觀風格：${label}`, { icon: 'palette' });
-  };
-
-  const handleToggleColorMode = () => {
-    const nextMode = resolvedColorMode === 'dark' ? 'light' : 'dark';
-    updatePreferences({ colorMode: nextMode });
-    showToast(nextMode === 'dark' ? '已切換至深色模式' : '已切換至亮色模式', {
-      icon: nextMode === 'dark' ? 'moon' : 'sun'
-    });
-  };
-
   const handleSelectSet = (setId: CalendarSetId) => {
     setActiveCalendarSet(setId);
   };
@@ -231,12 +315,12 @@ function AppSidebar({ conflictCount, onFocusQuickCapture }: AppSidebarProps) {
 
   return (
     <>
-      {/* Mobile Slide-Over Backdrop (ONLY mounted when drawer is open on < lg, preserving v1.3.0 zero-block rule) */}
+      {/* Mobile Slide-Over Backdrop (Crisp scrim without heavy full-screen mobile backdrop-filter GPU pass) */}
       {sidebarOpen && (
         <div
           data-testid="mobile-sidebar-overlay"
           onClick={() => setSidebarOpen(false)}
-          className="lg:hidden fixed inset-0 z-40 bg-slate-950/45 backdrop-blur-sm"
+          className="lg:hidden fixed inset-0 z-40 bg-slate-950/50 sm:backdrop-blur-[2px]"
           aria-hidden="true"
         />
       )}
@@ -246,7 +330,7 @@ function AppSidebar({ conflictCount, onFocusQuickCapture }: AppSidebarProps) {
         data-testid="app-sidebar"
         data-sidebar-mode={sidebarOpen ? 'expanded' : 'rail'}
         aria-label="主導覽側欄"
-        className={`app-sidebar-surface fixed inset-y-0 left-0 z-50 lg:sticky lg:top-0 lg:z-30 h-[100dvh] flex flex-col border-r border-[var(--border-subtle)] shadow-2xl lg:shadow-none shrink-0 transition-[transform,width] duration-200 ease-out pt-safe ${
+        className={`app-sidebar-surface fixed inset-y-0 left-0 z-50 lg:sticky lg:top-0 lg:z-30 h-[100dvh] flex flex-col border-r border-[var(--border-subtle)] shadow-2xl lg:shadow-none shrink-0 transition-[transform,width] duration-200 ease-out will-change-transform pt-safe ${
           sidebarOpen
             ? 'translate-x-0 w-[280px] max-w-[86vw] lg:w-[264px]'
             : '-translate-x-full pointer-events-none lg:translate-x-0 lg:pointer-events-auto lg:w-[64px] w-[280px]'
@@ -622,76 +706,17 @@ function AppSidebar({ conflictCount, onFocusQuickCapture }: AppSidebarProps) {
           </section>
         </div>
 
-        {/* 3. Pinned Utility Footer: 3-Theme Switcher + Dark/Light + Appearance + Member Account */}
+        {/* 3. Pinned Utility Footer: Isolated 3-Theme + Dark/Light Controls + Member Account */}
         <div
           className={`shrink-0 border-t border-[var(--border-subtle)] pb-safe ${
             isRailDesktop ? 'p-3 lg:px-2 lg:py-2.5' : 'p-3'
           } space-y-2`}
         >
-          {/* 3-Design-Theme Quick Switcher (Expanded & Mobile Drawer) */}
-          <div
-            role="group"
-            aria-label="外觀主題快速切換"
-            className={`grid grid-cols-3 gap-1 p-1 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-subtle)] ${hideOnRail}`}
-          >
-            {DESIGN_THEME_OPTIONS.map((opt) => {
-              const active = preferences.designTheme === opt.id;
-              return (
-                <button
-                  key={opt.id}
-                  type="button"
-                  data-testid={`theme-switch-${opt.id}`}
-                  aria-pressed={active}
-                  onClick={() => handleSelectTheme(opt.id)}
-                  className={`py-1 px-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition-colors inline-flex items-center justify-center gap-1 ${
-                    active
-                      ? 'theme-accent-solid shadow-sm'
-                      : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
-                  }`}
-                >
-                  <LucideIcon name={opt.icon} size={11} />
-                  <span>{opt.name}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Dark/Light Mode + Appearance Preferences Row */}
-          <div
-            className={`flex items-center gap-1.5 ${
-              isRailDesktop ? 'flex-row lg:flex-col' : 'flex-row'
-            }`}
-          >
-            <button
-              type="button"
-              data-testid="color-mode-toggle-btn"
-              onClick={handleToggleColorMode}
-              aria-label={resolvedColorMode === 'dark' ? '切換至亮色模式' : '切換至深色模式'}
-              title={resolvedColorMode === 'dark' ? '切換至亮色模式' : '切換至深色模式'}
-              className={`sidebar-nav-item rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-subtle)] hover:border-[var(--border-hover)] text-xs font-semibold text-[var(--text-main)] inline-flex items-center justify-center gap-1.5 ${
-                isRailDesktop ? 'flex-1 py-1.5 px-2 lg:w-10 lg:h-9 lg:p-0 lg:flex-none' : 'flex-1 py-1.5 px-2'
-              }`}
-            >
-              <LucideIcon name={resolvedColorMode === 'dark' ? 'sun' : 'moon'} size={14} />
-              <span className={hideOnRail}>
-                {resolvedColorMode === 'dark' ? '亮色' : '深色'}
-              </span>
-            </button>
-
-            <button
-              type="button"
-              data-testid="open-appearance-modal-btn"
-              onClick={() => handleOpenTool('appearance')}
-              aria-label="外觀風格與偏好設定"
-              title="偏好設定、工作時段與大廳膠囊管理"
-              className={`sidebar-nav-item rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-subtle)] hover:border-[var(--border-hover)] text-xs font-semibold text-[var(--text-main)] inline-flex items-center justify-center gap-1.5 ${
-                isRailDesktop ? 'flex-1 py-1.5 px-2 lg:w-10 lg:h-9 lg:p-0 lg:flex-none' : 'flex-1 py-1.5 px-2'
-              }`}
-            >
-              <LucideIcon name="sliders-horizontal" size={14} />
-              <span className={hideOnRail}>偏好設定</span>
-            </button>
-          </div>
+          <SidebarVisualControls
+            isRailDesktop={isRailDesktop}
+            hideOnRail={hideOnRail}
+            onOpenAppearance={() => handleOpenTool('appearance')}
+          />
 
           {/* Member Account Card */}
           <button

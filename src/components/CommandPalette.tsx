@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { LucideIcon } from './BrandMark';
 import { COLOR_TOKEN_PALETTE } from '../data/seedData';
 import { toLocalDateKey } from '../services/recurrenceEngine';
-import { useScheduleStore } from '../store/useScheduleStore';
+import { useScheduleStore, useVisualTheme } from '../store/useScheduleStore';
 
 export default function CommandPalette() {
   const {
@@ -10,7 +10,6 @@ export default function CommandPalette() {
     closeModal,
     events,
     tasks,
-    resolvedColorMode,
     sidebarOpen,
     inboxDrawerOpen,
     setViewMode,
@@ -26,6 +25,7 @@ export default function CommandPalette() {
     undo,
     redo
   } = useScheduleStore();
+  const { resolvedColorMode } = useVisualTheme();
 
   const [query, setQuery] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);

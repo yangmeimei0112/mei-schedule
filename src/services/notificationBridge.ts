@@ -176,27 +176,35 @@ export function resolveThemeSurfaceColor(
   return palette[resolvedColorMode];
 }
 
+export function applyThemeMetaSync(
+  resolvedColorMode: 'light' | 'dark',
+  designTheme: 'sky-glass' | 'minimal-linear' | 'warm-journal' = 'sky-glass'
+): void {
+  if (typeof document === 'undefined') return;
+  const surfaceHex = resolveThemeSurfaceColor(resolvedColorMode, designTheme);
+  let meta = document.getElementById('mei-theme-color-meta') as HTMLMetaElement | null;
+  if (!meta) {
+    meta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null;
+  }
+  if (!meta) {
+    meta = document.createElement('meta');
+    meta.id = 'mei-theme-color-meta';
+    meta.name = 'theme-color';
+    document.head.appendChild(meta);
+  }
+  if (meta.hasAttribute('media')) {
+    meta.removeAttribute('media');
+  }
+  if (meta.getAttribute('content') !== surfaceHex) {
+    meta.setAttribute('content', surfaceHex);
+  }
+}
+
 export async function syncNativeStatusBar(
   resolvedColorMode: 'light' | 'dark',
   designTheme: 'sky-glass' | 'minimal-linear' | 'warm-journal' = 'sky-glass'
 ): Promise<void> {
-  const surfaceHex = resolveThemeSurfaceColor(resolvedColorMode, designTheme);
-
-  if (typeof document !== 'undefined') {
-    document.documentElement.style.colorScheme = resolvedColorMode;
-    let meta = document.getElementById('mei-theme-color-meta') as HTMLMetaElement | null;
-    if (!meta) {
-      meta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null;
-    }
-    if (!meta) {
-      meta = document.createElement('meta');
-      meta.id = 'mei-theme-color-meta';
-      meta.name = 'theme-color';
-      document.head.appendChild(meta);
-    }
-    meta.removeAttribute('media');
-    meta.setAttribute('content', surfaceHex);
-  }
+  applyThemeMetaSync(resolvedColorMode, designTheme);
 
   const runtime = detectRuntimePlatform();
   if (runtime === 'capacitor-ios' || runtime === 'capacitor-android') {

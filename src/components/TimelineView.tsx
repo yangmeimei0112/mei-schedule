@@ -327,7 +327,7 @@ function TimelineView({ instances }: TimelineViewProps) {
                       );
                       e.dataTransfer.effectAllowed = 'move';
                     }}
-                    className={`schedule-time-block relative border p-3.5 transition-all ${palette.surfaceClass} ${palette.borderClass} ${
+                    className={`schedule-time-block relative border p-3.5 ${palette.surfaceClass} ${palette.borderClass} ${
                       isCompleted ? 'opacity-70' : ''
                     } ${hasConflict ? 'ring-2 ring-rose-500/70' : ''}`}
                   >
@@ -580,7 +580,7 @@ function TimelineView({ instances }: TimelineViewProps) {
                   }}
                   onDragLeave={() => setDragOverHour((prev) => (prev === hour ? null : prev))}
                   onDrop={(e) => handleDropOnHour(e, hour)}
-                  className={`relative min-h-[46px] px-2.5 py-1.5 flex items-start gap-2.5 transition-colors ${
+                  className={`timeline-hour-slot relative min-h-[46px] px-2.5 py-1.5 flex items-start gap-2.5 transition-colors ${
                     isDragTarget ? 'bg-[var(--accent-soft-bg)] ring-2 ring-inset ring-[var(--accent-primary)]' : ''
                   }`}
                 >

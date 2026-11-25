@@ -101,7 +101,7 @@ export const AppPreloaderOverlay = React.memo(function AppPreloaderOverlay({
           data-preload-phase={splashPhase}
           role="status"
           aria-live="polite"
-          className={`fixed inset-0 z-[60] sky-ambient-bg flex flex-col items-center justify-center px-6 transition-all duration-[350ms] ease-out ${
+          className={`fixed inset-0 z-[60] sky-ambient-bg flex flex-col items-center justify-center px-6 transition-[opacity,transform] duration-[350ms] ease-out ${
             splashPhase === 'exiting'
               ? 'opacity-0 scale-[1.02] pointer-events-none'
               : 'opacity-100 scale-100'

@@ -39,7 +39,7 @@ export function StudioToast({ toast, onDismiss, elevated = true }: StudioToastPr
         elevated
           ? 'bottom-36 sm:bottom-24 md:bottom-24 max-md:bottom-36'
           : 'bottom-20 md:bottom-6'
-      } left-4 right-4 sm:left-auto sm:right-6 mx-auto w-fit max-w-[calc(100vw-2rem)] sm:max-w-md z-50 inline-flex items-center gap-2.5 px-4 py-3 rounded-full bg-sky-100/95 dark:bg-sky-950/95 text-slate-900 dark:text-white border border-sky-300/80 dark:border-sky-400/40 shadow-xl shadow-sky-950/10 dark:shadow-sky-950/50 backdrop-blur-xl text-xs font-semibold select-none cursor-pointer ${
+      } left-4 right-4 sm:left-auto sm:right-6 mx-auto w-fit max-w-[calc(100vw-2rem)] sm:max-w-md z-50 inline-flex items-center gap-2.5 px-4 py-3 rounded-full bg-sky-100/95 dark:bg-sky-950/95 text-slate-900 dark:text-white border border-sky-300/80 dark:border-sky-400/40 shadow-xl shadow-sky-950/10 dark:shadow-sky-950/50 backdrop-blur-md sm:backdrop-blur-xl text-xs font-semibold select-none cursor-pointer ${
         toast.isExiting ? 'toast-slide-exit' : 'toast-spring-enter'
       }`}
     >
@@ -86,4 +86,4 @@ export function StudioToast({ toast, onDismiss, elevated = true }: StudioToastPr
   );
 }
 
-export default StudioToast;
+export default React.memo(StudioToast);

@@ -8,15 +8,22 @@ import React, {
   useRef,
   useState
 } from 'react';
+import { flushSync } from 'react-dom';
 import {
   COLOR_MODE_TRANSITION_MS,
+  MOBILE_COLOR_MODE_TRANSITION_MS,
+  MOBILE_THEME_TRANSITION_MS,
   THEME_BOOT_STORAGE_KEY,
-  THEME_TRANSITION_MS
+  THEME_TRANSITION_MS,
+  isTestRuntime
 } from '../services/preloadEngine';
+import { applyThemeMetaSync, syncNativeStatusBar } from '../services/notificationBridge';
 import type {
   Calendar,
   CalendarRole,
   CalendarSetId,
+  ColorMode,
+  DesignTheme,
   EventComment,
   FocusSession,
   HistoryEntry,
@@ -554,6 +561,18 @@ export interface ThemeTransitionPayload {
   targetMode: 'light' | 'dark';
 }
 
+export interface VisualThemeContextValue {
+  designTheme: DesignTheme;
+  colorMode: ColorMode;
+  resolvedColorMode: 'light' | 'dark';
+}
+
+interface ViewTransitionLike {
+  ready?: Promise<void>;
+  finished?: Promise<void>;
+  skipTransition?: () => void;
+}
+
 interface ToastContextValue {
   toast: ToastState | null;
   dismissToast: () => void;
@@ -565,6 +584,11 @@ const ToastStateContext = createContext<ToastContextValue>({
   dismissToast: () => {}
 });
 const ThemeTransitionContext = createContext<ThemeTransitionPayload | null>(null);
+const VisualThemeContext = createContext<VisualThemeContextValue>({
+  designTheme: 'sky-glass',
+  colorMode: 'system',
+  resolvedColorMode: 'light'
+});
 
 // ============================================================================
 // Provider Implementation
@@ -576,9 +600,61 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
   stateRef.current = state;
   const mutatedBeforeHydrateRef = useRef(false);
 
-  // Isolated Toast & Theme Transition states prevent full-tree re-renders
+  // Isolated Toast, Theme Transition & Visual Theme states prevent full-tree re-renders on Light/Dark swaps
   const [toastState, setToastState] = useState<ToastState | null>(null);
   const [themeTransition, setThemeTransition] = useState<ThemeTransitionPayload | null>(null);
+  const [visualTheme, setVisualTheme] = useState<VisualThemeContextValue>(() => ({
+    designTheme: state.preferences.designTheme || 'sky-glass',
+    colorMode: state.preferences.colorMode || 'system',
+    resolvedColorMode: state.resolvedColorMode
+  }));
+  const visualThemeRef = useRef<VisualThemeContextValue>(visualTheme);
+
+  const activeViewTransitionRef = useRef<ViewTransitionLike | null>(null);
+  const deferredPersistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingToastArgsRef = useRef<
+    [string, (string | ShowToastOptions)?, ShowToastOptions?] | null
+  >(null);
+  const prevVisualRef = useRef<{
+    initialized: boolean;
+    designTheme: DesignTheme;
+    resolvedColorMode: 'light' | 'dark';
+  }>({
+    initialized: false,
+    designTheme: state.preferences.designTheme || 'sky-glass',
+    resolvedColorMode: state.resolvedColorMode
+  });
+  const themeTransitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const transitionSeqRef = useRef(0);
+
+  const getEffectivePreferences = useCallback((): UserPreferences => {
+    return {
+      ...stateRef.current.preferences,
+      designTheme: visualThemeRef.current.designTheme,
+      colorMode: visualThemeRef.current.colorMode
+    };
+  }, []);
+
+  const syncVisualThemeState = useCallback((prefs: UserPreferences) => {
+    const nextDesignTheme: DesignTheme = prefs.designTheme || 'sky-glass';
+    const nextColorMode: ColorMode = prefs.colorMode || 'system';
+    const nextResolved = computeResolvedColorMode(nextColorMode);
+    const cur = visualThemeRef.current;
+    if (
+      cur.designTheme === nextDesignTheme &&
+      cur.colorMode === nextColorMode &&
+      cur.resolvedColorMode === nextResolved
+    ) {
+      return;
+    }
+    const nextVisual: VisualThemeContextValue = {
+      designTheme: nextDesignTheme,
+      colorMode: nextColorMode,
+      resolvedColorMode: nextResolved
+    };
+    visualThemeRef.current = nextVisual;
+    setVisualTheme(nextVisual);
+  }, []);
 
   const dispatch = useCallback((action: Action) => {
     if (
@@ -600,11 +676,12 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const dismissToast = useCallback(() => {
+    pendingToastArgsRef.current = null;
     clearToastTimers();
     setToastState(null);
   }, [clearToastTimers]);
 
-  const showToast = useCallback(
+  const showToastImmediate = useCallback(
     (
       message: string,
       iconOrOptions?: string | ShowToastOptions,
@@ -639,6 +716,21 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
       }, duration);
     },
     [clearToastTimers]
+  );
+
+  const showToast = useCallback(
+    (
+      message: string,
+      iconOrOptions?: string | ShowToastOptions,
+      extraOptions?: ShowToastOptions
+    ) => {
+      if (!isTestRuntime() && activeViewTransitionRef.current) {
+        pendingToastArgsRef.current = [message, iconOrOptions, extraOptions];
+        return;
+      }
+      showToastImmediate(message, iconOrOptions, extraOptions);
+    },
+    [showToastImmediate]
   );
 
   // Enqueue sync items when authenticated with cloud UUID
@@ -1433,29 +1525,207 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
     [persistSnapshot]
   );
 
+  const writeThemeBootCache = useCallback(
+    (designTheme: DesignTheme, colorMode: ColorMode, resolvedColorMode: 'light' | 'dark') => {
+      try {
+        window.localStorage?.setItem(
+          THEME_BOOT_STORAGE_KEY,
+          JSON.stringify({ designTheme, colorMode, resolvedColorMode })
+        );
+      } catch {
+        // Ignore storage restrictions
+      }
+    },
+    []
+  );
+
   const updatePreferences = useCallback(
     (updates: Partial<UserPreferences>) => {
       const nowIso = new Date().toISOString();
       const nextPrefs: UserPreferences = {
-        ...stateRef.current.preferences,
+        ...getEffectivePreferences(),
         ...updates,
         updatedAt: nowIso
       };
-      dispatch({ type: 'SET_PREFERENCES', preferences: nextPrefs });
-      void localStore.savePreferences(nextPrefs, { broadcast: true });
-      enqueueCloudOps([
-        {
-          id: generateUuidV4(),
-          entity: 'preferences',
-          operation: 'upsert',
-          recordId: nextPrefs.userId,
-          payload: preferencesToRow(nextPrefs),
-          queuedAt: nowIso,
-          retryCount: 0
+
+      const hasNonVisualUpdates = Object.keys(updates).some(
+        (key) => key !== 'colorMode' && key !== 'designTheme'
+      );
+      const nextTheme: DesignTheme = nextPrefs.designTheme || 'sky-glass';
+      const nextColorMode: ColorMode = nextPrefs.colorMode || 'system';
+      const nextResolvedMode = computeResolvedColorMode(nextColorMode);
+
+      const curVisual = visualThemeRef.current;
+      const colorModeChanged = curVisual.resolvedColorMode !== nextResolvedMode;
+      const themeChanged = curVisual.designTheme !== nextTheme;
+      const colorPrefChanged = curVisual.colorMode !== nextColorMode;
+
+      const persistAndSyncPrefs = () => {
+        writeThemeBootCache(nextTheme, nextColorMode, nextResolvedMode);
+        void localStore.savePreferences(nextPrefs, { broadcast: true });
+        enqueueCloudOps([
+          {
+            id: generateUuidV4(),
+            entity: 'preferences',
+            operation: 'upsert',
+            recordId: nextPrefs.userId,
+            payload: preferencesToRow(nextPrefs),
+            queuedAt: nowIso,
+            retryCount: 0
+          }
+        ]);
+      };
+
+      if (hasNonVisualUpdates) {
+        dispatch({ type: 'SET_PREFERENCES', preferences: nextPrefs });
+      }
+
+      if (!colorModeChanged && !themeChanged && !colorPrefChanged) {
+        persistAndSyncPrefs();
+        return;
+      }
+
+      const nextVisual: VisualThemeContextValue = {
+        designTheme: nextTheme,
+        colorMode: nextColorMode,
+        resolvedColorMode: nextResolvedMode
+      };
+      visualThemeRef.current = nextVisual;
+
+      const prefersReducedMotion =
+        typeof window !== 'undefined' &&
+        Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);
+
+      const doc =
+        typeof document !== 'undefined'
+          ? (document as Document & {
+              startViewTransition?: (cb: () => void) => ViewTransitionLike;
+            })
+          : null;
+
+      const canUseViewTransition =
+        Boolean(colorModeChanged || themeChanged) &&
+        !isTestRuntime() &&
+        !prefersReducedMotion &&
+        Boolean(doc && typeof doc.startViewTransition === 'function');
+
+      if (canUseViewTransition && doc && doc.startViewTransition) {
+        if (deferredPersistTimerRef.current) {
+          clearTimeout(deferredPersistTimerRef.current);
+          deferredPersistTimerRef.current = null;
         }
-      ]);
+        if (themeTransitionTimerRef.current) {
+          clearTimeout(themeTransitionTimerRef.current);
+          themeTransitionTimerRef.current = null;
+        }
+        try {
+          activeViewTransitionRef.current?.skipTransition?.();
+        } catch {
+          // Ignore skip errors from already-settled transitions
+        }
+
+        const seq = ++transitionSeqRef.current;
+        const html = doc.documentElement;
+        const kind: 'color-mode' | 'theme' = colorModeChanged ? 'color-mode' : 'theme';
+
+        // Mark prevVisualRef before updating React state so the fallback CSS effect does not double-fire
+        prevVisualRef.current = {
+          initialized: true,
+          designTheme: nextTheme,
+          resolvedColorMode: nextResolvedMode
+        };
+
+        html.classList.remove('theme-transitioning', 'color-mode-transitioning');
+        html.dataset.vtKind = kind;
+
+        const vt = doc.startViewTransition(() => {
+          html.classList.add('vt-active');
+          html.setAttribute('data-design-theme', nextTheme);
+          html.classList.toggle('dark', nextResolvedMode === 'dark');
+          applyThemeMetaSync(nextResolvedMode, nextTheme);
+          try {
+            flushSync(() => {
+              setVisualTheme(nextVisual);
+            });
+          } catch {
+            setVisualTheme(nextVisual);
+          }
+        });
+
+        activeViewTransitionRef.current = vt;
+
+        // Write tiny boot cache once GPU snapshots are locked in (zero impact on Frame 0)
+        void vt.ready?.then(
+          () => {
+            if (transitionSeqRef.current === seq) {
+              writeThemeBootCache(nextTheme, nextColorMode, nextResolvedMode);
+            }
+          },
+          () => {}
+        );
+
+        const finishTransition = () => {
+          if (transitionSeqRef.current !== seq) return;
+          html.classList.remove('vt-active');
+          delete html.dataset.vtKind;
+          activeViewTransitionRef.current = null;
+          if (pendingToastArgsRef.current) {
+            const [msg, iconOrOpts, extraOpts] = pendingToastArgsRef.current;
+            pendingToastArgsRef.current = null;
+            showToastImmediate(msg, iconOrOpts, extraOpts);
+          }
+          // Defer IndexedDB + cloud sync to an idle slice after the final frame paints
+          const scheduleIdle =
+            typeof window !== 'undefined' &&
+            typeof (window as Window & { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number })
+              .requestIdleCallback === 'function'
+              ? (cb: () => void) =>
+                  (
+                    window as Window & {
+                      requestIdleCallback: (fn: () => void, opts?: { timeout: number }) => number;
+                    }
+                  ).requestIdleCallback(cb, { timeout: 250 })
+              : (cb: () => void) => setTimeout(cb, 60);
+          scheduleIdle(() => {
+            if (transitionSeqRef.current !== seq) return;
+            persistAndSyncPrefs();
+            void syncNativeStatusBar(nextResolvedMode, nextTheme);
+          });
+        };
+
+        if (vt.finished) {
+          void vt.finished.then(finishTransition, finishTransition);
+        } else {
+          deferredPersistTimerRef.current = setTimeout(finishTransition, 360);
+        }
+        return;
+      }
+
+      // Fallback path (older mobile Safari/WebViews, Firefox, reduced-motion, or jsdom test runtime)
+      setVisualTheme(nextVisual);
+
+      if (isTestRuntime() || (!colorModeChanged && !themeChanged)) {
+        persistAndSyncPrefs();
+      } else {
+        if (deferredPersistTimerRef.current) {
+          clearTimeout(deferredPersistTimerRef.current);
+        }
+        const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+        const delayMs = colorModeChanged
+          ? isMobile
+            ? MOBILE_COLOR_MODE_TRANSITION_MS + 60
+            : COLOR_MODE_TRANSITION_MS + 60
+          : isMobile
+            ? MOBILE_THEME_TRANSITION_MS + 60
+            : THEME_TRANSITION_MS + 60;
+        writeThemeBootCache(nextTheme, nextColorMode, nextResolvedMode);
+        deferredPersistTimerRef.current = setTimeout(() => {
+          deferredPersistTimerRef.current = null;
+          persistAndSyncPrefs();
+        }, delayMs);
+      }
     },
-    [enqueueCloudOps]
+    [enqueueCloudOps, getEffectivePreferences, showToastImmediate, writeThemeBootCache]
   );
 
   const setActiveCalendarSet = useCallback(
@@ -1735,7 +2005,7 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
     const res = await mergeLocalAndCloudOnSignIn(
       member.uid,
       stateRef.current.present,
-      stateRef.current.preferences,
+      getEffectivePreferences(),
       stateRef.current.syncQueue
     );
 
@@ -1744,6 +2014,7 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
       snapshot: res.mergedSnapshot,
       preferences: res.mergedPreferences
     });
+    syncVisualThemeState(res.mergedPreferences);
     dispatch({
       type: 'SET_SYNC_STATE',
       syncStatus: res.status,
@@ -1756,7 +2027,7 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
     await localStore.savePreferences(res.mergedPreferences, { broadcast: false });
     await localStore.saveSyncQueue(res.remainingQueue);
     await localStore.setLastSyncedAt(res.lastSyncedAt);
-  }, []);
+  }, [getEffectivePreferences, syncVisualThemeState]);
 
   const setCurrentMember = useCallback((member: MemberProfile | null) => {
     dispatch({ type: 'SET_MEMBER', member });
@@ -1837,52 +2108,31 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
         const effectiveSnapshot = mutatedBeforeHydrateRef.current
           ? stateRef.current.present
           : res.snapshot;
+        const hydratedPrefs = res.preferences || createDefaultPreferences();
         dispatch({
           type: 'HYDRATE',
           snapshot: effectiveSnapshot,
-          preferences: res.preferences || createDefaultPreferences(),
+          preferences: hydratedPrefs,
           syncQueue: res.syncQueue,
           lastSyncedAt: res.lastSyncedAt
         });
+        // Preserve user's immediate pre-hydration theme toggle if they already interacted
+        if (transitionSeqRef.current === 0) {
+          syncVisualThemeState(hydratedPrefs);
+        }
       });
 
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [syncVisualThemeState]);
 
-  const prevVisualRef = useRef<{
-    initialized: boolean;
-    designTheme: string;
-    resolvedColorMode: 'light' | 'dark';
-  }>({
-    initialized: false,
-    designTheme: state.preferences.designTheme || 'sky-glass',
-    resolvedColorMode: state.resolvedColorMode
-  });
-  const themeTransitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const transitionSeqRef = useRef(0);
-
-  // Theme & Color Mode DOM Synchronization + Dual-Speed Style B Cross-Dissolve
+  // Theme & Color Mode DOM Synchronization + Fallback Cross-Dissolve (when View Transitions API is unavailable)
   useEffect(() => {
     if (typeof document === 'undefined') return;
     const html = document.documentElement;
-    const nextTheme = state.preferences.designTheme || 'sky-glass';
-    const nextMode = state.resolvedColorMode;
-
-    // Persist tiny boot cache so index.html eliminates reload FOUC before React mounts
-    try {
-      window.localStorage?.setItem(
-        THEME_BOOT_STORAGE_KEY,
-        JSON.stringify({
-          designTheme: nextTheme,
-          colorMode: state.preferences.colorMode,
-          resolvedColorMode: nextMode
-        })
-      );
-    } catch {
-      // Ignore storage restrictions
-    }
+    const nextTheme = visualTheme.designTheme || 'sky-glass';
+    const nextMode = visualTheme.resolvedColorMode;
 
     const prev = prevVisualRef.current;
     if (!prev.initialized) {
@@ -1893,45 +2143,64 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
       };
       html.setAttribute('data-design-theme', nextTheme);
       html.classList.toggle('dark', nextMode === 'dark');
+      applyThemeMetaSync(nextMode, nextTheme);
+      writeThemeBootCache(nextTheme, visualTheme.colorMode, nextMode);
+      void syncNativeStatusBar(nextMode, nextTheme);
       return;
     }
 
     const colorModeChanged = prev.resolvedColorMode !== nextMode;
     const themeChanged = prev.designTheme !== nextTheme;
+
+    // Already handled atomically inside native GPU View Transition
+    if (!colorModeChanged && !themeChanged) {
+      return;
+    }
+
     prevVisualRef.current = {
       initialized: true,
       designTheme: nextTheme,
       resolvedColorMode: nextMode
     };
 
-    if (colorModeChanged || themeChanged) {
-      if (themeTransitionTimerRef.current) {
-        clearTimeout(themeTransitionTimerRef.current);
-      }
+    writeThemeBootCache(nextTheme, visualTheme.colorMode, nextMode);
 
-      const kind: 'color-mode' | 'theme' = colorModeChanged ? 'color-mode' : 'theme';
-      const durationMs = colorModeChanged ? COLOR_MODE_TRANSITION_MS : THEME_TRANSITION_MS;
-
-      html.classList.remove('theme-transitioning', 'color-mode-transitioning');
-      html.classList.add(colorModeChanged ? 'color-mode-transitioning' : 'theme-transitioning');
-
-      transitionSeqRef.current += 1;
-      setThemeTransition({
-        key: transitionSeqRef.current,
-        kind,
-        targetMode: nextMode
-      });
-
-      themeTransitionTimerRef.current = setTimeout(() => {
-        html.classList.remove('theme-transitioning', 'color-mode-transitioning');
-        setThemeTransition(null);
-        themeTransitionTimerRef.current = null;
-      }, durationMs + 50);
+    if (themeTransitionTimerRef.current) {
+      clearTimeout(themeTransitionTimerRef.current);
     }
+
+    const kind: 'color-mode' | 'theme' = colorModeChanged ? 'color-mode' : 'theme';
+    const isMobileViewport =
+      !isTestRuntime() && typeof window !== 'undefined' && window.innerWidth < 768;
+    const durationMs = colorModeChanged
+      ? isMobileViewport
+        ? MOBILE_COLOR_MODE_TRANSITION_MS
+        : COLOR_MODE_TRANSITION_MS
+      : isMobileViewport
+        ? MOBILE_THEME_TRANSITION_MS
+        : THEME_TRANSITION_MS;
+
+    html.classList.remove('theme-transitioning', 'color-mode-transitioning');
+    html.classList.add(colorModeChanged ? 'color-mode-transitioning' : 'theme-transitioning');
+
+    transitionSeqRef.current += 1;
+    setThemeTransition({
+      key: transitionSeqRef.current,
+      kind,
+      targetMode: nextMode
+    });
+
+    themeTransitionTimerRef.current = setTimeout(() => {
+      html.classList.remove('theme-transitioning', 'color-mode-transitioning');
+      setThemeTransition(null);
+      themeTransitionTimerRef.current = null;
+    }, durationMs + 50);
 
     html.setAttribute('data-design-theme', nextTheme);
     html.classList.toggle('dark', nextMode === 'dark');
-  }, [state.preferences.designTheme, state.preferences.colorMode, state.resolvedColorMode]);
+    applyThemeMetaSync(nextMode, nextTheme);
+    void syncNativeStatusBar(nextMode, nextTheme);
+  }, [visualTheme.designTheme, visualTheme.colorMode, visualTheme.resolvedColorMode, writeThemeBootCache]);
 
   useEffect(() => {
     if (typeof document === 'undefined') return;
@@ -1944,28 +2213,49 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
       if (themeTransitionTimerRef.current) {
         clearTimeout(themeTransitionTimerRef.current);
       }
+      if (deferredPersistTimerRef.current) {
+        clearTimeout(deferredPersistTimerRef.current);
+      }
+      try {
+        activeViewTransitionRef.current?.skipTransition?.();
+      } catch {
+        // Ignore
+      }
       if (typeof document !== 'undefined') {
-        document.documentElement.classList.remove('theme-transitioning', 'color-mode-transitioning');
+        document.documentElement.classList.remove(
+          'theme-transitioning',
+          'color-mode-transitioning',
+          'vt-active'
+        );
+        delete document.documentElement.dataset.vtKind;
       }
     };
   }, []);
 
   // Listen to OS prefers-color-scheme when colorMode === 'system'
   useEffect(() => {
-    if (state.preferences.colorMode !== 'system' || typeof window === 'undefined') return;
+    if (visualTheme.colorMode !== 'system' || typeof window === 'undefined') return;
     try {
       const mql = window.matchMedia?.('(prefers-color-scheme: dark)');
       if (!mql) return;
-      dispatch({ type: 'SET_RESOLVED_COLOR_MODE', mode: mql.matches ? 'dark' : 'light' });
-      const onChange = (e: MediaQueryListEvent) => {
-        dispatch({ type: 'SET_RESOLVED_COLOR_MODE', mode: e.matches ? 'dark' : 'light' });
+      const syncFromOs = (isDark: boolean) => {
+        const nextMode: 'light' | 'dark' = isDark ? 'dark' : 'light';
+        if (visualThemeRef.current.resolvedColorMode === nextMode) return;
+        const nextVisual: VisualThemeContextValue = {
+          ...visualThemeRef.current,
+          resolvedColorMode: nextMode
+        };
+        visualThemeRef.current = nextVisual;
+        setVisualTheme(nextVisual);
       };
+      syncFromOs(mql.matches);
+      const onChange = (e: MediaQueryListEvent) => syncFromOs(e.matches);
       mql.addEventListener?.('change', onChange);
       return () => mql.removeEventListener?.('change', onChange);
     } catch {
       return undefined;
     }
-  }, [state.preferences.colorMode]);
+  }, [visualTheme.colorMode]);
 
   // Auth listener
   useEffect(() => {
@@ -2044,9 +2334,12 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
           snapshot: res.snapshot,
           preferences: res.preferences ?? undefined
         });
+        if (res.preferences) {
+          syncVisualThemeState(res.preferences);
+        }
       });
     });
-  }, []);
+  }, [syncVisualThemeState]);
 
   useEffect(() => {
     return () => clearToastTimers();
@@ -2183,11 +2476,13 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <ScheduleStoreContext.Provider value={value}>
-      <ToastStateContext.Provider value={toastContextValue}>
-        <ThemeTransitionContext.Provider value={themeTransition}>
-          {children}
-        </ThemeTransitionContext.Provider>
-      </ToastStateContext.Provider>
+      <VisualThemeContext.Provider value={visualTheme}>
+        <ToastStateContext.Provider value={toastContextValue}>
+          <ThemeTransitionContext.Provider value={themeTransition}>
+            {children}
+          </ThemeTransitionContext.Provider>
+        </ToastStateContext.Provider>
+      </VisualThemeContext.Provider>
     </ScheduleStoreContext.Provider>
   );
 }
@@ -2198,6 +2493,10 @@ export function useScheduleStore(): ScheduleStoreContextValue {
     throw new Error('useScheduleStore must be used within a ScheduleProvider');
   }
   return ctx;
+}
+
+export function useVisualTheme(): VisualThemeContextValue {
+  return useContext(VisualThemeContext);
 }
 
 export function useToastState(): ToastContextValue {

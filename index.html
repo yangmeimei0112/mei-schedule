@@ -51,7 +51,6 @@
               window.matchMedia &&
               window.matchMedia('(prefers-color-scheme: dark)').matches);
           html.classList.toggle('dark', Boolean(isDark));
-          html.style.colorScheme = isDark ? 'dark' : 'light';
           var meta = document.getElementById('mei-theme-color-meta');
           if (meta) {
             meta.setAttribute('content', THEME_BG[designTheme][isDark ? 'dark' : 'light']);

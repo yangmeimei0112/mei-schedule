@@ -15,7 +15,6 @@ import {
   extractAndCleanOAuthUrlError,
   type OAuthUrlErrorResult
 } from './services/memberAuthService';
-import { syncNativeStatusBar } from './services/notificationBridge';
 import { lazyModalLoaders } from './services/preloadEngine';
 import {
   expandRecurringEvents,
@@ -72,7 +71,6 @@ function MeiScheduleShell() {
     calendars,
     events,
     preferences,
-    resolvedColorMode,
     currentMember,
     syncStatus,
     viewMode,
@@ -110,11 +108,6 @@ function MeiScheduleShell() {
       showToast(captured.displayMessage, { icon: 'circle-alert', durationMs: 5200 });
     }
   }, [showToast]);
-
-  // Sync web PWA <meta name="theme-color">, color-scheme & native Capacitor status bar across all 6 themes
-  useEffect(() => {
-    void syncNativeStatusBar(resolvedColorMode, preferences.designTheme);
-  }, [resolvedColorMode, preferences.designTheme]);
 
   const handleFocusQuickCapture = useCallback(() => {
     quickCaptureInputRef.current?.focus();

@@ -6,7 +6,7 @@ export interface MobileBottomNavProps {
   onOpenCreateEvent: () => void;
 }
 
-export default function MobileBottomNav({ onOpenCreateEvent }: MobileBottomNavProps) {
+function MobileBottomNav({ onOpenCreateEvent }: MobileBottomNavProps) {
   const {
     tasks,
     viewMode,
@@ -139,3 +139,5 @@ export default function MobileBottomNav({ onOpenCreateEvent }: MobileBottomNavPr
     </>
   );
 }
+
+export default React.memo(MobileBottomNav);

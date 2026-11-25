@@ -13,6 +13,14 @@ export const THEME_TRANSITION_MS = 450;
 /** Deliberately slower, serene sunrise/sunset cross-dissolve for Light <-> Dark swaps (ms) */
 export const COLOR_MODE_TRANSITION_MS = 680;
 
+/** Mobile fallback CSS transition durations (snappy, zero-jank on mid-tier mobile GPUs) */
+export const MOBILE_THEME_TRANSITION_MS = 240;
+export const MOBILE_COLOR_MODE_TRANSITION_MS = 300;
+
+/** Hardware-composited View Transitions API durations (ms) */
+export const VIEW_TRANSITION_THEME_MS = 260;
+export const VIEW_TRANSITION_COLOR_MODE_MS = 320;
+
 export interface PreloadProgressState {
   percent: number;
   label: string;
