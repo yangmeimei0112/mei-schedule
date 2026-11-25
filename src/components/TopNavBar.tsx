@@ -91,7 +91,7 @@ function TopNavBar() {
   return (
     <header
       data-testid="top-nav-bar"
-      className="sticky top-0 z-20 pt-safe border-b border-[var(--border-subtle)] bg-[var(--surface-glass-strong)] backdrop-blur-[14px]"
+      className="sticky top-0 z-20 pt-safe border-b border-[var(--border-subtle)] theme-nav-top backdrop-blur-[14px]"
     >
       {/* Primary Single-Row Header (56px on Desktop) */}
       <div className="mobile-header-bar narrow-compact-px h-14 px-2.5 sm:px-5 flex items-center justify-between gap-2">
@@ -175,7 +175,7 @@ function TopNavBar() {
                 title={`${tab.label} (快捷鍵 ${tab.shortcut})`}
                 className={`px-2.5 xl:px-3 py-1.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 whitespace-nowrap transition-colors ${
                   active
-                    ? 'bg-sky-500 text-white shadow-sm'
+                    ? 'theme-accent-solid shadow-sm'
                     : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
                 }`}
               >
@@ -222,8 +222,8 @@ function TopNavBar() {
             title={inboxDrawerOpen ? '收合右側待辦收件匣 (I)' : '展開右側待辦收件匣 (I)'}
             className={`px-2 sm:px-3 py-1.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 border transition-colors ${
               inboxDrawerOpen
-                ? 'bg-sky-500 text-white border-sky-500 shadow-sm'
-                : 'bg-[var(--surface-subtle)] border-[var(--border-subtle)] text-[var(--text-main)] hover:border-sky-400/60'
+                ? 'theme-accent-solid shadow-sm'
+                : 'bg-[var(--surface-subtle)] border-[var(--border-subtle)] text-[var(--text-main)] hover:border-[var(--border-hover)]'
             }`}
           >
             <LucideIcon name={inboxDrawerOpen ? 'panel-right-close' : 'inbox'} size={14} />
@@ -234,7 +234,7 @@ function TopNavBar() {
                 className={`min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold inline-flex items-center justify-center ${
                   inboxDrawerOpen
                     ? 'bg-white/25 text-white'
-                    : 'bg-amber-500/18 text-amber-700 dark:text-amber-300'
+                    : 'theme-accent-soft'
                 }`}
               >
                 {unscheduledTaskCount}
@@ -263,7 +263,7 @@ function TopNavBar() {
                 onClick={() => setViewMode(tab.id)}
                 className={`px-1.5 py-1 rounded-xl text-[11px] font-bold inline-flex items-center justify-center gap-1 whitespace-nowrap transition-colors ${
                   active
-                    ? 'bg-sky-500 text-white'
+                    ? 'theme-accent-solid shadow-sm'
                     : 'text-[var(--text-muted)] hover:text-[var(--text-main)] bg-[var(--surface-glass)] border border-[var(--border-subtle)]'
                 }`}
               >

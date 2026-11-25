@@ -98,7 +98,7 @@ export default function AppearanceSettingsModal() {
       >
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <LucideIcon name="palette" size={20} className="text-sky-500" />
+            <LucideIcon name="palette" size={20} className="theme-accent-text" />
             <div>
               <h2 className="text-base sm:text-lg font-extrabold text-[var(--text-main)]">
                 外觀風格切換器與個人偏好
@@ -134,8 +134,8 @@ export default function AppearanceSettingsModal() {
                   onClick={() => handleSelectDesign(opt.id)}
                   className={`p-3.5 rounded-2xl border text-left space-y-2.5 transition-all ${
                     active
-                      ? 'border-sky-500 ring-2 ring-sky-400/40 bg-sky-500/8'
-                      : 'border-[var(--border-subtle)] bg-[var(--surface-subtle)] hover:border-sky-400/50'
+                      ? 'border-[var(--accent-primary)] ring-2 ring-[var(--accent-ring)] bg-[var(--accent-soft-bg)]/55'
+                      : 'border-[var(--border-subtle)] bg-[var(--surface-subtle)] hover:border-[var(--border-hover)]'
                   }`}
                 >
                   {/* Mini Visual Swatch */}
@@ -160,7 +160,7 @@ export default function AppearanceSettingsModal() {
                       <span className="text-sm font-extrabold text-[var(--text-main)]">
                         {opt.name}
                       </span>
-                      {active && <LucideIcon name="circle-check" size={15} className="text-sky-500" />}
+                      {active && <LucideIcon name="circle-check" size={15} className="theme-accent-text" />}
                     </div>
                     <p className="text-[11px] text-[var(--text-muted)] mt-0.5 leading-snug">
                       {opt.subtitle}
@@ -194,8 +194,8 @@ export default function AppearanceSettingsModal() {
                   onClick={() => handleSelectColorMode(modeId)}
                   className={`py-2.5 px-3 rounded-xl text-xs font-bold border inline-flex items-center justify-center gap-1.5 transition-colors ${
                     active
-                      ? 'bg-sky-500 text-white border-sky-500'
-                      : 'bg-[var(--surface-subtle)] border-[var(--border-subtle)] text-[var(--text-main)]'
+                      ? 'theme-accent-solid'
+                      : 'bg-[var(--surface-subtle)] border-[var(--border-subtle)] text-[var(--text-main)] hover:border-[var(--border-hover)]'
                   }`}
                 >
                   <LucideIcon name={icon} size={14} />
@@ -212,7 +212,7 @@ export default function AppearanceSettingsModal() {
             <h3 className="text-xs font-extrabold text-[var(--text-muted)] uppercase tracking-wider">
               返回咩創意大廳懸浮按鈕
             </h3>
-            <span className="text-[11px] font-semibold text-sky-600 dark:text-sky-400">
+            <span className="text-[11px] font-semibold theme-accent-deep">
               {dockMode === 'visible'
                 ? '目前：顯示中'
                 : dockMode === 'edge-hidden'
@@ -237,8 +237,8 @@ export default function AppearanceSettingsModal() {
                   onClick={() => handleSelectDockMode(modeId)}
                   className={`py-2.5 px-2.5 sm:px-3 rounded-xl text-xs font-bold border inline-flex items-center justify-center gap-1.5 transition-colors ${
                     active
-                      ? 'bg-sky-500 text-white border-sky-500'
-                      : 'bg-[var(--surface-subtle)] border-[var(--border-subtle)] text-[var(--text-main)] hover:border-sky-400/50'
+                      ? 'theme-accent-solid'
+                      : 'bg-[var(--surface-subtle)] border-[var(--border-subtle)] text-[var(--text-main)] hover:border-[var(--border-hover)]'
                   }`}
                 >
                   <LucideIcon name={icon} size={14} />
@@ -255,7 +255,7 @@ export default function AppearanceSettingsModal() {
         {/* 4. Work Window & Default Event Duration */}
         <section className="p-4 rounded-2xl bg-[var(--surface-subtle)] border border-[var(--border-subtle)] space-y-3">
           <h3 className="text-xs font-extrabold text-[var(--text-main)] inline-flex items-center gap-1.5">
-            <LucideIcon name="sliders-horizontal" size={14} className="text-sky-500" />
+            <LucideIcon name="sliders-horizontal" size={14} className="theme-accent-text" />
             <span>智慧排程工作時段與預設偏好</span>
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -343,7 +343,7 @@ export default function AppearanceSettingsModal() {
               }
               className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition-colors ${
                 preferences.autoWrapTitles !== false
-                  ? 'bg-sky-500 border-sky-500'
+                  ? 'theme-accent-solid'
                   : 'bg-slate-300/80 dark:bg-slate-700 border-[var(--border-subtle)]'
               }`}
             >
@@ -363,9 +363,9 @@ export default function AppearanceSettingsModal() {
           </div>
           <span
             data-testid="app-version-badge"
-            className="font-mono font-bold px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-400/25"
+            className="font-mono font-bold px-2 py-0.5 rounded-full theme-accent-soft border"
           >
-            v1.5.1
+            v1.5.2
           </span>
         </div>
       </div>

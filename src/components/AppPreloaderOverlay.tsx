@@ -124,7 +124,7 @@ export const AppPreloaderOverlay = React.memo(function AppPreloaderOverlay({
             <div className="w-full h-1.5 rounded-full bg-[var(--surface-subtle)] border border-[var(--border-subtle)] overflow-hidden">
               <div
                 data-testid="app-preloader-progress-bar"
-                className="h-full rounded-full bg-gradient-to-r from-sky-400 to-sky-600 transition-[width] duration-200 ease-out"
+                className="h-full rounded-full theme-progress-fill transition-[width] duration-200 ease-out"
                 style={{ width: `${Math.max(12, Math.min(100, progress.percent))}%` }}
               />
             </div>
@@ -144,7 +144,7 @@ export const AppPreloaderOverlay = React.memo(function AppPreloaderOverlay({
           data-testid="silent-preload-indicator"
           role="status"
           aria-live="polite"
-          className="fixed right-4 bottom-20 sm:bottom-6 z-40 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sky-100/95 dark:bg-sky-950/95 text-slate-900 dark:text-white border border-sky-300/80 dark:border-sky-400/40 shadow-md text-[11px] font-semibold pointer-events-none toast-spring-enter"
+          className="fixed right-4 bottom-20 sm:bottom-6 z-40 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--surface-glass-strong)] text-[var(--text-main)] border border-[var(--border-subtle)] shadow-md text-[11px] font-semibold pointer-events-none toast-spring-enter"
         >
           <LucideIcon
             name={silentStatus === 'ready' ? 'circle-check' : 'loader-2'}
@@ -152,7 +152,7 @@ export const AppPreloaderOverlay = React.memo(function AppPreloaderOverlay({
             className={
               silentStatus === 'ready'
                 ? 'text-emerald-600 dark:text-emerald-400'
-                : 'text-sky-600 dark:text-sky-400 animate-spin'
+                : 'theme-accent-text animate-spin'
             }
           />
           <span>

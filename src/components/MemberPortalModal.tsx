@@ -361,22 +361,22 @@ export default function MemberPortalModal({
       }}
       className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-md"
     >
-      <div className="bento-glass-card w-full max-w-xl max-h-[90vh] max-h-dvh-90 landscape-compact-modal overflow-y-auto p-4 sm:p-7 border border-sky-400/35 shadow-2xl relative">
+      <div className="bento-glass-card w-full max-w-xl max-h-[90vh] max-h-dvh-90 landscape-compact-modal overflow-y-auto p-4 sm:p-7 border border-[var(--border-subtle)] shadow-2xl relative">
         {/* Header */}
-        <div className="flex items-center justify-between gap-3 pb-4 mb-5 border-b border-sky-200/60 dark:border-slate-700/70">
+        <div className="flex items-center justify-between gap-3 pb-4 mb-5 border-b border-[var(--border-subtle)]">
           <div className="flex items-center gap-3 min-w-0">
             <StudioLogo size="md" />
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white truncate">
+                <h2 className="text-lg font-bold tracking-tight text-[var(--text-main)] truncate">
                   全站聯通會員專區
                 </h2>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-sky-100 text-sky-700 dark:bg-sky-900/60 dark:text-sky-300 border border-sky-300/60 dark:border-sky-500/30">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold theme-accent-soft border">
                   <LucideIcon name="orbit" size={12} />
                   <span>Cloud SSO v3.0</span>
                 </span>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              <p className="text-xs text-[var(--text-muted)] mt-0.5">
                 登入後自動無縫合併本機排程，跨五端即時同步並啟用多人共享日曆
               </p>
             </div>
@@ -386,7 +386,7 @@ export default function MemberPortalModal({
             type="button"
             onClick={onClose}
             aria-label="關閉會員專區視窗"
-            className="p-2 rounded-full text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-sky-100/70 dark:hover:bg-slate-800 transition-colors shrink-0"
+            className="p-2 rounded-full text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--surface-subtle)] transition-colors shrink-0"
           >
             <LucideIcon name="x" size={18} />
           </button>
@@ -396,21 +396,21 @@ export default function MemberPortalModal({
         {currentMember ? (
           <div data-testid="member-profile-card" className="space-y-5">
             {/* Digital Pass */}
-            <div className="rounded-2xl p-4 sm:p-5 bg-gradient-to-br from-sky-500/12 via-white/70 to-sky-100/50 dark:from-sky-500/15 dark:via-slate-900/70 dark:to-slate-800/70 border border-sky-400/30 space-y-4">
+            <div className="rounded-2xl p-4 sm:p-5 bg-[var(--surface-subtle)] border border-[var(--border-subtle)] space-y-4">
               <div className="flex items-start justify-between gap-3 flex-wrap">
                 <div className="space-y-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-base font-bold text-slate-900 dark:text-white truncate">
+                    <span className="text-base font-bold text-[var(--text-main)] truncate">
                       {currentMember.displayName}
                     </span>
-                    <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-sky-500 text-white">
+                    <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold theme-accent-solid">
                       {currentMember.tierLabel}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-300 truncate">
+                  <p className="text-xs text-[var(--text-muted)] truncate">
                     {currentMember.email || '未提供信箱'}
                   </p>
-                  <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400 truncate">
+                  <p className="text-[11px] font-mono text-[var(--text-muted)] truncate">
                     Union ID: {currentMember.unionId}
                   </p>
                 </div>
@@ -432,28 +432,28 @@ export default function MemberPortalModal({
                   <LucideIcon name="circle-check" size={12} />
                   <span>全站子專案已聯通</span>
                 </span>
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-sky-100 text-sky-800 dark:bg-sky-950/70 dark:text-sky-200 border border-sky-300/60 dark:border-sky-500/30">
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold theme-accent-soft border">
                   <LucideIcon name={syncBadge.icon} size={12} />
                   <span>{syncBadge.label}</span>
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 border-t border-sky-300/30 dark:border-slate-700/60 text-xs">
-                <div className="rounded-xl p-2.5 bg-white/70 dark:bg-slate-900/60 border border-sky-200/50 dark:border-slate-700/60">
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400">主要登入來源</div>
-                  <div className="font-semibold text-slate-800 dark:text-slate-100 mt-0.5 uppercase">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 border-t border-[var(--border-subtle)] text-xs">
+                <div className="rounded-xl p-2.5 bg-[var(--surface-glass)] border border-[var(--border-subtle)]">
+                  <div className="text-[11px] text-[var(--text-muted)]">主要登入來源</div>
+                  <div className="font-semibold text-[var(--text-main)] mt-0.5 uppercase">
                     {currentMember.authProvider}
                   </div>
                 </div>
-                <div className="rounded-xl p-2.5 bg-white/70 dark:bg-slate-900/60 border border-sky-200/50 dark:border-slate-700/60">
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400">生物辨識金鑰</div>
-                  <div className="font-semibold text-slate-800 dark:text-slate-100 mt-0.5">
+                <div className="rounded-xl p-2.5 bg-[var(--surface-glass)] border border-[var(--border-subtle)]">
+                  <div className="text-[11px] text-[var(--text-muted)]">生物辨識金鑰</div>
+                  <div className="font-semibold text-[var(--text-main)] mt-0.5">
                     {isPasskeyBound ? '已綁定安全金鑰' : '未綁定金鑰'}
                   </div>
                 </div>
-                <div className="rounded-xl p-2.5 bg-white/70 dark:bg-slate-900/60 border border-sky-200/50 dark:border-slate-700/60">
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400">漫遊授權範圍</div>
-                  <div className="font-semibold text-slate-800 dark:text-slate-100 mt-0.5">
+                <div className="rounded-xl p-2.5 bg-[var(--surface-glass)] border border-[var(--border-subtle)]">
+                  <div className="text-[11px] text-[var(--text-muted)]">漫遊授權範圍</div>
+                  <div className="font-semibold text-[var(--text-main)] mt-0.5">
                     旗下所有網站與子專案 (*)
                   </div>
                 </div>
@@ -465,13 +465,13 @@ export default function MemberPortalModal({
               <form
                 data-testid="member-add-password-section"
                 onSubmit={handleSetPassword}
-                className="rounded-2xl p-4 bg-white/75 dark:bg-slate-900/65 border border-sky-300/40 space-y-3"
+                className="rounded-2xl p-4 bg-[var(--surface-subtle)] border border-[var(--border-subtle)] space-y-3"
               >
-                <div className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white">
-                  <LucideIcon name="key-round" size={16} className="text-sky-500" />
+                <div className="flex items-center gap-2 text-sm font-bold text-[var(--text-main)]">
+                  <LucideIcon name="key-round" size={16} className="theme-accent-text" />
                   <span>為 Gmail 帳號增設登入密碼</span>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
+                <p className="text-xs text-[var(--text-muted)]">
                   設定密碼後，除了 Google 一鍵登入外，亦可使用信箱與密碼登入咩創意旗下所有專案。
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -482,7 +482,7 @@ export default function MemberPortalModal({
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="輸入新密碼（至少 6 碼）"
                     disabled={isSubmitting}
-                    className="w-full px-3 py-2 rounded-xl text-sm bg-white dark:bg-slate-950 border border-sky-300/50 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500/50"
+                    className="w-full px-3 py-2 rounded-xl text-sm bg-[var(--surface-glass)] border border-[var(--border-subtle)] text-[var(--text-main)] focus:outline-none focus:border-[var(--accent-primary)]"
                   />
                   <input
                     type="password"
@@ -491,7 +491,7 @@ export default function MemberPortalModal({
                     onChange={(e) => setConfirmNewPassword(e.target.value)}
                     placeholder="再次確認新密碼"
                     disabled={isSubmitting}
-                    className="w-full px-3 py-2 rounded-xl text-sm bg-white dark:bg-slate-950 border border-sky-300/50 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500/50"
+                    className="w-full px-3 py-2 rounded-xl text-sm bg-[var(--surface-glass)] border border-[var(--border-subtle)] text-[var(--text-main)] focus:outline-none focus:border-[var(--accent-primary)]"
                   />
                 </div>
                 {passwordError && (
@@ -546,17 +546,17 @@ export default function MemberPortalModal({
             </div>
 
             {/* Cross-Project SSO Token */}
-            <div className="rounded-2xl p-3.5 bg-slate-50/90 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-700/70 space-y-2">
+            <div className="rounded-2xl p-3.5 bg-[var(--surface-subtle)] border border-[var(--border-subtle)] space-y-2">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 inline-flex items-center gap-1.5">
-                  <LucideIcon name="link-2" size={14} className="text-sky-500" />
+                <span className="text-xs font-semibold text-[var(--text-main)] inline-flex items-center gap-1.5">
+                  <LucideIcon name="link-2" size={14} className="theme-accent-text" />
                   <span>跨專案 SSO 漫遊權杖 (mei_sso_v2)</span>
                 </span>
                 <button
                   type="button"
                   data-testid="member-copy-sso-token-btn"
                   onClick={handleCopyToken}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-sky-100 hover:bg-sky-200 text-sky-800 dark:bg-sky-900/60 dark:text-sky-200 transition-colors"
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold theme-accent-soft border transition-colors"
                 >
                   <LucideIcon name={copiedToken ? 'check' : 'copy'} size={12} />
                   <span>{copiedToken ? '已複製' : '複製權杖'}</span>
@@ -564,7 +564,7 @@ export default function MemberPortalModal({
               </div>
               <div
                 data-testid="member-sso-token-display"
-                className="font-mono text-[11px] break-all p-2 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 max-h-20 overflow-y-auto"
+                className="font-mono text-[11px] break-all p-2 rounded-lg bg-[var(--surface-glass)] border border-[var(--border-subtle)] text-[var(--text-muted)] max-h-20 overflow-y-auto"
               >
                 {ssoToken || '產生中...'}
               </div>
@@ -576,7 +576,7 @@ export default function MemberPortalModal({
             <div
               role="tablist"
               aria-label="會員登入與註冊方式"
-              className="grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-sky-50/90 dark:bg-slate-900/80 border border-sky-200/70 dark:border-slate-700/70"
+              className="grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-[var(--surface-subtle)] border border-[var(--border-subtle)]"
             >
               {(
                 [
@@ -601,8 +601,8 @@ export default function MemberPortalModal({
                     }}
                     className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition-colors ${
                       active
-                        ? 'bg-white dark:bg-slate-800 text-sky-700 dark:text-sky-300 shadow-sm border border-sky-300/50 dark:border-sky-500/30'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                        ? 'theme-accent-solid shadow-sm'
+                        : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
                     }`}
                   >
                     <LucideIcon name={tab.icon} size={14} />
@@ -618,7 +618,7 @@ export default function MemberPortalModal({
                 <div className="space-y-1.5">
                   <label
                     htmlFor="gmail-nickname-input"
-                    className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
+                    className="block text-xs font-semibold text-[var(--text-main)]"
                   >
                     自訂顯示暱稱（選填，授權完成後自動套用）
                   </label>
@@ -630,7 +630,7 @@ export default function MemberPortalModal({
                     onChange={(e) => setGmailNickname(e.target.value)}
                     disabled={isSubmitting}
                     placeholder="例如：排程達人小咩"
-                    className="w-full px-3.5 py-2.5 rounded-xl text-sm bg-white/85 dark:bg-slate-900/85 border border-sky-300/40 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500/50"
+                    className="w-full px-3.5 py-2.5 rounded-xl text-sm bg-[var(--surface-subtle)] border border-[var(--border-subtle)] text-[var(--text-main)] focus:outline-none focus:border-[var(--accent-primary)]"
                   />
                 </div>
 
@@ -662,13 +662,13 @@ export default function MemberPortalModal({
                   </span>
                 </button>
 
-                <div className="rounded-2xl p-4 bg-white/70 dark:bg-slate-900/60 border border-sky-200/70 dark:border-slate-700/70 space-y-2.5">
+                <div className="rounded-2xl p-4 bg-[var(--surface-subtle)] border border-[var(--border-subtle)] space-y-2.5">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs font-bold text-slate-800 dark:text-slate-100 inline-flex items-center gap-1.5">
-                      <LucideIcon name={bioCap.icon} size={15} className="text-sky-500" />
+                    <span className="text-xs font-bold text-[var(--text-main)] inline-flex items-center gap-1.5">
+                      <LucideIcon name={bioCap.icon} size={15} className="theme-accent-text" />
                       <span>W3C Passkey 生物辨識金鑰</span>
                     </span>
-                    <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                    <span className="text-[11px] text-[var(--text-muted)]">
                       {bioCap.webAuthnAvailable ? '支援此裝置' : '需支援瀏覽器'}
                     </span>
                   </div>
@@ -692,7 +692,7 @@ export default function MemberPortalModal({
                 <div className="space-y-1.5">
                   <label
                     htmlFor="member-email-input"
-                    className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
+                    className="block text-xs font-semibold text-[var(--text-main)]"
                   >
                     電子信箱
                   </label>
@@ -704,14 +704,14 @@ export default function MemberPortalModal({
                     onChange={(e) => setLoginEmail(e.target.value)}
                     disabled={isSubmitting}
                     placeholder="name@example.com"
-                    className="w-full px-3.5 py-2.5 rounded-xl text-sm bg-white/85 dark:bg-slate-900/85 border border-sky-300/40 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500/50"
+                    className="w-full px-3.5 py-2.5 rounded-xl text-sm bg-[var(--surface-subtle)] border border-[var(--border-subtle)] text-[var(--text-main)] focus:outline-none focus:border-[var(--accent-primary)]"
                   />
                 </div>
 
                 <div className="space-y-1.5">
                   <label
                     htmlFor="member-password-input"
-                    className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
+                    className="block text-xs font-semibold text-[var(--text-main)]"
                   >
                     登入密碼
                   </label>
@@ -723,7 +723,7 @@ export default function MemberPortalModal({
                     onChange={(e) => setLoginPassword(e.target.value)}
                     disabled={isSubmitting}
                     placeholder="請輸入密碼"
-                    className="w-full px-3.5 py-2.5 rounded-xl text-sm bg-white/85 dark:bg-slate-900/85 border border-sky-300/40 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500/50"
+                    className="w-full px-3.5 py-2.5 rounded-xl text-sm bg-[var(--surface-subtle)] border border-[var(--border-subtle)] text-[var(--text-main)] focus:outline-none focus:border-[var(--accent-primary)]"
                   />
                 </div>
 
@@ -745,7 +745,7 @@ export default function MemberPortalModal({
                           setAuthTab('quick');
                           setLoginError('');
                         }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-600 text-white text-xs font-bold hover:bg-sky-700 transition-colors"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg theme-accent-solid text-xs font-bold transition-colors"
                       >
                         <LucideIcon name="globe" size={13} />
                         <span>前往 Gmail 快速登入</span>
@@ -765,9 +765,9 @@ export default function MemberPortalModal({
                 </button>
 
                 <div className="relative py-1 flex items-center">
-                  <div className="flex-grow border-t border-slate-200 dark:border-slate-700" />
-                  <span className="px-3 text-[11px] text-slate-400">或</span>
-                  <div className="flex-grow border-t border-slate-200 dark:border-slate-700" />
+                  <div className="flex-grow border-t border-[var(--border-subtle)]" />
+                  <span className="px-3 text-[11px] text-[var(--text-muted)]">或</span>
+                  <div className="flex-grow border-t border-[var(--border-subtle)]" />
                 </div>
 
                 <button
@@ -790,7 +790,7 @@ export default function MemberPortalModal({
                   <div className="space-y-1">
                     <label
                       htmlFor="register-name-input"
-                      className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
+                      className="block text-xs font-semibold text-[var(--text-main)]"
                     >
                       會員暱稱
                     </label>
@@ -802,13 +802,13 @@ export default function MemberPortalModal({
                       onChange={(e) => setRegName(e.target.value)}
                       disabled={isSubmitting}
                       placeholder="至少 2 個字元"
-                      className="w-full px-3 py-2 rounded-xl text-sm bg-white/85 dark:bg-slate-900/85 border border-sky-300/40 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500/50"
+                      className="w-full px-3 py-2 rounded-xl text-sm bg-[var(--surface-subtle)] border border-[var(--border-subtle)] text-[var(--text-main)] focus:outline-none focus:border-[var(--accent-primary)]"
                     />
                   </div>
                   <div className="space-y-1">
                     <label
                       htmlFor="register-email-input"
-                      className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
+                      className="block text-xs font-semibold text-[var(--text-main)]"
                     >
                       電子信箱
                     </label>
@@ -820,7 +820,7 @@ export default function MemberPortalModal({
                       onChange={(e) => setRegEmail(e.target.value)}
                       disabled={isSubmitting}
                       placeholder="name@example.com"
-                      className="w-full px-3 py-2 rounded-xl text-sm bg-white/85 dark:bg-slate-900/85 border border-sky-300/40 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500/50"
+                      className="w-full px-3 py-2 rounded-xl text-sm bg-[var(--surface-subtle)] border border-[var(--border-subtle)] text-[var(--text-main)] focus:outline-none focus:border-[var(--accent-primary)]"
                     />
                   </div>
                 </div>
@@ -829,7 +829,7 @@ export default function MemberPortalModal({
                   <div className="space-y-1">
                     <label
                       htmlFor="register-password-input"
-                      className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
+                      className="block text-xs font-semibold text-[var(--text-main)]"
                     >
                       設定密碼
                     </label>
@@ -841,13 +841,13 @@ export default function MemberPortalModal({
                       onChange={(e) => setRegPassword(e.target.value)}
                       disabled={isSubmitting}
                       placeholder="至少 6 個字元"
-                      className="w-full px-3 py-2 rounded-xl text-sm bg-white/85 dark:bg-slate-900/85 border border-sky-300/40 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500/50"
+                      className="w-full px-3 py-2 rounded-xl text-sm bg-[var(--surface-subtle)] border border-[var(--border-subtle)] text-[var(--text-main)] focus:outline-none focus:border-[var(--accent-primary)]"
                     />
                   </div>
                   <div className="space-y-1">
                     <label
                       htmlFor="register-confirm-password-input"
-                      className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
+                      className="block text-xs font-semibold text-[var(--text-main)]"
                     >
                       再次確認密碼
                     </label>
@@ -859,7 +859,7 @@ export default function MemberPortalModal({
                       onChange={(e) => setRegConfirmPassword(e.target.value)}
                       disabled={isSubmitting}
                       placeholder="再輸入一次密碼"
-                      className="w-full px-3 py-2 rounded-xl text-sm bg-white/85 dark:bg-slate-900/85 border border-sky-300/40 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500/50"
+                      className="w-full px-3 py-2 rounded-xl text-sm bg-[var(--surface-subtle)] border border-[var(--border-subtle)] text-[var(--text-main)] focus:outline-none focus:border-[var(--accent-primary)]"
                     />
                   </div>
                 </div>

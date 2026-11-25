@@ -113,7 +113,7 @@ export default function CalendarSyncModal() {
       >
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <LucideIcon name="refresh-cw" size={20} className="text-sky-500" />
+            <LucideIcon name="refresh-cw" size={20} className="theme-accent-text" />
             <div>
               <h2 className="text-base sm:text-lg font-extrabold text-[var(--text-main)]">
                 標準日曆互通（.ics / Google）與跨端提醒
@@ -136,7 +136,7 @@ export default function CalendarSyncModal() {
         {/* 1. Export .ics & Google Quick Link */}
         <section className="p-4 rounded-2xl bg-[var(--surface-subtle)] border border-[var(--border-subtle)] space-y-3">
           <h3 className="text-xs font-extrabold text-[var(--text-main)] inline-flex items-center gap-1.5">
-            <LucideIcon name="download" size={14} className="text-sky-500" />
+            <LucideIcon name="download" size={14} className="theme-accent-text" />
             <span>匯出標準 .ics 與 Google 日曆連動</span>
           </h3>
           <div className="flex items-center gap-2.5 flex-wrap">
@@ -184,7 +184,7 @@ export default function CalendarSyncModal() {
             </select>
           </div>
 
-          <label className="block p-4 rounded-xl border-2 border-dashed border-sky-400/40 hover:border-sky-400 bg-sky-500/5 text-center cursor-pointer transition-colors">
+          <label className="block p-4 rounded-xl border-2 border-dashed border-[var(--accent-soft-border)] hover:border-[var(--accent-primary)] bg-[var(--accent-soft-bg)]/45 text-center cursor-pointer transition-colors">
             <input
               type="file"
               accept=".ics,text/calendar"
@@ -192,7 +192,7 @@ export default function CalendarSyncModal() {
               onChange={(e) => void handleFileChange(e)}
               className="hidden"
             />
-            <LucideIcon name="upload" size={20} className="mx-auto text-sky-500 mb-1" />
+            <LucideIcon name="upload" size={20} className="mx-auto theme-accent-text mb-1" />
             <span className="text-xs font-bold text-[var(--text-main)] block">
               點擊選擇 .ics 檔案（來自 Google / Apple / Outlook）
             </span>
@@ -233,7 +233,7 @@ export default function CalendarSyncModal() {
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <div>
               <h3 className="text-xs font-extrabold text-[var(--text-main)] inline-flex items-center gap-1.5">
-                <LucideIcon name="bell-ring" size={14} className="text-amber-500" />
+                <LucideIcon name="bell-ring" size={14} className="theme-accent-text" />
                 <span>跨五端原生通知提醒（{runtimePlatform}）</span>
               </h3>
               <p className="text-[11px] text-[var(--text-muted)] mt-0.5">
@@ -251,7 +251,7 @@ export default function CalendarSyncModal() {
             </button>
           </div>
           {notifyStatus && (
-            <p className="text-xs font-semibold text-sky-700 dark:text-sky-300">{notifyStatus}</p>
+            <p className="text-xs font-semibold theme-accent-deep">{notifyStatus}</p>
           )}
         </section>
       </div>

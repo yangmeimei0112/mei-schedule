@@ -110,10 +110,10 @@ function MeiScheduleShell() {
     }
   }, [showToast]);
 
-  // Sync native mobile status bar theme on Capacitor iOS/Android
+  // Sync web PWA <meta name="theme-color">, color-scheme & native Capacitor status bar across all 6 themes
   useEffect(() => {
-    void syncNativeStatusBar(resolvedColorMode);
-  }, [resolvedColorMode]);
+    void syncNativeStatusBar(resolvedColorMode, preferences.designTheme);
+  }, [resolvedColorMode, preferences.designTheme]);
 
   const handleFocusQuickCapture = useCallback(() => {
     quickCaptureInputRef.current?.focus();

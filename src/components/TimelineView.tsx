@@ -188,7 +188,7 @@ function TimelineView({ instances }: TimelineViewProps) {
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs font-bold text-[var(--text-muted)] inline-flex items-center gap-1.5">
-            <LucideIcon name="clock" size={14} className="text-sky-500" />
+            <LucideIcon name="clock" size={14} className="theme-accent-text" />
             <span>今日 {dayInstances.length} 筆排程</span>
           </span>
 
@@ -263,7 +263,7 @@ function TimelineView({ instances }: TimelineViewProps) {
         <section className="xl:col-span-7 bento-glass-card p-4 sm:p-5 space-y-3">
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <h2 className="text-sm font-extrabold text-[var(--text-main)] inline-flex items-center gap-1.5 whitespace-nowrap shrink-0">
-              <LucideIcon name="milestone" size={15} className="text-sky-500 shrink-0" />
+              <LucideIcon name="milestone" size={15} className="theme-accent-text shrink-0" />
               <span>今日行程時間軸</span>
             </h2>
             <span className="text-[11px] text-[var(--text-muted)] leading-snug">
@@ -273,7 +273,7 @@ function TimelineView({ instances }: TimelineViewProps) {
 
           {timedEvents.length === 0 ? (
             <div className="py-12 text-center space-y-3">
-              <LucideIcon name="calendar-days" size={32} className="mx-auto text-sky-400 opacity-75" />
+              <LucideIcon name="calendar-days" size={32} className="mx-auto theme-accent-text opacity-75" />
               <div className="space-y-1">
                 <p className="text-sm font-bold text-[var(--text-main)]">這一天目前完全空閒</p>
                 <p className="text-xs text-[var(--text-muted)]">
@@ -350,7 +350,7 @@ function TimelineView({ instances }: TimelineViewProps) {
                                 </span>
                               )}
                               {evt.isFlexible && (
-                                <span className="px-1.5 py-0.2 rounded bg-sky-500/15 text-sky-700 dark:text-sky-200 font-sans">
+                                <span className="px-1.5 py-0.2 rounded theme-accent-soft font-sans">
                                   彈性
                                 </span>
                               )}
@@ -409,7 +409,7 @@ function TimelineView({ instances }: TimelineViewProps) {
                             <button
                               type="button"
                               onClick={() => selectEvent(evt.masterEventId, evt.occurrenceDate)}
-                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-sky-500/12 text-sky-700 dark:text-sky-300 font-bold"
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full theme-accent-soft font-bold"
                             >
                               <LucideIcon name="message-square" size={11} />
                               <span>{commentCount} 則留言</span>
@@ -437,7 +437,7 @@ function TimelineView({ instances }: TimelineViewProps) {
                                   type="checkbox"
                                   checked={sub.done}
                                   onChange={() => toggleEventSubtask(evt.masterEventId, sub.id)}
-                                  className="rounded border-slate-400 text-sky-500 focus:ring-sky-400"
+                                  className="rounded border-slate-400 theme-checkbox"
                                 />
                                 <span className={sub.done ? 'line-through opacity-60' : ''}>
                                   {sub.title}
@@ -486,7 +486,7 @@ function TimelineView({ instances }: TimelineViewProps) {
                               type="button"
                               data-testid={`start-focus-btn-${evt.masterEventId}`}
                               onClick={() => openModal('focus', { focusTargetEventId: evt.masterEventId })}
-                              className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-sky-500 text-white hover:bg-sky-600 inline-flex items-center gap-1 transition-colors"
+                              className="px-2.5 py-1 rounded-lg text-[11px] font-bold theme-accent-solid inline-flex items-center gap-1 transition-colors"
                             >
                               <LucideIcon name="play" size={11} />
                               <span>專注</span>
@@ -523,7 +523,7 @@ function TimelineView({ instances }: TimelineViewProps) {
                             Math.min(gap.endMs, gap.startMs + 45 * 60_000)
                           )
                         }
-                        className="px-2.5 py-1 rounded-xl border border-dashed border-sky-400/50 bg-sky-500/5 hover:bg-sky-500/12 text-xs font-semibold text-sky-700 dark:text-sky-300 inline-flex items-center gap-1.5 transition-colors"
+                        className="px-2.5 py-1 rounded-xl border border-dashed theme-accent-soft text-xs font-semibold inline-flex items-center gap-1.5 transition-colors"
                       >
                         <LucideIcon name="plus" size={12} />
                         <span className="font-mono">
@@ -544,14 +544,14 @@ function TimelineView({ instances }: TimelineViewProps) {
         <section className="xl:col-span-5 bento-glass-card p-4 sm:p-5 space-y-2.5">
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-sm font-extrabold text-[var(--text-main)] inline-flex items-center gap-1.5 whitespace-nowrap shrink-0">
-              <LucideIcon name="layout-dashboard" size={15} className="text-sky-500 shrink-0" />
+              <LucideIcon name="layout-dashboard" size={15} className="theme-accent-text shrink-0" />
               <span>時段格</span>
             </h2>
             {!inboxDrawerOpen ? (
               <button
                 type="button"
                 onClick={() => setInboxDrawerOpen(true)}
-                className="text-[11px] font-bold text-sky-600 dark:text-sky-400 hover:underline inline-flex items-center gap-1"
+                className="text-[11px] font-bold theme-accent-deep hover:underline inline-flex items-center gap-1"
               >
                 <LucideIcon name="inbox" size={12} />
                 <span>展開待辦拖入</span>
@@ -581,7 +581,7 @@ function TimelineView({ instances }: TimelineViewProps) {
                   onDragLeave={() => setDragOverHour((prev) => (prev === hour ? null : prev))}
                   onDrop={(e) => handleDropOnHour(e, hour)}
                   className={`relative min-h-[46px] px-2.5 py-1.5 flex items-start gap-2.5 transition-colors ${
-                    isDragTarget ? 'bg-sky-500/20 ring-2 ring-inset ring-sky-400' : ''
+                    isDragTarget ? 'bg-[var(--accent-soft-bg)] ring-2 ring-inset ring-[var(--accent-primary)]' : ''
                   }`}
                 >
                   {isNowHour && (
@@ -613,7 +613,7 @@ function TimelineView({ instances }: TimelineViewProps) {
                           ).getTime();
                           handleCreateInSlot(start);
                         }}
-                        className="w-full text-left text-[11px] text-transparent hover:text-sky-600 dark:hover:text-sky-400 py-1 rounded-lg transition-colors"
+                        className="w-full text-left text-[11px] text-transparent hover:text-[var(--accent-deep)] py-1 rounded-lg transition-colors"
                       >
                         + 於 {String(hour).padStart(2, '0')}:00 新增時間塊
                       </button>

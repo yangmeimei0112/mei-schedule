@@ -77,12 +77,12 @@ export default function FocusTimerModal() {
         {/* Header */}
         <div className="flex items-center justify-between gap-2">
           <div className="inline-flex items-center gap-2 text-sm font-extrabold text-[var(--text-main)]">
-            <LucideIcon name="timer" size={18} className="text-sky-500" />
+            <LucideIcon name="timer" size={18} className="theme-accent-text" />
             <span>咩時光專注番茄鐘</span>
           </div>
           <div className="flex items-center gap-1.5">
             {(isRunning || audio.isPlaying) && (
-              <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/12 text-sky-700 dark:text-sky-300 border border-sky-400/25">
+              <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold theme-accent-soft border">
                 關閉後持續背景運作
               </span>
             )}
@@ -113,9 +113,8 @@ export default function FocusTimerModal() {
               cy="92"
               r={radius}
               fill="none"
-              stroke="currentColor"
+              stroke="var(--accent-soft-bg)"
               strokeWidth="9"
-              className="text-sky-500/15"
             />
             <circle
               cx="92"
@@ -131,8 +130,8 @@ export default function FocusTimerModal() {
             />
             <defs>
               <linearGradient id="focusGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#38BDF8" />
-                <stop offset="100%" stopColor="#0284C7" />
+                <stop offset="0%" stopColor="var(--accent-primary)" />
+                <stop offset="100%" stopColor="var(--accent-hover)" />
               </linearGradient>
             </defs>
           </svg>
@@ -158,7 +157,7 @@ export default function FocusTimerModal() {
               onClick={() => selectPreset(preset.minutes)}
               className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-colors ${
                 plannedMinutes === preset.minutes
-                  ? 'bg-sky-500 text-white'
+                  ? 'theme-accent-solid'
                   : 'bg-[var(--surface-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)]'
               }`}
             >
@@ -209,7 +208,7 @@ export default function FocusTimerModal() {
           {/* Music Panel Header & Playback Controls */}
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <div className="inline-flex items-center gap-2 min-w-0">
-              <div className="w-7 h-7 rounded-lg bg-sky-500/15 text-sky-600 dark:text-sky-400 inline-flex items-center justify-center shrink-0">
+              <div className="w-7 h-7 rounded-lg squircle-icon-badge inline-flex items-center justify-center shrink-0">
                 <LucideIcon name="headphones" size={15} />
               </div>
               <div className="min-w-0">
@@ -218,7 +217,7 @@ export default function FocusTimerModal() {
                   {audio.isPlaying && !audio.isMuted && (
                     <span
                       data-testid="focus-audio-live-badge"
-                      className="inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-sky-500/15 text-sky-700 dark:text-sky-300"
+                      className="inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full theme-accent-soft"
                     >
                       播放中
                     </span>
@@ -238,8 +237,8 @@ export default function FocusTimerModal() {
                 aria-label={audio.isPlaying ? '暫停輕音樂' : '試聽輕音樂'}
                 className={`px-2.5 py-1.5 rounded-xl text-[11px] font-bold inline-flex items-center gap-1 border transition-colors ${
                   audio.isPlaying
-                    ? 'bg-sky-500 text-white border-sky-500'
-                    : 'bg-[var(--surface-glass)] text-[var(--text-main)] border-[var(--border-subtle)] hover:border-sky-400/60'
+                    ? 'theme-accent-solid'
+                    : 'bg-[var(--surface-glass)] text-[var(--text-main)] border-[var(--border-subtle)] hover:border-[var(--border-hover)]'
                 }`}
               >
                 <LucideIcon name={audio.isPlaying ? 'pause' : 'play'} size={12} />
@@ -252,7 +251,7 @@ export default function FocusTimerModal() {
                 onClick={toggleMute}
                 aria-label={audio.isMuted ? '取消靜音' : '靜音'}
                 title={audio.isMuted ? '取消靜音' : '靜音'}
-                className="p-1.5 rounded-xl bg-[var(--surface-glass)] border border-[var(--border-subtle)] text-[var(--text-muted)] hover:text-sky-600 dark:hover:text-sky-300 transition-colors"
+                className="p-1.5 rounded-xl bg-[var(--surface-glass)] border border-[var(--border-subtle)] text-[var(--text-muted)] hover:text-[var(--accent-deep)] transition-colors"
               >
                 <LucideIcon name={audio.isMuted ? 'volume-x' : 'volume-2'} size={14} />
               </button>
@@ -272,14 +271,14 @@ export default function FocusTimerModal() {
                   onClick={() => selectTrack(track.id)}
                   className={`px-2.5 py-2 rounded-xl border text-left transition-colors flex items-center gap-2 min-w-0 ${
                     active
-                      ? 'bg-sky-500/12 border-sky-500 text-[var(--text-main)]'
-                      : 'bg-[var(--surface-glass)] border-[var(--border-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:border-sky-400/50'
+                      ? 'bg-[var(--accent-soft-bg)]/70 border-[var(--accent-primary)] text-[var(--text-main)]'
+                      : 'bg-[var(--surface-glass)] border-[var(--border-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:border-[var(--border-hover)]'
                   }`}
                 >
                   <LucideIcon
                     name={track.icon}
                     size={14}
-                    className={active ? 'text-sky-500 shrink-0' : 'shrink-0'}
+                    className={active ? 'theme-accent-text shrink-0' : 'shrink-0'}
                   />
                   <div className="min-w-0">
                     <div className="text-[11px] font-extrabold text-[var(--text-main)] schedule-title-wrap">
@@ -317,7 +316,7 @@ export default function FocusTimerModal() {
                     size={13}
                     className={
                       audio.trackId === 'local-file'
-                        ? 'text-sky-500 shrink-0'
+                        ? 'theme-accent-text shrink-0'
                         : 'text-[var(--text-muted)] shrink-0'
                     }
                   />
@@ -329,7 +328,7 @@ export default function FocusTimerModal() {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="px-2 py-1 rounded-lg text-[10px] font-bold bg-[var(--surface-subtle)] text-[var(--text-main)] hover:text-sky-600"
+                    className="px-2 py-1 rounded-lg text-[10px] font-bold bg-[var(--surface-subtle)] text-[var(--text-main)] hover:text-[var(--accent-deep)]"
                   >
                     更換
                   </button>
@@ -349,7 +348,7 @@ export default function FocusTimerModal() {
                 type="button"
                 data-testid="focus-import-local-audio-btn"
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full inline-flex items-center justify-center gap-1.5 text-[11px] font-bold text-[var(--text-muted)] hover:text-sky-600 dark:hover:text-sky-300 transition-colors"
+                className="w-full inline-flex items-center justify-center gap-1.5 text-[11px] font-bold text-[var(--text-muted)] hover:text-[var(--accent-deep)] transition-colors"
               >
                 <LucideIcon name="upload" size={13} />
                 <span>匯入本機音檔 (.mp3 / .wav / .m4a，僅本機離線播放)</span>
@@ -374,7 +373,7 @@ export default function FocusTimerModal() {
                     onClick={() => selectAmbient(amb.id)}
                     className={`px-2 py-1.5 rounded-xl text-[11px] font-bold border inline-flex items-center justify-center gap-1 transition-colors ${
                       active
-                        ? 'bg-sky-500 text-white border-sky-500'
+                        ? 'theme-accent-solid'
                         : 'bg-[var(--surface-glass)] border-[var(--border-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)]'
                     }`}
                   >
@@ -401,7 +400,7 @@ export default function FocusTimerModal() {
                 value={Math.round(audio.musicVolume * 100)}
                 onChange={(e) => setMusicVolume(Number(e.target.value) / 100)}
                 aria-label="輕音樂音量"
-                className="w-full accent-sky-500 h-1.5 rounded-full cursor-pointer"
+                className="w-full theme-checkbox h-1.5 rounded-full cursor-pointer"
               />
             </label>
 
@@ -419,7 +418,7 @@ export default function FocusTimerModal() {
                 value={Math.round(audio.ambientVolume * 100)}
                 onChange={(e) => setAmbientVolume(Number(e.target.value) / 100)}
                 aria-label="環境音音量"
-                className="w-full accent-sky-500 h-1.5 rounded-full cursor-pointer disabled:cursor-not-allowed"
+                className="w-full theme-checkbox h-1.5 rounded-full cursor-pointer disabled:cursor-not-allowed"
               />
             </label>
           </div>
@@ -432,7 +431,7 @@ export default function FocusTimerModal() {
                 data-testid="focus-autosync-toggle"
                 checked={audio.autoSyncWithTimer}
                 onChange={(e) => setAutoSync(e.target.checked)}
-                className="rounded border-sky-400 text-sky-500 focus:ring-sky-400"
+                className="rounded border-[var(--border-subtle)] theme-checkbox"
               />
               <span>跟隨專注自動播放／暫停</span>
             </label>
@@ -444,7 +443,7 @@ export default function FocusTimerModal() {
                   data-testid="focus-chime-toggle"
                   checked={audio.chimeEnabled}
                   onChange={(e) => setChimeEnabled(e.target.checked)}
-                  className="rounded border-sky-400 text-sky-500 focus:ring-sky-400"
+                  className="rounded border-[var(--border-subtle)] theme-checkbox"
                 />
                 <span>完成提示音</span>
               </label>
@@ -454,7 +453,7 @@ export default function FocusTimerModal() {
                 onClick={previewChime}
                 aria-label="試聽完成提示音"
                 title="試聽療癒完成風鈴聲"
-                className="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-[var(--surface-glass)] border border-[var(--border-subtle)] text-sky-600 dark:text-sky-300 hover:border-sky-400/60"
+                className="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-[var(--surface-glass)] border border-[var(--border-subtle)] theme-accent-deep hover:border-[var(--border-hover)]"
               >
                 試聽
               </button>

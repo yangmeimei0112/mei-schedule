@@ -106,7 +106,7 @@ function MonthView({ instances }: MonthViewProps) {
                 }}
                 className={`min-h-[76px] sm:min-h-[108px] p-0.5 sm:p-1.5 flex flex-col gap-0.5 sm:gap-1 cursor-pointer transition-colors ${
                   isSelected
-                    ? 'bg-sky-500/12 ring-2 ring-inset ring-sky-400/70'
+                    ? 'bg-[var(--accent-soft-bg)]/55 ring-2 ring-inset ring-[var(--accent-primary)]/70'
                     : cell.inCurrentMonth
                       ? 'hover:bg-[var(--surface-subtle)]/70'
                       : 'bg-[var(--surface-subtle)]/35 opacity-55'
@@ -116,9 +116,9 @@ function MonthView({ instances }: MonthViewProps) {
                   <span
                     className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full text-[10px] sm:text-[11px] font-extrabold font-mono flex items-center justify-center ${
                       isToday
-                        ? 'bg-sky-500 text-white'
+                        ? 'theme-accent-solid'
                         : isSelected
-                          ? 'text-sky-700 dark:text-sky-300'
+                          ? 'theme-accent-deep'
                           : 'text-[var(--text-main)]'
                     }`}
                   >
@@ -153,7 +153,7 @@ function MonthView({ instances }: MonthViewProps) {
                     );
                   })}
                   {overflowCount > 0 && (
-                    <div className="text-[9px] sm:text-[10px] font-bold text-sky-600 dark:text-sky-400 px-0.5 sm:px-1 whitespace-nowrap">
+                    <div className="text-[9px] sm:text-[10px] font-bold theme-accent-deep px-0.5 sm:px-1 whitespace-nowrap">
                       +{overflowCount} 筆
                     </div>
                   )}
@@ -168,7 +168,7 @@ function MonthView({ instances }: MonthViewProps) {
       <section data-testid="month-selected-day-panel" className="bento-glass-card p-4 sm:p-5 space-y-3">
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <div className="flex items-center gap-2">
-            <LucideIcon name="calendar-check" size={16} className="text-sky-500" />
+            <LucideIcon name="calendar-check" size={16} className="theme-accent-text" />
             <h3 className="text-sm font-extrabold text-[var(--text-main)]">
               {selectedDate} 當日行程明細（{selectedDayEvents.length} 筆）
             </h3>

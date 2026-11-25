@@ -172,13 +172,17 @@ test('4. 跨五端原生封裝設定、Electron 安全隔離與 PWA／Vercel／C
   assert.ok(ebCfg.includes('target: dmg'));
   assert.ok(ebCfg.includes('target: nsis'));
 
-  // PWA manifest & Service Worker
+  // PWA manifest & Service Worker (canvas theme_color prevents bright-blue Android WebAPK bottom nav bar)
   const manifest = JSON.parse(
     fs.readFileSync(path.join(ROOT, 'public/manifest.webmanifest'), 'utf8')
   );
   assert.equal(manifest.display, 'standalone');
-  assert.equal(manifest.theme_color, '#38BDF8');
+  assert.equal(manifest.theme_color, '#F4F9FF');
+  assert.notEqual(manifest.theme_color, '#38BDF8');
   assert.ok(fs.existsSync(path.join(ROOT, 'public/sw.js')));
+  const htmlSrc = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+  assert.ok(htmlSrc.includes('id="mei-theme-color-meta"'));
+  assert.equal(htmlSrc.includes('content="#38BDF8"'), false);
 
   // Vercel security headers
   const vercelCfg = JSON.parse(fs.readFileSync(path.join(ROOT, 'vercel.json'), 'utf8'));

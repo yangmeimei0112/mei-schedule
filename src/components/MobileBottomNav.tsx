@@ -31,18 +31,18 @@ export default function MobileBottomNav({ onFocusQuickCapture }: MobileBottomNav
         data-testid="mobile-quick-add-fab"
         onClick={onFocusQuickCapture}
         aria-label="快速新增排程"
-        className="sm:hidden fixed right-4 bottom-20 z-30 w-12 h-12 rounded-2xl btn-sky-primary flex items-center justify-center shadow-lg"
+        className="mobile-fab-float sm:hidden fixed right-4 z-30 w-12 h-12 rounded-2xl btn-sky-primary flex items-center justify-center shadow-lg"
       >
         <LucideIcon name="plus" size={22} />
       </button>
 
-      {/* One-Handed Bottom Navigation Bar (Mobile) */}
+      {/* Edge-to-Edge Translucent Floating Frosted-Glass Bottom Navigation (Mobile) */}
       <nav
         data-testid="mobile-bottom-nav"
         aria-label="行動端底部導覽列"
-        className="mobile-bottom-nav sm:hidden fixed bottom-0 inset-x-0 z-30 border-t border-[var(--border-subtle)] bg-[var(--surface-glass-strong)] backdrop-blur-[10px] pb-safe-bottom"
+        className="mobile-bottom-nav mobile-bottom-nav-float theme-nav-bottom sm:hidden fixed inset-x-2.5 sm:inset-x-3 z-30 max-w-md mx-auto rounded-2xl backdrop-blur-[12px]"
       >
-        <div className="grid grid-cols-5 h-14 max-w-md mx-auto px-1">
+        <div className="mobile-bottom-nav-grid grid grid-cols-5 h-14 px-1 py-1 gap-0.5">
           <button
             type="button"
             data-testid="bottom-nav-timeline"
@@ -51,10 +51,10 @@ export default function MobileBottomNav({ onFocusQuickCapture }: MobileBottomNav
               setInboxDrawerOpen(false);
               setViewMode('day');
             }}
-            className={`flex flex-col items-center justify-center gap-0.5 text-[10px] font-bold ${
+            className={`rounded-xl flex flex-col items-center justify-center gap-0.5 text-[10px] font-bold transition-colors ${
               viewMode === 'day' && !sidebarOpen && !inboxDrawerOpen
-                ? 'text-sky-600 dark:text-sky-400'
-                : 'text-[var(--text-muted)]'
+                ? 'theme-accent-soft'
+                : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
             }`}
           >
             <LucideIcon name="clock" size={18} />
@@ -69,10 +69,10 @@ export default function MobileBottomNav({ onFocusQuickCapture }: MobileBottomNav
               setInboxDrawerOpen(false);
               setViewMode(viewMode === 'month' ? 'week' : 'month');
             }}
-            className={`flex flex-col items-center justify-center gap-0.5 text-[10px] font-bold ${
+            className={`rounded-xl flex flex-col items-center justify-center gap-0.5 text-[10px] font-bold transition-colors ${
               (viewMode === 'month' || viewMode === 'week') && !sidebarOpen && !inboxDrawerOpen
-                ? 'text-sky-600 dark:text-sky-400'
-                : 'text-[var(--text-muted)]'
+                ? 'theme-accent-soft'
+                : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
             }`}
           >
             <LucideIcon name="calendar-days" size={18} />
@@ -86,14 +86,16 @@ export default function MobileBottomNav({ onFocusQuickCapture }: MobileBottomNav
               setSidebarOpen(false);
               setInboxDrawerOpen(!inboxDrawerOpen);
             }}
-            className={`relative flex flex-col items-center justify-center gap-0.5 text-[10px] font-bold ${
-              inboxDrawerOpen ? 'text-sky-600 dark:text-sky-400' : 'text-[var(--text-muted)]'
+            className={`relative rounded-xl flex flex-col items-center justify-center gap-0.5 text-[10px] font-bold transition-colors ${
+              inboxDrawerOpen
+                ? 'theme-accent-soft'
+                : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
             }`}
           >
             <span className="relative inline-flex">
               <LucideIcon name="inbox" size={18} />
               {unscheduledCount > 0 && (
-                <span className="absolute -top-1 -right-2 min-w-[14px] h-3.5 px-1 rounded-full bg-amber-500 text-white text-[9px] font-bold flex items-center justify-center">
+                <span className="absolute -top-1 -right-2 min-w-[14px] h-3.5 px-1 rounded-full theme-accent-solid text-[9px] font-bold flex items-center justify-center shadow-sm">
                   {unscheduledCount}
                 </span>
               )}
@@ -109,7 +111,7 @@ export default function MobileBottomNav({ onFocusQuickCapture }: MobileBottomNav
               setInboxDrawerOpen(false);
               openModal('focus');
             }}
-            className="flex flex-col items-center justify-center gap-0.5 text-[10px] font-bold text-[var(--text-muted)] hover:text-sky-500"
+            className="rounded-xl flex flex-col items-center justify-center gap-0.5 text-[10px] font-bold text-[var(--text-muted)] hover:text-[var(--accent-deep)] transition-colors"
           >
             <LucideIcon name="timer" size={18} />
             <span>專注</span>
@@ -122,8 +124,10 @@ export default function MobileBottomNav({ onFocusQuickCapture }: MobileBottomNav
               setInboxDrawerOpen(false);
               setSidebarOpen(!sidebarOpen);
             }}
-            className={`flex flex-col items-center justify-center gap-0.5 text-[10px] font-bold ${
-              sidebarOpen ? 'text-sky-600 dark:text-sky-400' : 'text-[var(--text-muted)]'
+            className={`rounded-xl flex flex-col items-center justify-center gap-0.5 text-[10px] font-bold transition-colors ${
+              sidebarOpen
+                ? 'theme-accent-soft'
+                : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
             }`}
           >
             <LucideIcon name="layout-grid" size={18} />

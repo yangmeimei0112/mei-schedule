@@ -67,13 +67,39 @@ describe('Flagship Modules: Shared Calendar & Member Removal, Focus Timer Light 
       expect(screen.getByTestId(`shared-member-row-${SEED_CAL_SHARED}-demo-editor-lin`)).toBeInTheDocument();
     });
 
-    // Create a new shared calendar
+    // Entering a nonexistent 6-char invite code MUST NOT create a new shared team; must notify user instead
+    expect(within(sharedModal).getByText('已參與的共享日曆 (1)')).toBeInTheDocument();
+    fireEvent.change(screen.getByTestId('shared-join-code-input'), {
+      target: { value: 'ZZZZ99' }
+    });
+    fireEvent.click(screen.getByTestId('shared-join-submit-btn'));
+    await waitFor(() => {
+      expect(screen.getByTestId('shared-join-error')).toHaveTextContent('邀請碼「ZZZZ99」不存在');
+      expect(screen.getByTestId('shared-join-error')).toHaveTextContent('建立新的多人共享日曆');
+      expect(screen.getByTestId('studio-toast')).toHaveTextContent('邀請碼「ZZZZ99」不存在');
+    });
+    expect(within(sharedModal).getByText('已參與的共享日曆 (1)')).toBeInTheDocument();
+    expect(within(sharedModal).queryByText(/共享協作日曆/)).toBeNull();
+
+    // Entering an existing invite code notifies user they are already in it and clears error
+    fireEvent.change(screen.getByTestId('shared-join-code-input'), {
+      target: { value: 'MEI248' }
+    });
+    fireEvent.click(screen.getByTestId('shared-join-submit-btn'));
+    await waitFor(() => {
+      expect(screen.queryByTestId('shared-join-error')).toBeNull();
+      expect(screen.getByTestId('studio-toast')).toHaveTextContent('您已在共享日曆「咩創協作團隊」中');
+    });
+    expect(within(sharedModal).getByText('已參與的共享日曆 (1)')).toBeInTheDocument();
+
+    // Creating a new shared calendar ONLY happens via the dedicated "建立新的多人共享日曆" block
     fireEvent.change(screen.getByTestId('shared-create-name-input'), {
       target: { value: '家庭週末旅遊' }
     });
     fireEvent.click(screen.getByTestId('shared-create-submit-btn'));
     await waitFor(() => {
       expect(within(sharedModal).getByText('家庭週末旅遊')).toBeInTheDocument();
+      expect(within(sharedModal).getByText('已參與的共享日曆 (2)')).toBeInTheDocument();
     });
 
     // Close modal and open seeded shared event detail drawer to post a comment

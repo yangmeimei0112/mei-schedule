@@ -30,7 +30,7 @@ export default function AnalyticsDashboard() {
       >
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <LucideIcon name="bar-chart-3" size={20} className="text-sky-500" />
+            <LucideIcon name="bar-chart-3" size={20} className="theme-accent-text" />
             <div>
               <h2 className="text-base sm:text-lg font-extrabold text-[var(--text-main)]">
                 時間統計與專注習慣儀表板
@@ -55,7 +55,7 @@ export default function AnalyticsDashboard() {
           <div className="p-4 rounded-2xl bg-[var(--surface-subtle)] border border-[var(--border-subtle)] space-y-1">
             <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
               <span>累計專注時長</span>
-              <LucideIcon name="timer" size={15} className="text-sky-500" />
+              <LucideIcon name="timer" size={15} className="theme-accent-text" />
             </div>
             <div data-testid="analytics-total-focus" className="text-2xl font-extrabold font-mono text-[var(--text-main)]">
               {summary.totalFocusMinutes}m
@@ -105,13 +105,13 @@ export default function AnalyticsDashboard() {
         <section className="p-4 rounded-2xl bg-[var(--surface-subtle)] border border-[var(--border-subtle)] space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-extrabold text-[var(--text-main)] inline-flex items-center gap-1.5">
-              <LucideIcon name="trending-up" size={15} className="text-sky-500" />
+              <LucideIcon name="trending-up" size={15} className="theme-accent-text" />
               <span>近 7 日每日專注趨勢（分鐘）</span>
             </h3>
             <button
               type="button"
               onClick={() => openModal('focus')}
-              className="text-xs font-bold text-sky-600 dark:text-sky-400 hover:underline inline-flex items-center gap-1"
+              className="text-xs font-bold theme-accent-deep hover:underline inline-flex items-center gap-1"
             >
               <LucideIcon name="play" size={12} />
               <span>立刻開始一輪番茄鐘</span>
@@ -131,7 +131,7 @@ export default function AnalyticsDashboard() {
                       style={{ height: `${day.minutes > 0 ? heightPct : 6}%` }}
                       className={`w-full rounded-t-xl transition-all ${
                         day.minutes > 0
-                          ? 'bg-gradient-to-t from-sky-600 to-sky-400'
+                          ? 'theme-chart-bar'
                           : 'bg-slate-300/40 dark:bg-slate-700/50'
                       }`}
                     />
@@ -165,7 +165,7 @@ export default function AnalyticsDashboard() {
                   <div className="h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
                     <div
                       style={{ width: `${Math.max(4, cat.percentage)}%` }}
-                      className="h-full rounded-full bg-gradient-to-r from-sky-500 to-emerald-500"
+                      className="h-full rounded-full theme-progress-fill"
                     />
                   </div>
                 </div>

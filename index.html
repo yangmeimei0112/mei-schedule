@@ -6,10 +6,10 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover"
     />
-    <meta name="theme-color" content="#38BDF8" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#080E1A" media="(prefers-color-scheme: dark)" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#F4F9FF" id="mei-theme-color-meta" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="咩時光 MeiSchedule" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta
@@ -31,26 +31,37 @@
     <script>
       (function () {
         try {
+          var THEME_BG = {
+            'sky-glass': { light: '#F4F9FF', dark: '#080E1A' },
+            'minimal-linear': { light: '#FFFFFF', dark: '#0B0D12' },
+            'warm-journal': { light: '#FAF6F0', dark: '#1C1917' }
+          };
           var raw = window.localStorage && window.localStorage.getItem('mei_schedule_theme_boot_v1');
-          if (!raw) return;
-          var parsed = JSON.parse(raw);
+          var parsed = raw ? JSON.parse(raw) : null;
           var html = document.documentElement;
-          if (parsed && typeof parsed.designTheme === 'string') {
-            html.setAttribute('data-design-theme', parsed.designTheme);
-          }
-          var mode = parsed && parsed.colorMode;
+          var designTheme =
+            parsed && typeof parsed.designTheme === 'string' && THEME_BG[parsed.designTheme]
+              ? parsed.designTheme
+              : 'sky-glass';
+          html.setAttribute('data-design-theme', designTheme);
+          var mode = parsed && parsed.colorMode ? parsed.colorMode : 'system';
           var isDark =
             mode === 'dark' ||
             (mode === 'system' &&
               window.matchMedia &&
               window.matchMedia('(prefers-color-scheme: dark)').matches);
           html.classList.toggle('dark', Boolean(isDark));
+          html.style.colorScheme = isDark ? 'dark' : 'light';
+          var meta = document.getElementById('mei-theme-color-meta');
+          if (meta) {
+            meta.setAttribute('content', THEME_BG[designTheme][isDark ? 'dark' : 'light']);
+          }
         } catch (e) {}
       })();
     </script>
     <title>咩時光 MeiSchedule — 咩創意工作室</title>
   </head>
-  <body class="antialiased selection:bg-sky-400/25 selection:text-sky-700 dark:selection:text-sky-200">
+  <body class="antialiased">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <script

@@ -23,8 +23,8 @@ const SidebarFocusBadge = React.memo(function SidebarFocusBadge() {
   const mins = String(Math.floor(remainingSeconds / 60)).padStart(2, '0');
   const secs = String(remainingSeconds % 60).padStart(2, '0');
   return (
-    <span className="px-1.5 py-0.5 rounded-full bg-sky-500/15 text-sky-600 dark:text-sky-300 font-mono text-[10px] font-bold inline-flex items-center gap-1">
-      <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />
+    <span className="px-1.5 py-0.5 rounded-full theme-accent-soft font-mono text-[10px] font-bold inline-flex items-center gap-1">
+      <span className="w-1.5 h-1.5 rounded-full theme-accent-dot animate-pulse" />
       {mins}:{secs}
     </span>
   );
@@ -34,7 +34,7 @@ const SidebarFocusRailDot = React.memo(function SidebarFocusRailDot() {
   const { isRunning } = useFocusSession();
   if (!isRunning) return null;
   return (
-    <span className="hidden lg:block absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-sky-500 animate-pulse" />
+    <span className="hidden lg:block absolute top-1.5 right-1.5 w-2 h-2 rounded-full theme-accent-dot animate-pulse" />
   );
 });
 
@@ -117,12 +117,12 @@ function AppSidebar({ conflictCount, onFocusQuickCapture }: AppSidebarProps) {
     syncStatus === 'synced'
       ? 'bg-emerald-500'
       : syncStatus === 'syncing'
-        ? 'bg-sky-500 animate-pulse'
+        ? 'theme-accent-dot animate-pulse'
         : syncStatus === 'offline-queued'
           ? 'bg-amber-500'
           : syncStatus === 'error'
             ? 'bg-rose-500'
-            : 'bg-sky-400';
+            : 'theme-accent-dot';
 
   const closeIfMobile = () => {
     if (typeof window !== 'undefined' && window.innerWidth < 1024) {
@@ -273,7 +273,7 @@ function AppSidebar({ conflictCount, onFocusQuickCapture }: AppSidebarProps) {
                   <span className="font-heading-lg text-[15px] font-extrabold tracking-tight text-[var(--text-main)] whitespace-nowrap">
                     咩時光
                   </span>
-                  <span className="font-en text-[10px] font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400 whitespace-nowrap">
+                  <span className="font-en text-[10px] font-bold uppercase tracking-wider theme-accent-deep whitespace-nowrap">
                     MeiSchedule
                   </span>
                 </div>
@@ -353,7 +353,7 @@ function AppSidebar({ conflictCount, onFocusQuickCapture }: AppSidebarProps) {
             onClick={() => handleOpenTool('command')}
             aria-label="開啟全域搜尋與指令列"
             title="全域搜尋與快捷指令 (Cmd/Ctrl + K)"
-            className={`rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-subtle)] hover:border-sky-400/60 text-[var(--text-muted)] hover:text-[var(--text-main)] text-xs font-medium flex items-center transition-colors ${
+            className={`rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-subtle)] hover:border-[var(--border-hover)] text-[var(--text-muted)] hover:text-[var(--text-main)] text-xs font-medium flex items-center transition-colors ${
               isRailDesktop
                 ? 'w-full px-2.5 py-1.5 justify-between lg:w-10 lg:h-9 lg:p-0 lg:mx-auto lg:justify-center'
                 : 'w-full px-2.5 py-1.5 justify-between'
@@ -400,7 +400,7 @@ function AppSidebar({ conflictCount, onFocusQuickCapture }: AppSidebarProps) {
                       : 'w-full px-2.5 py-1.5 justify-between'
                   } ${
                     isActive
-                      ? 'bg-sky-500/15 text-sky-700 dark:text-sky-300'
+                      ? 'theme-accent-soft'
                       : 'text-[var(--text-main)] hover:bg-[var(--surface-subtle)]'
                   }`}
                 >
@@ -409,7 +409,7 @@ function AppSidebar({ conflictCount, onFocusQuickCapture }: AppSidebarProps) {
                       name={item.icon}
                       size={15}
                       className={
-                        isActive ? 'text-sky-600 dark:text-sky-400' : 'text-[var(--text-muted)]'
+                        isActive ? 'theme-accent-text' : 'text-[var(--text-muted)]'
                       }
                     />
                     <span className={`truncate ${hideOnRail}`}>{item.label}</span>
@@ -423,7 +423,7 @@ function AppSidebar({ conflictCount, onFocusQuickCapture }: AppSidebarProps) {
                   {isRailDesktop && item.railDot && (
                     <span
                       className={`hidden lg:block absolute top-1.5 right-1.5 w-2 h-2 rounded-full ${
-                        item.railDotClass || 'bg-sky-500'
+                        item.railDotClass || 'theme-accent-dot'
                       }`}
                     />
                   )}
@@ -441,7 +441,7 @@ function AppSidebar({ conflictCount, onFocusQuickCapture }: AppSidebarProps) {
               <button
                 type="button"
                 onClick={() => setMiniMonthExpanded((v) => !v)}
-                className="inline-flex items-center gap-1 text-[11px] font-extrabold text-[var(--text-main)] hover:text-sky-600 dark:hover:text-sky-400 transition-colors"
+                className="inline-flex items-center gap-1 text-[11px] font-extrabold text-[var(--text-main)] hover:text-[var(--accent-deep)] transition-colors"
               >
                 <LucideIcon
                   name={miniMonthExpanded ? 'chevron-down' : 'chevron-right'}
@@ -469,7 +469,7 @@ function AppSidebar({ conflictCount, onFocusQuickCapture }: AppSidebarProps) {
                       setMiniMonthOffset(0);
                       setSelectedDate(todayKey);
                     }}
-                    className="px-1.5 py-0.5 rounded-md text-[10px] font-bold text-sky-600 dark:text-sky-400 hover:bg-sky-500/10"
+                    className="px-1.5 py-0.5 rounded-md text-[10px] font-bold theme-accent-deep hover:bg-[var(--accent-soft-bg)]"
                   >
                     今
                   </button>
@@ -510,9 +510,9 @@ function AppSidebar({ conflictCount, onFocusQuickCapture }: AppSidebarProps) {
                         }}
                         className={`relative h-6 rounded-md text-[11px] font-semibold flex flex-col items-center justify-center transition-colors ${
                           isSelected
-                            ? 'bg-sky-500 text-white'
+                            ? 'theme-accent-solid'
                             : isToday
-                              ? 'bg-sky-500/15 text-sky-700 dark:text-sky-300 ring-1 ring-sky-400/50'
+                              ? 'theme-accent-soft border'
                               : cell.inMonth
                                 ? 'text-[var(--text-main)] hover:bg-[var(--surface-subtle)]'
                                 : 'text-[var(--text-muted)] opacity-40 hover:opacity-75'
@@ -520,7 +520,7 @@ function AppSidebar({ conflictCount, onFocusQuickCapture }: AppSidebarProps) {
                       >
                         <span>{cell.day}</span>
                         {hasEvents && !isSelected && (
-                          <span className="w-1 h-1 rounded-full bg-sky-500 absolute bottom-0.5" />
+                          <span className="w-1 h-1 rounded-full theme-accent-dot absolute bottom-0.5" />
                         )}
                       </button>
                     );
@@ -539,7 +539,7 @@ function AppSidebar({ conflictCount, onFocusQuickCapture }: AppSidebarProps) {
               <button
                 type="button"
                 onClick={() => setCalendarsExpanded((v) => !v)}
-                className="inline-flex items-center gap-1 text-[11px] font-extrabold text-[var(--text-main)] hover:text-sky-600 dark:hover:text-sky-400 transition-colors"
+                className="inline-flex items-center gap-1 text-[11px] font-extrabold text-[var(--text-main)] hover:text-[var(--accent-deep)] transition-colors"
               >
                 <LucideIcon
                   name={calendarsExpanded ? 'chevron-down' : 'chevron-right'}
@@ -553,7 +553,7 @@ function AppSidebar({ conflictCount, onFocusQuickCapture }: AppSidebarProps) {
                 data-testid="sidebar-manage-shared-btn"
                 onClick={() => handleOpenTool('shared')}
                 title="管理共享日曆與成員"
-                className="text-[10px] font-bold text-sky-600 dark:text-sky-400 hover:underline inline-flex items-center gap-0.5"
+                className="text-[10px] font-bold theme-accent-deep hover:underline inline-flex items-center gap-0.5"
               >
                 <LucideIcon name="plus" size={11} />
                 <span>共享管理</span>
@@ -575,7 +575,7 @@ function AppSidebar({ conflictCount, onFocusQuickCapture }: AppSidebarProps) {
                         onClick={() => handleSelectSet(setMeta.id)}
                         className={`px-2 py-0.5 rounded-lg text-[10px] font-bold inline-flex items-center gap-1 transition-colors ${
                           active
-                            ? 'bg-sky-500 text-white'
+                            ? 'theme-accent-solid'
                             : 'bg-[var(--surface-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)]'
                         }`}
                       >
@@ -601,7 +601,7 @@ function AppSidebar({ conflictCount, onFocusQuickCapture }: AppSidebarProps) {
                             type="checkbox"
                             checked={visible}
                             onChange={() => toggleCalendarVisibility(cal.id)}
-                            className="mt-0.5 rounded border-slate-300 text-sky-500 focus:ring-sky-400"
+                            className="mt-0.5 rounded border-[var(--border-subtle)] theme-checkbox"
                           />
                           <span className={`w-2 h-2 mt-1.5 rounded-full shrink-0 ${palette.dotClass}`} />
                           <span className="font-medium text-[var(--text-main)] schedule-title-wrap">
@@ -609,7 +609,7 @@ function AppSidebar({ conflictCount, onFocusQuickCapture }: AppSidebarProps) {
                           </span>
                         </div>
                         {cal.isShared && (
-                          <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-sky-500/12 text-sky-700 dark:text-sky-300 shrink-0">
+                          <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold theme-accent-soft shrink-0">
                             共享
                           </span>
                         )}
@@ -645,7 +645,7 @@ function AppSidebar({ conflictCount, onFocusQuickCapture }: AppSidebarProps) {
                   onClick={() => handleSelectTheme(opt.id)}
                   className={`py-1 px-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition-colors inline-flex items-center justify-center gap-1 ${
                     active
-                      ? 'bg-sky-500 text-white shadow-sm'
+                      ? 'theme-accent-solid shadow-sm'
                       : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
                   }`}
                 >
@@ -668,7 +668,7 @@ function AppSidebar({ conflictCount, onFocusQuickCapture }: AppSidebarProps) {
               onClick={handleToggleColorMode}
               aria-label={resolvedColorMode === 'dark' ? '切換至亮色模式' : '切換至深色模式'}
               title={resolvedColorMode === 'dark' ? '切換至亮色模式' : '切換至深色模式'}
-              className={`sidebar-nav-item rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-subtle)] hover:border-sky-400/50 text-xs font-semibold text-[var(--text-main)] inline-flex items-center justify-center gap-1.5 ${
+              className={`sidebar-nav-item rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-subtle)] hover:border-[var(--border-hover)] text-xs font-semibold text-[var(--text-main)] inline-flex items-center justify-center gap-1.5 ${
                 isRailDesktop ? 'flex-1 py-1.5 px-2 lg:w-10 lg:h-9 lg:p-0 lg:flex-none' : 'flex-1 py-1.5 px-2'
               }`}
             >
@@ -684,7 +684,7 @@ function AppSidebar({ conflictCount, onFocusQuickCapture }: AppSidebarProps) {
               onClick={() => handleOpenTool('appearance')}
               aria-label="外觀風格與偏好設定"
               title="偏好設定、工作時段與大廳膠囊管理"
-              className={`sidebar-nav-item rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-subtle)] hover:border-sky-400/50 text-xs font-semibold text-[var(--text-main)] inline-flex items-center justify-center gap-1.5 ${
+              className={`sidebar-nav-item rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-subtle)] hover:border-[var(--border-hover)] text-xs font-semibold text-[var(--text-main)] inline-flex items-center justify-center gap-1.5 ${
                 isRailDesktop ? 'flex-1 py-1.5 px-2 lg:w-10 lg:h-9 lg:p-0 lg:flex-none' : 'flex-1 py-1.5 px-2'
               }`}
             >
@@ -699,7 +699,7 @@ function AppSidebar({ conflictCount, onFocusQuickCapture }: AppSidebarProps) {
             data-testid="header-member-portal-btn"
             onClick={() => handleOpenTool('member')}
             title={currentMember ? `會員帳號：${currentMember.displayName}` : '登入或註冊咩創意雲端會員'}
-            className={`sidebar-nav-item rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-glass)] hover:border-sky-400/60 flex items-center gap-2.5 text-left ${
+            className={`sidebar-nav-item rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-glass)] hover:border-[var(--border-hover)] flex items-center gap-2.5 text-left ${
               isRailDesktop
                 ? 'w-full p-2 lg:w-10 lg:h-10 lg:p-0 lg:mx-auto lg:justify-center'
                 : 'w-full p-2'

@@ -159,11 +159,50 @@ export async function triggerLightHaptic(): Promise<void> {
   }
 }
 
-export async function syncNativeStatusBar(resolvedColorMode: 'light' | 'dark'): Promise<void> {
+export const THEME_SURFACE_COLORS: Record<
+  'sky-glass' | 'minimal-linear' | 'warm-journal',
+  { light: string; dark: string }
+> = {
+  'sky-glass': { light: '#F4F9FF', dark: '#080E1A' },
+  'minimal-linear': { light: '#FFFFFF', dark: '#0B0D12' },
+  'warm-journal': { light: '#FAF6F0', dark: '#1C1917' }
+};
+
+export function resolveThemeSurfaceColor(
+  resolvedColorMode: 'light' | 'dark',
+  designTheme: 'sky-glass' | 'minimal-linear' | 'warm-journal' = 'sky-glass'
+): string {
+  const palette = THEME_SURFACE_COLORS[designTheme] || THEME_SURFACE_COLORS['sky-glass'];
+  return palette[resolvedColorMode];
+}
+
+export async function syncNativeStatusBar(
+  resolvedColorMode: 'light' | 'dark',
+  designTheme: 'sky-glass' | 'minimal-linear' | 'warm-journal' = 'sky-glass'
+): Promise<void> {
+  const surfaceHex = resolveThemeSurfaceColor(resolvedColorMode, designTheme);
+
+  if (typeof document !== 'undefined') {
+    document.documentElement.style.colorScheme = resolvedColorMode;
+    let meta = document.getElementById('mei-theme-color-meta') as HTMLMetaElement | null;
+    if (!meta) {
+      meta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null;
+    }
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.id = 'mei-theme-color-meta';
+      meta.name = 'theme-color';
+      document.head.appendChild(meta);
+    }
+    meta.removeAttribute('media');
+    meta.setAttribute('content', surfaceHex);
+  }
+
   const runtime = detectRuntimePlatform();
   if (runtime === 'capacitor-ios' || runtime === 'capacitor-android') {
     try {
       const { StatusBar, Style } = await import('@capacitor/status-bar');
+      await StatusBar.setOverlaysWebView({ overlay: true });
       await StatusBar.setStyle({
         style: resolvedColorMode === 'dark' ? Style.Dark : Style.Light
       });

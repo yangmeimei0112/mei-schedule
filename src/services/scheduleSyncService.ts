@@ -847,16 +847,27 @@ export async function joinSharedCalendarRemote(
       if (isTableNotFoundError(error) || isNetworkOrOfflineError(error)) {
         return { mode: 'local-fallback', calendar: null, events: [], error: null };
       }
+      const rawMsg = String(error.message || '');
+      const friendlyError = /invalid or expired invite code/i.test(rawMsg)
+        ? `邀請碼「${cleanCode}」不存在或已失效，請確認後再試。`
+        : /authentication required/i.test(rawMsg)
+          ? '請先登入咩創意雲端會員帳號後再透過邀請碼加入。'
+          : rawMsg || `邀請碼「${cleanCode}」不存在或已失效。`;
       return {
         mode: 'cloud',
         calendar: null,
         events: [],
-        error: error.message || '無效或已過期的共享日曆邀請碼'
+        error: friendlyError
       };
     }
 
     if (!calendarId) {
-      return { mode: 'cloud', calendar: null, events: [], error: '找不到對應的共享日曆' };
+      return {
+        mode: 'cloud',
+        calendar: null,
+        events: [],
+        error: `邀請碼「${cleanCode}」不存在，請確認邀請碼是否正確。`
+      };
     }
 
     const [calRes, memRes, evtRes] = await Promise.all([

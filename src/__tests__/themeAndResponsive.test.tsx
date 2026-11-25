@@ -49,11 +49,20 @@ describe('M1 Visual System: 3 Themes x 2 Modes, Sky-Blue Toast, dvh & 4 Aspect R
     expect(screen.getByTestId('theme-switch-minimal-linear')).toHaveTextContent('極簡');
     expect(screen.getByTestId('theme-switch-warm-journal')).toHaveTextContent('溫暖');
 
+    const expectedThemeColors: Record<DesignTheme, { light: string; dark: string }> = {
+      'sky-glass': { light: '#F4F9FF', dark: '#080E1A' },
+      'minimal-linear': { light: '#FFFFFF', dark: '#0B0D12' },
+      'warm-journal': { light: '#FAF6F0', dark: '#1C1917' }
+    };
+
     const themes: DesignTheme[] = ['sky-glass', 'minimal-linear', 'warm-journal'];
     for (const theme of themes) {
       fireEvent.click(screen.getByTestId(`theme-switch-${theme}`));
       await waitFor(() => {
         expect(document.documentElement.getAttribute('data-design-theme')).toBe(theme);
+        const meta = document.querySelector('meta[name="theme-color"]');
+        expect(meta?.getAttribute('content')).toBe(expectedThemeColors[theme].light);
+        expect(meta?.getAttribute('content')).not.toBe('#38BDF8');
       });
 
       // Toggle dark mode on
@@ -64,6 +73,8 @@ describe('M1 Visual System: 3 Themes x 2 Modes, Sky-Blue Toast, dvh & 4 Aspect R
       await waitFor(() => {
         expect(document.documentElement.classList.contains('dark')).toBe(true);
         expect(document.documentElement.getAttribute('data-design-theme')).toBe(theme);
+        const meta = document.querySelector('meta[name="theme-color"]');
+        expect(meta?.getAttribute('content')).toBe(expectedThemeColors[theme].dark);
       });
 
       // Toggle light mode back on
@@ -71,8 +82,16 @@ describe('M1 Visual System: 3 Themes x 2 Modes, Sky-Blue Toast, dvh & 4 Aspect R
       await waitFor(() => {
         expect(document.documentElement.classList.contains('dark')).toBe(false);
         expect(document.documentElement.getAttribute('data-design-theme')).toBe(theme);
+        const meta = document.querySelector('meta[name="theme-color"]');
+        expect(meta?.getAttribute('content')).toBe(expectedThemeColors[theme].light);
       });
     }
+
+    // MobileBottomNav renders as a translucent floating edge-to-edge dock (no opaque bottom slab)
+    const bottomNav = screen.getByTestId('mobile-bottom-nav');
+    expect(bottomNav.className).toContain('mobile-bottom-nav-float');
+    expect(bottomNav.className).toContain('theme-nav-bottom');
+    expect(bottomNav.className).not.toContain('pb-safe-bottom');
 
     const css = fs.readFileSync(path.join(ROOT_DIR, 'src/styles/index.css'), 'utf8');
     expect(css).toContain(':root[data-design-theme="sky-glass"]');
@@ -81,6 +100,11 @@ describe('M1 Visual System: 3 Themes x 2 Modes, Sky-Blue Toast, dvh & 4 Aspect R
     expect(css).toContain(':root.dark[data-design-theme="minimal-linear"]');
     expect(css).toContain(':root[data-design-theme="warm-journal"]');
     expect(css).toContain(':root.dark[data-design-theme="warm-journal"]');
+    expect(css).toContain('--nav-top-glass');
+    expect(css).toContain('--nav-bottom-glass');
+    expect(css).toContain('--accent-solid-bg');
+    expect(css).toContain('--accent-soft-bg');
+    expect(css).toContain('--badge-surface-from');
   });
 
   it('renders high-contrast sky-blue [data-testid="studio-toast"] with mobile anti-overlap and working Undo/Close actions', () => {
@@ -329,10 +353,10 @@ describe('M1 Visual System: 3 Themes x 2 Modes, Sky-Blue Toast, dvh & 4 Aspect R
       // Mobile (<1024px) must NOT show full-screen blocking sidebar overlay on initial load
       expect(screen.queryByTestId('mobile-sidebar-overlay')).toBeNull();
 
-      // Appearance settings modal exposes v1.5.1 release badge, Studio Dock visibility control & Auto-Wrap Titles switch
+      // Appearance settings modal exposes v1.5.2 release badge, Studio Dock visibility control & Auto-Wrap Titles switch
       expect(document.documentElement.getAttribute('data-title-wrap')).toBe('wrap');
       fireEvent.click(screen.getByTestId('open-appearance-modal-btn'));
-      expect(await screen.findByTestId('app-version-badge')).toHaveTextContent('v1.5.1');
+      expect(await screen.findByTestId('app-version-badge')).toHaveTextContent('v1.5.2');
       expect(screen.getByTestId('dock-visibility-control')).toBeInTheDocument();
       const autoWrapSwitch = screen.getByTestId('toggle-auto-wrap-titles');
       expect(autoWrapSwitch).toHaveAttribute('aria-checked', 'true');

@@ -108,7 +108,7 @@
    三套視覺風格 x 亮深雙模式 CSS 變數系統 (6 Visual Combinations)
    ========================================================================== */
 
-/* 1A. Sky-Glass Light (預設：晴空澄澈毛玻璃 - 亮色) */
+/* 1A. Sky-Glass Light (預設：晴空 - 亮色) */
 :root,
 :root[data-design-theme="sky-glass"] {
   --font-en: "Zen Maru Gothic", -apple-system, BlinkMacSystemFont, sans-serif;
@@ -124,13 +124,32 @@
   --surface-subtle: #F8FAFC;
   --surface-blur: 14px;
 
+  --nav-top-glass: rgba(244, 249, 255, 0.86);
+  --nav-bottom-glass: rgba(255, 255, 255, 0.56);
+  --nav-bottom-border: rgba(56, 189, 248, 0.32);
+  --nav-bottom-shadow: 0 10px 28px -8px rgba(14, 165, 233, 0.18), 0 2px 8px rgba(15, 23, 42, 0.08);
+
   --sky-primary: #38BDF8;
   --sky-hover: #0284C7;
   --sky-deep: #0369A1;
   --sky-tint: #EFF6FF;
-  --accent-primary: #38BDF8;
+
+  --accent-primary: #0EA5E9;
   --accent-hover: #0284C7;
   --accent-deep: #0369A1;
+  --accent-solid-bg: #0EA5E9;
+  --accent-solid-hover: #0284C7;
+  --accent-solid-text: #FFFFFF;
+  --accent-soft-bg: rgba(224, 242, 254, 0.82);
+  --accent-soft-hover: #BAE6FD;
+  --accent-soft-border: rgba(56, 189, 248, 0.34);
+  --accent-ring: rgba(56, 189, 248, 0.38);
+
+  --badge-surface-from: rgba(56, 189, 248, 0.20);
+  --badge-surface-to: rgba(14, 165, 233, 0.07);
+  --badge-border: rgba(56, 189, 248, 0.34);
+  --badge-text: #0284C7;
+  --badge-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.7), 0 2px 6px -1px rgba(14, 165, 233, 0.14);
 
   --border-sky: rgba(56, 189, 248, 0.24);
   --border-sky-hover: rgba(56, 189, 248, 0.55);
@@ -141,13 +160,16 @@
   --text-main: #0F172A;
   --text-muted: #475569;
 
+  --scrollbar-thumb: rgba(56, 189, 248, 0.28);
+  --scrollbar-thumb-hover: rgba(14, 165, 233, 0.48);
+
   --card-radius: 24px;
   --block-radius: 16px;
   --shadow-bento: 0 14px 36px -10px rgba(14, 165, 233, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
   --shadow-bento-hover: 0 22px 48px -12px rgba(14, 165, 233, 0.22), 0 6px 16px -4px rgba(15, 23, 42, 0.06);
 }
 
-/* 1B. Sky-Glass Dark (晴空澄澈毛玻璃 - 星夜冰藍深色) */
+/* 1B. Sky-Glass Dark (晴空 - 星夜冰藍深色) */
 :root.dark,
 :root.dark[data-design-theme="sky-glass"] {
   --bg-primary: #080E1A;
@@ -157,13 +179,32 @@
   --surface-subtle: #1E293B;
   --surface-blur: 14px;
 
+  --nav-top-glass: rgba(8, 14, 26, 0.86);
+  --nav-bottom-glass: rgba(10, 18, 34, 0.54);
+  --nav-bottom-border: rgba(56, 189, 248, 0.30);
+  --nav-bottom-shadow: 0 12px 32px -8px rgba(2, 6, 23, 0.64), inset 0 1px 0 rgba(125, 211, 252, 0.12);
+
   --sky-primary: #38BDF8;
   --sky-hover: #7DD3FC;
   --sky-deep: #BAE6FD;
   --sky-tint: #1E293B;
+
   --accent-primary: #38BDF8;
   --accent-hover: #7DD3FC;
-  --accent-deep: #BAE6FD;
+  --accent-deep: #7DD3FC;
+  --accent-solid-bg: #0EA5E9;
+  --accent-solid-hover: #0284C7;
+  --accent-solid-text: #FFFFFF;
+  --accent-soft-bg: rgba(56, 189, 248, 0.16);
+  --accent-soft-hover: rgba(56, 189, 248, 0.26);
+  --accent-soft-border: rgba(56, 189, 248, 0.30);
+  --accent-ring: rgba(56, 189, 248, 0.42);
+
+  --badge-surface-from: rgba(56, 189, 248, 0.22);
+  --badge-surface-to: rgba(14, 165, 233, 0.08);
+  --badge-border: rgba(56, 189, 248, 0.36);
+  --badge-text: #38BDF8;
+  --badge-shadow: inset 0 1px 1px rgba(56, 189, 248, 0.22), 0 2px 6px -1px rgba(14, 165, 233, 0.22);
 
   --border-sky: rgba(56, 189, 248, 0.22);
   --border-sky-hover: rgba(56, 189, 248, 0.52);
@@ -174,13 +215,16 @@
   --text-main: #F8FAFC;
   --text-muted: #94A3B8;
 
+  --scrollbar-thumb: rgba(56, 189, 248, 0.28);
+  --scrollbar-thumb-hover: rgba(56, 189, 248, 0.48);
+
   --card-radius: 24px;
   --block-radius: 16px;
   --shadow-bento: 0 16px 40px -12px rgba(2, 8, 23, 0.65), 0 0 0 1px rgba(56, 189, 248, 0.14);
   --shadow-bento-hover: 0 24px 52px -12px rgba(14, 165, 233, 0.22), 0 0 0 1px rgba(56, 189, 248, 0.38);
 }
 
-/* 2A. Minimal-Linear Light (極簡效率專業 - 亮色) */
+/* 2A. Minimal-Linear Light (極簡 - 亮色) */
 :root[data-design-theme="minimal-linear"] {
   --bg-primary: #FFFFFF;
   --bg-secondary: #F8FAFC;
@@ -189,18 +233,39 @@
   --surface-subtle: #F1F5F9;
   --surface-blur: 0px;
 
+  --nav-top-glass: rgba(255, 255, 255, 0.90);
+  --nav-bottom-glass: rgba(255, 255, 255, 0.64);
+  --nav-bottom-border: rgba(148, 163, 184, 0.38);
+  --nav-bottom-shadow: 0 8px 24px -8px rgba(15, 23, 42, 0.14), 0 1px 3px rgba(15, 23, 42, 0.06);
+
   --accent-primary: #2563EB;
   --accent-hover: #1D4ED8;
   --accent-deep: #1E40AF;
+  --accent-solid-bg: #0F172A;
+  --accent-solid-hover: #1E293B;
+  --accent-solid-text: #FFFFFF;
+  --accent-soft-bg: #F1F5F9;
+  --accent-soft-hover: #E2E8F0;
+  --accent-soft-border: #CBD5E1;
+  --accent-ring: rgba(37, 99, 235, 0.34);
+
+  --badge-surface-from: #F1F5F9;
+  --badge-surface-to: #E2E8F0;
+  --badge-border: #CBD5E1;
+  --badge-text: #0F172A;
+  --badge-shadow: none;
 
   --border-sky: #E2E8F0;
   --border-sky-hover: #CBD5E1;
   --border-subtle: #E2E8F0;
-  --border-hover: #CBD5E1;
+  --border-hover: #94A3B8;
   --grid-line: #E2E8F0;
 
   --text-main: #0F172A;
   --text-muted: #64748B;
+
+  --scrollbar-thumb: rgba(100, 116, 139, 0.30);
+  --scrollbar-thumb-hover: rgba(71, 85, 105, 0.50);
 
   --card-radius: 12px;
   --block-radius: 8px;
@@ -208,7 +273,7 @@
   --shadow-bento-hover: 0 6px 16px -4px rgba(15, 23, 42, 0.08);
 }
 
-/* 2B. Minimal-Linear Dark (極簡效率專業 - 深炭黑) */
+/* 2B. Minimal-Linear Dark (極簡 - 深炭黑) */
 :root.dark[data-design-theme="minimal-linear"] {
   --bg-primary: #0B0D12;
   --bg-secondary: #12151E;
@@ -217,18 +282,39 @@
   --surface-subtle: #1A1F2C;
   --surface-blur: 0px;
 
+  --nav-top-glass: rgba(11, 13, 18, 0.90);
+  --nav-bottom-glass: rgba(14, 18, 28, 0.58);
+  --nav-bottom-border: rgba(96, 165, 250, 0.24);
+  --nav-bottom-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
   --accent-primary: #60A5FA;
   --accent-hover: #93C5FD;
-  --accent-deep: #BFDBFE;
+  --accent-deep: #93C5FD;
+  --accent-solid-bg: #2563EB;
+  --accent-solid-hover: #1D4ED8;
+  --accent-solid-text: #FFFFFF;
+  --accent-soft-bg: rgba(96, 165, 250, 0.14);
+  --accent-soft-hover: rgba(96, 165, 250, 0.24);
+  --accent-soft-border: rgba(96, 165, 250, 0.28);
+  --accent-ring: rgba(96, 165, 250, 0.38);
+
+  --badge-surface-from: #1A2133;
+  --badge-surface-to: #141926;
+  --badge-border: #334155;
+  --badge-text: #60A5FA;
+  --badge-shadow: none;
 
   --border-sky: #242938;
   --border-sky-hover: #363E54;
   --border-subtle: #242938;
-  --border-hover: #363E54;
+  --border-hover: #475569;
   --grid-line: #242938;
 
   --text-main: #F1F5F9;
   --text-muted: #94A3B8;
+
+  --scrollbar-thumb: rgba(96, 165, 250, 0.26);
+  --scrollbar-thumb-hover: rgba(96, 165, 250, 0.46);
 
   --card-radius: 12px;
   --block-radius: 8px;
@@ -236,7 +322,7 @@
   --shadow-bento-hover: 0 8px 20px -6px rgba(0, 0, 0, 0.65);
 }
 
-/* 3A. Warm-Journal Light (溫暖質感手帳 - 暖象牙紙感) */
+/* 3A. Warm-Journal Light (溫暖 - 暖象牙紙感) */
 :root[data-design-theme="warm-journal"] {
   --bg-primary: #FAF6F0;
   --bg-secondary: #F3ECE2;
@@ -245,9 +331,27 @@
   --surface-subtle: #F5EFE6;
   --surface-blur: 8px;
 
+  --nav-top-glass: rgba(250, 246, 240, 0.88);
+  --nav-bottom-glass: rgba(255, 251, 245, 0.60);
+  --nav-bottom-border: rgba(217, 119, 6, 0.28);
+  --nav-bottom-shadow: 0 10px 26px -8px rgba(146, 64, 14, 0.18), 0 2px 6px rgba(120, 90, 60, 0.08);
+
   --accent-primary: #D97706;
   --accent-hover: #B45309;
   --accent-deep: #92400E;
+  --accent-solid-bg: #D97706;
+  --accent-solid-hover: #B45309;
+  --accent-solid-text: #FFFFFF;
+  --accent-soft-bg: rgba(254, 243, 199, 0.80);
+  --accent-soft-hover: #FDE68A;
+  --accent-soft-border: rgba(217, 119, 6, 0.32);
+  --accent-ring: rgba(217, 119, 6, 0.36);
+
+  --badge-surface-from: #FFFBEB;
+  --badge-surface-to: #FEF3C7;
+  --badge-border: rgba(217, 119, 6, 0.34);
+  --badge-text: #B45309;
+  --badge-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.75), 0 2px 6px -1px rgba(180, 83, 9, 0.12);
 
   --border-sky: #E7DDD0;
   --border-sky-hover: #D6C5B0;
@@ -258,13 +362,16 @@
   --text-main: #292524;
   --text-muted: #78716C;
 
+  --scrollbar-thumb: rgba(217, 119, 6, 0.28);
+  --scrollbar-thumb-hover: rgba(180, 83, 9, 0.48);
+
   --card-radius: 24px;
   --block-radius: 20px;
   --shadow-bento: 0 10px 28px -10px rgba(120, 90, 60, 0.12), 0 2px 6px rgba(120, 90, 60, 0.05);
   --shadow-bento-hover: 0 16px 36px -10px rgba(120, 90, 60, 0.18), 0 4px 10px rgba(120, 90, 60, 0.08);
 }
 
-/* 3B. Warm-Journal Dark (溫暖質感手帳 - 暖深可可) */
+/* 3B. Warm-Journal Dark (溫暖 - 暖深可可) */
 :root.dark[data-design-theme="warm-journal"] {
   --bg-primary: #1C1917;
   --bg-secondary: #24201D;
@@ -273,18 +380,39 @@
   --surface-subtle: #36312D;
   --surface-blur: 8px;
 
+  --nav-top-glass: rgba(28, 25, 23, 0.88);
+  --nav-bottom-glass: rgba(34, 29, 26, 0.56);
+  --nav-bottom-border: rgba(245, 158, 11, 0.28);
+  --nav-bottom-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(251, 191, 36, 0.12);
+
   --accent-primary: #F59E0B;
   --accent-hover: #FBBF24;
-  --accent-deep: #FDE68A;
+  --accent-deep: #FCD34D;
+  --accent-solid-bg: #D97706;
+  --accent-solid-hover: #B45309;
+  --accent-solid-text: #FFFFFF;
+  --accent-soft-bg: rgba(245, 158, 11, 0.15);
+  --accent-soft-hover: rgba(245, 158, 11, 0.24);
+  --accent-soft-border: rgba(245, 158, 11, 0.32);
+  --accent-ring: rgba(245, 158, 11, 0.42);
+
+  --badge-surface-from: #3B2F23;
+  --badge-surface-to: #292524;
+  --badge-border: rgba(245, 158, 11, 0.38);
+  --badge-text: #F59E0B;
+  --badge-shadow: inset 0 1px 1px rgba(245, 158, 11, 0.18);
 
   --border-sky: #44403C;
   --border-sky-hover: #57534E;
   --border-subtle: #44403C;
-  --border-hover: #57534E;
+  --border-hover: #78716C;
   --grid-line: rgba(120, 113, 108, 0.26);
 
   --text-main: #F5F5F4;
   --text-muted: #A8A29E;
+
+  --scrollbar-thumb: rgba(245, 158, 11, 0.28);
+  --scrollbar-thumb-hover: rgba(245, 158, 11, 0.48);
 
   --card-radius: 24px;
   --block-radius: 20px;
@@ -299,6 +427,12 @@
 html {
   scroll-behavior: smooth;
   -webkit-tap-highlight-color: transparent;
+  accent-color: var(--accent-primary);
+}
+
+::selection {
+  background-color: var(--accent-soft-bg);
+  color: var(--accent-deep);
 }
 
 body {
@@ -397,10 +531,6 @@ h4, h5, h6, p, span, button, input, textarea, select, label, .font-heading-sm, .
               opacity 0.18s ease;
 }
 
-:root[data-design-theme="minimal-linear"] .schedule-time-block {
-  filter: saturate(0.78);
-}
-
 .schedule-buffer-hatch {
   background-image: repeating-linear-gradient(
     -45deg,
@@ -412,67 +542,21 @@ h4, h5, h6, p, span, button, input, textarea, select, label, .font-heading-sm, .
 }
 
 /* ==========================================================================
-   品牌標誌底座與主次按鈕（嚴格禁止 transition: all）
+   品牌標誌底座、主次按鈕與全站統一語意主題類別（嚴格禁止 transition: all）
+   - 嚴格跟隨三套主題 x 亮深雙模式 CSS 變數，行程圖塊維持使用者自選底色不動
    ========================================================================== */
 
-.squircle-icon-badge {
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.16), rgba(14, 165, 233, 0.06));
-  border: 1px solid rgba(56, 189, 248, 0.28);
-  color: #0284C7;
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.6);
-}
-
-.dark .squircle-icon-badge {
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.20), rgba(14, 165, 233, 0.08));
-  border: 1px solid rgba(56, 189, 248, 0.32);
-  color: #38BDF8;
-  box-shadow: inset 0 1px 1px rgba(56, 189, 248, 0.15);
+.squircle-icon-badge,
+.studio-brand-logo .squircle-icon-badge,
+.meischedule-brand-logo .squircle-icon-badge {
+  background: linear-gradient(135deg, var(--badge-surface-from), var(--badge-surface-to));
+  border: 1px solid var(--badge-border);
+  color: var(--badge-text);
+  box-shadow: var(--badge-shadow);
 }
 
 .studio-brand-logo {
   user-select: none;
-}
-
-.studio-brand-logo .squircle-icon-badge {
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.22), rgba(14, 165, 233, 0.08));
-  border: 1px solid rgba(56, 189, 248, 0.36);
-  color: #0284C7;
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.7), 0 2px 6px -1px rgba(14, 165, 233, 0.15);
-}
-
-.dark .studio-brand-logo .squircle-icon-badge {
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.24), rgba(14, 165, 233, 0.10));
-  border: 1px solid rgba(56, 189, 248, 0.40);
-  color: #38BDF8;
-  box-shadow: inset 0 1px 1px rgba(56, 189, 248, 0.25), 0 2px 6px -1px rgba(14, 165, 233, 0.25);
-}
-
-:root[data-design-theme="minimal-linear"] .meischedule-brand-logo .squircle-icon-badge {
-  background: #F1F5F9;
-  border-color: #CBD5E1;
-  color: #0F172A;
-  box-shadow: none;
-}
-
-:root.dark[data-design-theme="minimal-linear"] .meischedule-brand-logo .squircle-icon-badge {
-  background: #1A2133;
-  border-color: #334155;
-  color: #60A5FA;
-  box-shadow: none;
-}
-
-:root[data-design-theme="warm-journal"] .meischedule-brand-logo .squircle-icon-badge {
-  background: linear-gradient(135deg, #FFFBEB, #FEF3C7);
-  border-color: rgba(217, 119, 6, 0.34);
-  color: #B45309;
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.75), 0 2px 6px -1px rgba(180, 83, 9, 0.12);
-}
-
-:root.dark[data-design-theme="warm-journal"] .meischedule-brand-logo .squircle-icon-badge {
-  background: linear-gradient(135deg, #3B2F23, #292524);
-  border-color: rgba(245, 158, 11, 0.38);
-  color: #F59E0B;
-  box-shadow: inset 0 1px 1px rgba(245, 158, 11, 0.18);
 }
 
 .btn-sky-primary {
@@ -498,12 +582,22 @@ h4, h5, h6, p, span, button, input, textarea, select, label, .font-heading-sm, .
 
 :root[data-design-theme="minimal-linear"] .btn-sky-primary {
   background: #0F172A;
-  box-shadow: none;
+  box-shadow: 0 4px 12px -4px rgba(15, 23, 42, 0.24);
+}
+
+:root[data-design-theme="minimal-linear"] .btn-sky-primary:hover {
+  background: #1E293B;
+  box-shadow: 0 8px 18px -4px rgba(15, 23, 42, 0.34);
 }
 
 :root.dark[data-design-theme="minimal-linear"] .btn-sky-primary {
   background: #2563EB;
-  box-shadow: none;
+  box-shadow: 0 6px 16px -4px rgba(37, 99, 235, 0.42);
+}
+
+:root.dark[data-design-theme="minimal-linear"] .btn-sky-primary:hover {
+  background: #1D4ED8;
+  box-shadow: 0 10px 22px -4px rgba(37, 99, 235, 0.52);
 }
 
 :root[data-design-theme="warm-journal"] .btn-sky-primary {
@@ -511,10 +605,15 @@ h4, h5, h6, p, span, button, input, textarea, select, label, .font-heading-sm, .
   box-shadow: 0 8px 18px -4px rgba(217, 119, 6, 0.32);
 }
 
+:root[data-design-theme="warm-journal"] .btn-sky-primary:hover {
+  background: linear-gradient(135deg, #D97706 0%, #B45309 100%);
+  box-shadow: 0 12px 24px -4px rgba(180, 83, 9, 0.42);
+}
+
 .btn-sky-secondary {
-  background: rgba(239, 246, 255, 0.9);
-  border: 1px solid rgba(56, 189, 248, 0.28);
-  color: #0369A1;
+  background: var(--accent-soft-bg);
+  border: 1px solid var(--accent-soft-border);
+  color: var(--accent-deep);
   transition: color 0.2s ease,
               background-color 0.2s ease,
               border-color 0.2s ease,
@@ -523,21 +622,64 @@ h4, h5, h6, p, span, button, input, textarea, select, label, .font-heading-sm, .
 }
 
 .btn-sky-secondary:hover {
-  background: #E0F2FE;
-  border-color: rgba(56, 189, 248, 0.55);
-  color: #0284C7;
+  background: var(--accent-soft-hover);
+  border-color: var(--border-hover);
+  color: var(--accent-hover);
 }
 
-.dark .btn-sky-secondary {
-  background: rgba(30, 41, 59, 0.85);
-  border: 1px solid rgba(56, 189, 248, 0.25);
-  color: #BAE6FD;
+/* 全站統一語意主題輔助類別 */
+.theme-accent-text {
+  color: var(--accent-primary);
 }
 
-.dark .btn-sky-secondary:hover {
-  background: rgba(56, 189, 248, 0.18);
-  border-color: rgba(56, 189, 248, 0.45);
-  color: #E0F2FE;
+.theme-accent-deep {
+  color: var(--accent-deep);
+}
+
+.theme-accent-solid {
+  background-color: var(--accent-solid-bg);
+  color: var(--accent-solid-text);
+  border-color: var(--accent-solid-bg);
+}
+
+.theme-accent-solid:hover {
+  background-color: var(--accent-solid-hover);
+}
+
+.theme-accent-soft {
+  background-color: var(--accent-soft-bg);
+  color: var(--accent-deep);
+  border-color: var(--accent-soft-border);
+}
+
+.theme-accent-soft:hover {
+  background-color: var(--accent-soft-hover);
+}
+
+.theme-accent-dot {
+  background-color: var(--accent-primary);
+}
+
+.theme-nav-top {
+  background: var(--nav-top-glass);
+}
+
+.theme-nav-bottom {
+  background: var(--nav-bottom-glass);
+  border: 1px solid var(--nav-bottom-border);
+  box-shadow: var(--nav-bottom-shadow);
+}
+
+.theme-checkbox {
+  accent-color: var(--accent-primary);
+}
+
+.theme-progress-fill {
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-hover));
+}
+
+.theme-chart-bar {
+  background: linear-gradient(180deg, var(--accent-primary), var(--accent-solid-bg));
 }
 
 /* ==========================================================================
@@ -725,13 +867,26 @@ html.color-mode-transitioning .squircle-icon-badge {
   will-change: transform;
 }
 
-/* 行動端智慧分層毛玻璃降載：頂底導覽列精簡至 blur(10px) 保持 60fps 捲動 */
+/* 行動端智慧分層毛玻璃降載：頂底導覽列精簡至 blur(10px) 保持 60fps 捲動並呈現穿透內容質感 */
 @media (max-width: 767px) {
-  [data-testid="top-nav-bar"],
-  [data-testid="mobile-bottom-nav"] {
+  [data-testid="top-nav-bar"] {
     backdrop-filter: blur(10px) !important;
     -webkit-backdrop-filter: blur(10px) !important;
   }
+
+  [data-testid="mobile-bottom-nav"] {
+    backdrop-filter: blur(10px) saturate(165%) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(165%) !important;
+  }
+}
+
+/* Android / iOS Edge-to-Edge 懸浮半透明底部導覽列（採用 Chrome 官方 bottom: calc(... + env(safe-area-inset-bottom)) 快速路徑，不以實心底條遮擋底部內容） */
+.mobile-bottom-nav-float {
+  bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+.mobile-fab-float {
+  bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px));
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -866,6 +1021,81 @@ html.color-mode-transitioning .squircle-icon-badge {
   }
 }
 
+/* 返回咩創意大廳懸浮膠囊與貼邊微露拉條：跟隨三套主題 x 亮深雙模式統一視覺色系 */
+:root[data-design-theme="minimal-linear"] .mei-dock-capsule,
+:root[data-design-theme="warm-journal"] .mei-dock-capsule {
+  background: var(--nav-bottom-glass) !important;
+  border-color: var(--nav-bottom-border) !important;
+  box-shadow: var(--nav-bottom-shadow) !important;
+  color: var(--text-main) !important;
+}
+
+:root[data-design-theme="minimal-linear"] .mei-dock-badge,
+:root[data-design-theme="warm-journal"] .mei-dock-badge {
+  background: linear-gradient(135deg, var(--badge-surface-from), var(--badge-surface-to)) !important;
+  border-color: var(--badge-border) !important;
+  color: var(--badge-text) !important;
+  box-shadow: var(--badge-shadow) !important;
+}
+
+:root[data-design-theme="minimal-linear"] .mei-dock-home-btn,
+:root[data-design-theme="warm-journal"] .mei-dock-home-btn {
+  background: var(--accent-solid-bg) !important;
+  color: var(--accent-solid-text) !important;
+}
+
+:root[data-design-theme="minimal-linear"] .mei-dock-icon-btn,
+:root[data-design-theme="warm-journal"] .mei-dock-icon-btn,
+:root[data-design-theme="minimal-linear"] .mei-dock-collapse-btn,
+:root[data-design-theme="warm-journal"] .mei-dock-collapse-btn,
+:root[data-design-theme="minimal-linear"] .mei-dock-hide-btn,
+:root[data-design-theme="warm-journal"] .mei-dock-hide-btn {
+  background: var(--accent-soft-bg) !important;
+  border-color: var(--accent-soft-border) !important;
+  color: var(--accent-deep) !important;
+}
+
+:root[data-design-theme="minimal-linear"] .mei-dock-icon-btn:hover,
+:root[data-design-theme="warm-journal"] .mei-dock-icon-btn:hover,
+:root[data-design-theme="minimal-linear"] .mei-dock-collapse-btn:hover,
+:root[data-design-theme="warm-journal"] .mei-dock-collapse-btn:hover,
+:root[data-design-theme="minimal-linear"] .mei-dock-hide-btn:hover,
+:root[data-design-theme="warm-journal"] .mei-dock-hide-btn:hover {
+  background: var(--accent-soft-hover) !important;
+  color: var(--accent-hover) !important;
+}
+
+:root[data-design-theme="minimal-linear"] .mei-dock-popover,
+:root[data-design-theme="warm-journal"] .mei-dock-popover {
+  background: var(--surface-glass-strong) !important;
+  border-color: var(--border-subtle) !important;
+}
+
+:root[data-design-theme="minimal-linear"] .mei-dock-popover-title,
+:root[data-design-theme="warm-journal"] .mei-dock-popover-title {
+  color: var(--accent-deep) !important;
+  border-bottom-color: var(--border-subtle) !important;
+}
+
+:root[data-design-theme="minimal-linear"] .mei-dock-popover-item:hover,
+:root[data-design-theme="warm-journal"] .mei-dock-popover-item:hover {
+  background: var(--accent-soft-bg) !important;
+  color: var(--accent-deep) !important;
+}
+
+:root[data-design-theme="minimal-linear"] #mei-dock-edge-tab,
+:root[data-design-theme="warm-journal"] #mei-dock-edge-tab {
+  background: var(--nav-bottom-glass) !important;
+  border-color: var(--nav-bottom-border) !important;
+  color: var(--accent-primary) !important;
+  box-shadow: var(--nav-bottom-shadow) !important;
+}
+
+:root[data-design-theme="minimal-linear"] #mei-dock-edge-tab .mei-dock-edge-pill,
+:root[data-design-theme="warm-journal"] #mei-dock-edge-tab .mei-dock-edge-pill {
+  background: var(--accent-primary) !important;
+}
+
 /* 統一全高左側側欄與右側待辦翼板質感（三套主題 x 亮深雙模式自適應） */
 .app-sidebar-surface,
 .app-right-wing-surface {
@@ -915,11 +1145,12 @@ body.tray-route #mei-dock-edge-tab {
   }
 
   .mobile-bottom-nav {
-    padding-bottom: max(0.35rem, env(safe-area-inset-bottom, 0.35rem)) !important;
+    bottom: calc(0.25rem + env(safe-area-inset-bottom, 0px)) !important;
   }
 
   .mobile-bottom-nav-grid {
-    padding-top: 0.25rem !important;
+    height: 2.75rem !important;
+    padding-top: 0.15rem !important;
   }
 
   .mobile-nav-primary-btn {
@@ -951,7 +1182,7 @@ body.tray-route #mei-dock-edge-tab {
   }
 }
 
-/* 細緻捲軸樣式 */
+/* 細緻捲軸樣式（跟隨當前主題色） */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -962,10 +1193,10 @@ body.tray-route #mei-dock-edge-tab {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(56, 189, 248, 0.28);
+  background: var(--scrollbar-thumb);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(14, 165, 233, 0.48);
+  background: var(--scrollbar-thumb-hover);
 }

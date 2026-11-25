@@ -157,7 +157,7 @@ export default function CommandPalette() {
         className="max-h-dvh-85 w-full max-w-xl bento-glass-card overflow-hidden flex flex-col shadow-2xl"
       >
         <div className="px-4 py-3 border-b border-[var(--border-subtle)] flex items-center gap-2.5">
-          <LucideIcon name="search" size={18} className="text-sky-500 shrink-0" />
+          <LucideIcon name="search" size={18} className="theme-accent-text shrink-0" />
           <input
             ref={inputRef}
             type="text"
@@ -196,7 +196,7 @@ export default function CommandPalette() {
                       selectEvent(evt.id, dKey);
                       closeModal();
                     }}
-                    className="w-full px-3 py-2 rounded-xl hover:bg-sky-500/10 flex items-center justify-between gap-2 text-left text-xs"
+                    className="w-full px-3 py-2 rounded-xl hover:bg-[var(--accent-soft-bg)] flex items-center justify-between gap-2 text-left text-xs transition-colors"
                   >
                     <div className="flex items-start gap-2 min-w-0">
                       <span className={`w-2 h-2 mt-1.5 rounded-full shrink-0 ${palette.dotClass}`} />
@@ -225,13 +225,13 @@ export default function CommandPalette() {
                     toggleTaskComplete(task.id);
                     closeModal();
                   }}
-                  className="w-full px-3 py-2 rounded-xl hover:bg-sky-500/10 flex items-start justify-between gap-2 text-left text-xs"
+                  className="w-full px-3 py-2 rounded-xl hover:bg-[var(--accent-soft-bg)] flex items-start justify-between gap-2 text-left text-xs transition-colors"
                 >
                   <div className="flex items-start gap-2 min-w-0">
                     <LucideIcon
                       name={task.completed ? 'check-square' : 'square'}
                       size={14}
-                      className="text-amber-500 mt-0.5 shrink-0"
+                      className="theme-accent-text mt-0.5 shrink-0"
                     />
                     <span className="font-semibold text-[var(--text-main)] schedule-title-wrap">{task.title}</span>
                   </div>
@@ -258,9 +258,9 @@ export default function CommandPalette() {
                     closeModal();
                     cmd.run();
                   }}
-                  className="w-full px-3 py-2 rounded-xl hover:bg-sky-500/10 flex items-center gap-2.5 text-left text-xs font-bold text-[var(--text-main)]"
+                  className="w-full px-3 py-2 rounded-xl hover:bg-[var(--accent-soft-bg)] flex items-center gap-2.5 text-left text-xs font-bold text-[var(--text-main)] transition-colors"
                 >
-                  <LucideIcon name={cmd.icon} size={14} className="text-sky-500" />
+                  <LucideIcon name={cmd.icon} size={14} className="theme-accent-text" />
                   <span>{cmd.label}</span>
                 </button>
               ))}

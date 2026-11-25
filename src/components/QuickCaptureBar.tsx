@@ -97,7 +97,7 @@ const QuickCaptureBar = forwardRef<HTMLInputElement, QuickCaptureBarProps>(funct
   return (
     <div
       data-testid="quick-capture-bar"
-      className={`bento-glass-card ${compact ? 'p-2.5' : 'px-3 py-2.5 sm:px-3.5 sm:py-3'} focus-within:border-sky-400/75 transition-colors`}
+      className={`bento-glass-card ${compact ? 'p-2.5' : 'px-3 py-2.5 sm:px-3.5 sm:py-3'} focus-within:border-[var(--accent-primary)] transition-colors`}
     >
       <form onSubmit={handleSubmit} className="flex items-center gap-2">
         <div className="w-8 h-8 rounded-xl squircle-icon-badge flex items-center justify-center shrink-0">
@@ -152,7 +152,7 @@ const QuickCaptureBar = forwardRef<HTMLInputElement, QuickCaptureBarProps>(funct
               key={sample}
               type="button"
               onClick={() => setInputValue(sample)}
-              className="px-2 py-0.5 rounded-lg bg-[var(--surface-subtle)] hover:bg-sky-500/12 hover:text-sky-700 dark:hover:text-sky-300 transition-colors truncate max-w-[260px]"
+              className="px-2 py-0.5 rounded-lg bg-[var(--surface-subtle)] hover:bg-[var(--accent-soft-bg)] hover:text-[var(--accent-deep)] transition-colors truncate max-w-[260px]"
             >
               {sample}
             </button>
@@ -167,17 +167,17 @@ const QuickCaptureBar = forwardRef<HTMLInputElement, QuickCaptureBarProps>(funct
           className="mt-2 pt-2 border-t border-[var(--border-subtle)] flex items-center gap-1.5 flex-wrap text-[11px]"
         >
           <span className="font-bold text-[var(--text-main)] inline-flex items-center gap-1">
-            <LucideIcon name="wand-sparkles" size={12} className="text-sky-500" />
+            <LucideIcon name="wand-sparkles" size={12} className="theme-accent-text" />
             <span>{parsed.title}</span>
           </span>
           {parsed.tokensDetected.map((tok, idx) => (
             <span
               key={`${tok.kind}-${idx}`}
               data-testid={`nlp-token-${tok.kind}`}
-              className={`px-2 py-0.5 rounded-full font-semibold ${
+              className={`px-2 py-0.5 rounded-full font-semibold border ${
                 tok.kind === 'tag'
-                  ? COLOR_TOKEN_PALETTE[parsed.colorToken].badgeClass
-                  : 'bg-sky-500/12 text-sky-700 dark:text-sky-300 border border-sky-400/25'
+                  ? `${COLOR_TOKEN_PALETTE[parsed.colorToken].badgeClass} border-transparent`
+                  : 'theme-accent-soft'
               }`}
             >
               {tok.label}

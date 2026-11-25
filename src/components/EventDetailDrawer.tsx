@@ -287,7 +287,7 @@ export default function EventDetailDrawer() {
                 value={title}
                 disabled={isViewerOnly}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl text-sm font-bold bg-[var(--surface-subtle)] border border-[var(--border-subtle)] text-[var(--text-main)] focus:outline-none focus:border-sky-400 disabled:opacity-65"
+                className="w-full px-3.5 py-2.5 rounded-xl text-sm font-bold bg-[var(--surface-subtle)] border border-[var(--border-subtle)] text-[var(--text-main)] focus:outline-none focus:border-[var(--accent-primary)] disabled:opacity-65"
               />
             </div>
 
@@ -323,7 +323,7 @@ export default function EventDetailDrawer() {
                     checked={allDay}
                     disabled={isViewerOnly}
                     onChange={(e) => setAllDay(e.target.checked)}
-                    className="rounded text-sky-500"
+                    className="rounded theme-checkbox"
                   />
                   <span>全天行程</span>
                 </label>
@@ -333,7 +333,7 @@ export default function EventDetailDrawer() {
                     checked={isFlexible}
                     disabled={isViewerOnly}
                     onChange={(e) => setIsFlexible(e.target.checked)}
-                    className="rounded text-sky-500"
+                    className="rounded theme-checkbox"
                   />
                   <span>彈性可順延</span>
                 </label>
@@ -413,7 +413,7 @@ export default function EventDetailDrawer() {
                     onClick={() => setColorToken(item.token)}
                     title={item.label}
                     className={`w-7 h-7 rounded-full flex items-center justify-center transition-transform ${item.dotClass} ${
-                      colorToken === item.token ? 'ring-2 ring-offset-2 ring-sky-500 scale-110' : 'opacity-75 hover:opacity-100'
+                      colorToken === item.token ? 'ring-2 ring-offset-2 ring-[var(--accent-primary)] scale-110' : 'opacity-75 hover:opacity-100'
                     }`}
                   >
                     {colorToken === item.token && <LucideIcon name="check" size={13} className="text-white" />}
@@ -456,7 +456,7 @@ export default function EventDetailDrawer() {
               </div>
             </div>
 
-            {/* Free Recurrence Rule Configuration */}
+            {/* Recurrence Rule Configuration */}
             <div className="p-3.5 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-subtle)]/70 space-y-3">
               <div className="flex items-center justify-between">
                 <label className="inline-flex items-center gap-2 text-xs font-extrabold text-[var(--text-main)] cursor-pointer">
@@ -465,13 +465,13 @@ export default function EventDetailDrawer() {
                     checked={recEnabled}
                     disabled={isViewerOnly}
                     onChange={(e) => setRecEnabled(e.target.checked)}
-                    className="rounded text-sky-500"
+                    className="rounded theme-checkbox"
                   />
-                  <LucideIcon name="repeat" size={14} className="text-sky-500" />
+                  <LucideIcon name="repeat" size={14} className="theme-accent-text" />
                   <span>啟用彈性重複規則</span>
                 </label>
                 {recEnabled && (
-                  <span className="text-[11px] font-semibold text-sky-600 dark:text-sky-400">
+                  <span className="text-[11px] font-semibold theme-accent-deep">
                     {describeRecurrenceRule(buildRulePayload())}
                   </span>
                 )}
@@ -515,7 +515,7 @@ export default function EventDetailDrawer() {
                             onClick={() => toggleWeekday(w.val)}
                             className={`w-7 h-7 rounded-lg text-xs font-bold ${
                               active
-                                ? 'bg-sky-500 text-white'
+                                ? 'theme-accent-solid'
                                 : 'bg-[var(--surface-glass)] border border-[var(--border-subtle)] text-[var(--text-muted)]'
                             }`}
                           >
@@ -556,7 +556,7 @@ export default function EventDetailDrawer() {
                       onClick={() => setEditScope(scopeId)}
                       className={`px-2 py-0.5 rounded-lg font-bold ${
                         editScope === scopeId
-                          ? 'bg-sky-500 text-white'
+                          ? 'theme-accent-solid'
                           : 'bg-[var(--surface-glass)] text-[var(--text-muted)]'
                       }`}
                     >
@@ -590,7 +590,7 @@ export default function EventDetailDrawer() {
             {/* Subtasks Editor */}
             <div className="space-y-2">
               <div className="text-xs font-extrabold text-[var(--text-main)] inline-flex items-center gap-1.5">
-                <LucideIcon name="list-todo" size={14} className="text-sky-500" />
+                <LucideIcon name="list-todo" size={14} className="theme-accent-text" />
                 <span>子任務清單 ({subtasks.filter((s) => s.done).length}/{subtasks.length})</span>
               </div>
               <div className="space-y-1.5">
@@ -609,7 +609,7 @@ export default function EventDetailDrawer() {
                             prev.map((s) => (s.id === sub.id ? { ...s, done: !s.done } : s))
                           )
                         }
-                        className="rounded text-sky-500"
+                        className="rounded theme-checkbox"
                       />
                       <span className={`schedule-title-wrap ${sub.done ? 'line-through opacity-60' : ''}`}>
                         {sub.title}
@@ -661,7 +661,7 @@ export default function EventDetailDrawer() {
           >
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-extrabold text-[var(--text-main)] inline-flex items-center gap-1.5">
-                <LucideIcon name="message-square" size={14} className="text-violet-500" />
+                <LucideIcon name="message-square" size={14} className="theme-accent-text" />
                 <span>單一行程即時留言串 ({eventComments.length})</span>
               </h3>
               <span className="text-[10px] text-[var(--text-muted)]">支援共享日曆即時討論</span>
@@ -678,7 +678,7 @@ export default function EventDetailDrawer() {
                     className="p-2.5 rounded-2xl bg-[var(--surface-subtle)] border border-[var(--border-subtle)] space-y-1"
                   >
                     <div className="flex items-center justify-between gap-2 text-[11px]">
-                      <span className="font-extrabold text-sky-700 dark:text-sky-300">
+                      <span className="font-extrabold theme-accent-deep">
                         {c.authorName}
                       </span>
                       <div className="flex items-center gap-1.5">

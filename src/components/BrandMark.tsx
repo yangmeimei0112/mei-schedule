@@ -532,7 +532,7 @@ export function StudioLogo({
       strokeWidth={1.75}
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={`text-sky-500 dark:text-sky-400 studio-infinity-cloud ${frameless ? 'drop-shadow-md' : ''}`.trim()}
+      className={`text-[var(--accent-primary)] studio-infinity-cloud ${frameless ? 'drop-shadow-md' : ''}`.trim()}
     >
       <path d={CANDIDATE_F_CLOUD_PATH} />
       <path d={CANDIDATE_F_INFINITY_PATH} />
@@ -550,7 +550,7 @@ export function StudioLogo({
         brandSvg
       ) : (
         <div
-          className={`squircle-icon-badge inline-flex items-center justify-center shrink-0 transition-transform duration-300 border border-sky-400/25 dark:border-sky-500/25 bg-sky-500/10 dark:bg-sky-400/10 ${current.box} ${badgeClassName}`.trim()}
+          className={`squircle-icon-badge inline-flex items-center justify-center shrink-0 transition-transform duration-300 ${current.box} ${badgeClassName}`.trim()}
         >
           {brandSvg}
         </div>

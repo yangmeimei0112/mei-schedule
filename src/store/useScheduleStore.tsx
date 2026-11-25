@@ -1462,37 +1462,47 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
   const joinSharedCalendar = useCallback(
     async (inviteCode: string): Promise<{ success: boolean; calendar?: Calendar; error?: string }> => {
       const cleanCode = inviteCode.trim().toUpperCase();
-      if (!cleanCode || cleanCode.length < 4) {
-        return { success: false, error: '請輸入有效的共享日曆邀請碼' };
+      if (!cleanCode || cleanCode.length < 6) {
+        const msg = '請輸入完整的 6 碼共享日曆邀請碼';
+        showToast(msg, { icon: 'circle-alert' });
+        return { success: false, error: msg };
       }
 
       const member = stateRef.current.currentMember;
-      const uid = getActiveUserId();
       const displayName = member?.displayName || '本機協作成員';
 
       if (member && isValidUuid(member.uid)) {
         const remote = await joinSharedCalendarRemote(cleanCode, displayName);
         if (remote.mode === 'cloud') {
           if (remote.error || !remote.calendar) {
-            return { success: false, error: remote.error || '無效或已過期的邀請碼' };
+            const errMsg =
+              remote.error || `邀請碼「${cleanCode}」不存在或已失效，請確認後再試。`;
+            showToast(errMsg, { icon: 'circle-alert' });
+            return { success: false, error: errMsg };
           }
           const exists = stateRef.current.present.calendars.some((c) => c.id === remote.calendar!.id);
           const mergedEvents = [...stateRef.current.present.events];
           for (const evt of remote.events) {
             if (!mergedEvents.some((e) => e.id === evt.id)) mergedEvents.push(evt);
           }
-          commitUndoable(`已加入共享日曆「${remote.calendar.name}」`, (prev) => ({
-            ...prev,
-            calendars: exists
-              ? prev.calendars.map((c) => (c.id === remote.calendar!.id ? remote.calendar! : c))
-              : [...prev.calendars, remote.calendar!],
-            events: mergedEvents
-          }), { icon: 'users' });
+          commitUndoable(
+            `已加入共享日曆「${remote.calendar.name}」`,
+            (prev) => ({
+              ...prev,
+              calendars: exists
+                ? prev.calendars.map((c) => (c.id === remote.calendar!.id ? remote.calendar! : c))
+                : [...prev.calendars, remote.calendar!],
+              events: mergedEvents
+            }),
+            { icon: 'users' }
+          );
           return { success: true, calendar: remote.calendar };
         }
       }
 
-      // Offline / Pre-migration Local Demo Join
+      // Local lookup: ONLY join an already-existing shared calendar with matching invite code.
+      // NEVER auto-create a new shared team here — creating new teams is exclusively handled
+      // by the "建立新的多人共享日曆" section.
       const existingLocal = stateRef.current.present.calendars.find(
         (c) => c.isShared && c.inviteCode?.toUpperCase() === cleanCode
       );
@@ -1501,27 +1511,11 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
         return { success: true, calendar: existingLocal };
       }
 
-      const demoCal = createCalendar({
-        name: `共享協作日曆 (${cleanCode})`,
-        description: '透過邀請碼加入的離線示範共享日曆，連上雲端後將自動同步',
-        colorToken: 'violet',
-        icon: 'users',
-        calendarSet: 'shared',
-        isShared: true,
-        inviteCode: cleanCode,
-        members: [
-          {
-            calendarId: '',
-            userId: uid,
-            displayName,
-            role: 'editor',
-            joinedAt: new Date().toISOString()
-          }
-        ]
-      });
-      return { success: true, calendar: demoCal };
+      const notFoundMsg = `邀請碼「${cleanCode}」不存在，請確認邀請碼是否正確。`;
+      showToast(notFoundMsg, { icon: 'circle-alert' });
+      return { success: false, error: notFoundMsg };
     },
-    [commitUndoable, createCalendar, getActiveUserId, showToast]
+    [commitUndoable, showToast]
   );
 
   const updateCalendarMemberRole = useCallback(

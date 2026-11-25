@@ -201,7 +201,7 @@ function WeekGridView({ mode, instances }: WeekGridViewProps) {
                 <div
                   key={col.dateKey}
                   className={`p-1.5 sm:p-2 border-l border-[var(--border-subtle)] space-y-1 ${
-                    isToday ? 'bg-sky-500/10' : ''
+                    isToday ? 'bg-[var(--accent-soft-bg)]/50' : ''
                   }`}
                 >
                   <button
@@ -215,9 +215,9 @@ function WeekGridView({ mode, instances }: WeekGridViewProps) {
                     <span
                       className={`px-1.5 sm:px-2 py-0.5 rounded-full text-[11px] sm:text-xs font-extrabold font-mono whitespace-nowrap shrink-0 ${
                         isToday
-                          ? 'bg-sky-500 text-white'
+                          ? 'theme-accent-solid'
                           : isSelected
-                            ? 'bg-sky-500/20 text-sky-700 dark:text-sky-300'
+                            ? 'theme-accent-soft'
                             : 'text-[var(--text-main)]'
                       }`}
                     >
@@ -300,7 +300,7 @@ function WeekGridView({ mode, instances }: WeekGridViewProps) {
                           selectEvent(created.id, col.dateKey);
                         }}
                         className={`border-b border-[var(--border-subtle)]/70 transition-colors ${
-                          isOver ? 'bg-sky-500/20' : 'hover:bg-sky-500/5'
+                          isOver ? 'bg-[var(--accent-soft-bg)]' : 'hover:bg-[var(--accent-soft-bg)]/35'
                         }`}
                       />
                     );

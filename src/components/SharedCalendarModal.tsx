@@ -21,6 +21,7 @@ export default function SharedCalendarModal() {
   const [newCalDesc, setNewCalDesc] = useState('');
   const [newCalColor, setNewCalColor] = useState<ColorToken>('violet');
   const [inviteInput, setInviteInput] = useState('');
+  const [joinError, setJoinError] = useState<string | null>(null);
   const [joining, setJoining] = useState(false);
 
   if (activeModal !== 'shared') return null;
@@ -40,6 +41,7 @@ export default function SharedCalendarModal() {
     });
     setNewCalName('');
     setNewCalDesc('');
+    setJoinError(null);
     showToast(`已建立共享日曆「${created.name}」，邀請碼：${created.inviteCode}`, {
       icon: 'users'
     });
@@ -49,11 +51,15 @@ export default function SharedCalendarModal() {
     e.preventDefault();
     const clean = inviteInput.trim().toUpperCase();
     if (!clean) return;
+    setJoinError(null);
     setJoining(true);
     try {
       const res = await joinSharedCalendar(clean);
       if (res.success) {
         setInviteInput('');
+        setJoinError(null);
+      } else {
+        setJoinError(res.error || `邀請碼「${clean}」不存在，請確認邀請碼是否正確。`);
       }
     } finally {
       setJoining(false);
@@ -86,7 +92,7 @@ export default function SharedCalendarModal() {
       >
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <LucideIcon name="users" size={20} className="text-violet-500" />
+            <LucideIcon name="users" size={20} className="theme-accent-text" />
             <div>
               <h2 className="text-base sm:text-lg font-extrabold text-[var(--text-main)]">
                 多人共享日曆與協作
@@ -119,8 +125,11 @@ export default function SharedCalendarModal() {
               type="text"
               data-testid="shared-join-code-input"
               value={inviteInput}
-              onChange={(e) => setInviteInput(e.target.value.toUpperCase())}
-              maxLength={12}
+              onChange={(e) => {
+                setInviteInput(e.target.value.toUpperCase());
+                if (joinError) setJoinError(null);
+              }}
+              maxLength={6}
               placeholder="輸入 6 碼邀請碼，例如 MEI248"
               className="flex-1 px-3 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider bg-[var(--surface-glass)] border border-[var(--border-subtle)] text-[var(--text-main)]"
             />
@@ -134,6 +143,21 @@ export default function SharedCalendarModal() {
               <span>{joining ? '加入中...' : '加入日曆'}</span>
             </button>
           </div>
+          {joinError && (
+            <div
+              role="alert"
+              data-testid="shared-join-error"
+              className="flex items-start gap-2 px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-400/35 text-[11px] font-semibold text-rose-700 dark:text-rose-300 leading-relaxed"
+            >
+              <LucideIcon name="circle-alert" size={14} className="mt-0.5 shrink-0" />
+              <div className="min-w-0">
+                <div>{joinError}</div>
+                <div className="text-[10px] opacity-85 mt-0.5">
+                  如需建立新的共享團隊，請使用下方「建立新的多人共享日曆」區塊。
+                </div>
+              </div>
+            </div>
+          )}
         </form>
 
         {/* Active Shared Calendars & Member Roles */}
@@ -189,7 +213,7 @@ export default function SharedCalendarModal() {
                         className="flex items-center justify-between gap-2 text-xs py-1 flex-wrap sm:flex-nowrap"
                       >
                         <div className="flex items-center gap-2 min-w-0">
-                          <LucideIcon name="user" size={13} className="text-sky-500 shrink-0" />
+                          <LucideIcon name="user" size={13} className="theme-accent-text shrink-0" />
                           <span className="font-semibold text-[var(--text-main)] schedule-title-wrap">
                             {member.displayName}
                           </span>
@@ -237,7 +261,7 @@ export default function SharedCalendarModal() {
           className="p-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-subtle)]/70 space-y-3"
         >
           <h3 className="text-xs font-extrabold text-[var(--text-main)] inline-flex items-center gap-1.5">
-            <LucideIcon name="plus" size={14} className="text-sky-500" />
+            <LucideIcon name="plus" size={14} className="theme-accent-text" />
             <span>建立新的多人共享日曆</span>
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -265,7 +289,7 @@ export default function SharedCalendarModal() {
                   type="button"
                   onClick={() => setNewCalColor(c.token)}
                   className={`w-6 h-6 rounded-full ${c.dotClass} ${
-                    newCalColor === c.token ? 'ring-2 ring-offset-2 ring-sky-500' : 'opacity-70'
+                    newCalColor === c.token ? 'ring-2 ring-offset-2 ring-[var(--accent-primary)]' : 'opacity-70'
                   }`}
                 />
               ))}

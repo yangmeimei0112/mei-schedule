@@ -55,3 +55,7 @@
 - **嚴禁以 `...` (`truncate`) 截斷行程與待辦標題**：三日視圖、週視圖、月總覽色條、時間軸時段格、待辦收件匣、智慧排程預覽、指令搜尋列與系統匣等所有使用者閱讀區之行程與任務標題，一律必須套用 `.schedule-title-wrap`（自動換行、`overflow-wrap: anywhere`、`word-break: break-word`），搭配 `items-start` 確保圓點／圖示對齊首行。
 - **短時長區塊智慧擴展防裁切**：於時間網格（`WeekGridView`）中，短時長排程在下方空檔允許範圍內自動微調高度以完整呈現換行文字，並透過 `preferences.autoWrapTitles`（預設 `true`，同步至 `<html data-title-wrap="wrap | nowrap">`）提供系統級控制。
 
+## 8. 全站主題視覺統一、Android 沉浸透視底部導覽與邀請碼嚴格校驗規範
+- **全站語意主題統一（保留使用者自選行程圖塊底色）**：除行程圖塊／色標（`COLOR_TOKEN_PALETTE`）依使用者所選底色呈現、以及狀態通知膠囊 `StudioToast` 依第 2 條維持高對比淡藍外，全站所有指標圖示、品牌 Logo 底座、頂部／底部導覽列、側欄啟用態、次按鈕、勾選框、捲軸與返回大廳膠囊（`mei-dock.js`）一律必須使用語意主題變數與類別（`.theme-accent-text`、`.theme-accent-deep`、`.theme-accent-solid`、`.theme-accent-soft`、`.theme-nav-top`、`.theme-nav-bottom`、`.theme-checkbox`），禁止於 UI 控制項寫死 `sky-*` 造成切換至極簡／溫暖主題時色系割裂。
+- **Android PWA 沉浸透視底部導覽列**：`public/manifest.webmanifest` 與 `index.html` 嚴禁將 `theme_color` 寫死為亮藍 `#38BDF8`，須以畫布底色 `#F4F9FF` 起步並透過 `#mei-theme-color-meta` 與 `syncNativeStatusBar(resolvedColorMode, designTheme)` 即時同步 6 套主題畫布色；行動端 `MobileBottomNav` 採用懸浮半透明毛玻璃（`.mobile-bottom-nav-float` + `.theme-nav-bottom`），遵循 Chrome Edge-to-Edge `bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px))` 快速路徑，確保底部與按鈕後方直接透視呈現 App 內容。
+- **共享日曆邀請碼嚴格查核**：透過 6 碼邀請碼加入共享日曆時，若邀請碼不存在或未滿 6 碼，一律回報錯誤通知並顯示內嵌警示，嚴禁自動建立示範／新共享日曆團隊；新建共享團隊僅能由「建立新的多人共享日曆」區塊觸發。

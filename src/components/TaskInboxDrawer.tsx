@@ -107,7 +107,7 @@ function TaskInboxDrawer() {
         {/* Header */}
         <div className="shrink-0 px-4 py-3.5 border-b border-[var(--border-subtle)] flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
-            <div className="w-7 h-7 rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-300 flex items-center justify-center shrink-0">
+            <div className="w-7 h-7 rounded-lg squircle-icon-badge flex items-center justify-center shrink-0">
               <LucideIcon name="inbox" size={15} />
             </div>
             <div className="min-w-0">
@@ -117,7 +117,7 @@ function TaskInboxDrawer() {
                 </h2>
                 <span
                   data-testid="inbox-unscheduled-count"
-                  className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300"
+                  className="px-1.5 py-0.5 rounded-full text-[10px] font-bold theme-accent-soft"
                 >
                   {unscheduledCount}
                 </span>
@@ -131,7 +131,7 @@ function TaskInboxDrawer() {
               data-testid="inbox-auto-schedule-btn"
               onClick={() => openModal('smart')}
               title="使用智慧助手將未排程待辦自動填入空檔"
-              className="px-2 py-1 rounded-lg text-[11px] font-bold text-sky-600 dark:text-sky-400 hover:bg-sky-500/10 inline-flex items-center gap-1 transition-colors"
+              className="px-2 py-1 rounded-lg text-[11px] font-bold theme-accent-deep hover:bg-[var(--accent-soft-bg)] inline-flex items-center gap-1 transition-colors"
             >
               <LucideIcon name="wand-sparkles" size={12} />
               <span>智慧排塊</span>
@@ -159,7 +159,7 @@ function TaskInboxDrawer() {
                 value={newTaskTitle}
                 onChange={(e) => setNewTaskTitle(e.target.value)}
                 placeholder="新增待辦事項..."
-                className="flex-1 min-w-0 px-3 py-2 rounded-xl text-xs bg-[var(--surface-subtle)] border border-[var(--border-subtle)] text-[var(--text-main)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-sky-400"
+                className="flex-1 min-w-0 px-3 py-2 rounded-xl text-xs bg-[var(--surface-subtle)] border border-[var(--border-subtle)] text-[var(--text-main)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent-primary)]"
               />
               <button
                 type="submit"
@@ -180,7 +180,7 @@ function TaskInboxDrawer() {
                     onClick={() => setNewTaskMinutes(m)}
                     className={`px-1.5 py-0.5 rounded-md font-mono font-semibold transition-colors ${
                       newTaskMinutes === m
-                        ? 'bg-sky-500/20 text-sky-700 dark:text-sky-300'
+                        ? 'theme-accent-soft'
                         : 'hover:bg-[var(--surface-subtle)]'
                     }`}
                   >
@@ -211,8 +211,8 @@ function TaskInboxDrawer() {
             </div>
           </form>
 
-          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-sky-500/8 text-[11px] text-[var(--text-muted)]">
-            <LucideIcon name="grip-vertical" size={12} className="text-sky-500 shrink-0" />
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[var(--accent-soft-bg)]/60 text-[11px] text-[var(--text-muted)]">
+            <LucideIcon name="grip-vertical" size={12} className="theme-accent-text shrink-0" />
             <span>拖曳卡片進中間時段格，或點日曆鍵一鍵排入</span>
           </div>
         </div>
@@ -243,7 +243,7 @@ function TaskInboxDrawer() {
                   data-testid={`inbox-task-${task.id}`}
                   draggable={!task.completed}
                   onDragStart={(e) => handleDragStartTask(e, task)}
-                  className={`group p-2.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-subtle)] hover:border-sky-400/60 transition-colors cursor-grab active:cursor-grabbing ${
+                  className={`group p-2.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-subtle)] hover:border-[var(--border-hover)] transition-colors cursor-grab active:cursor-grabbing ${
                     task.completed ? 'opacity-55' : ''
                   }`}
                 >
@@ -293,7 +293,7 @@ function TaskInboxDrawer() {
                           data-testid={`schedule-task-btn-${task.id}`}
                           onClick={() => handleQuickScheduleTask(task)}
                           title="一鍵排入所選日期時間軸"
-                          className="p-1 rounded-lg hover:bg-sky-500/15 text-sky-600 dark:text-sky-400"
+                          className="p-1 rounded-lg hover:bg-[var(--accent-soft-bg)] theme-accent-deep"
                         >
                           <LucideIcon name="calendar-plus" size={14} />
                         </button>
