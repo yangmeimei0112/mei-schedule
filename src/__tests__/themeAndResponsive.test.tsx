@@ -353,10 +353,10 @@ describe('M1 Visual System: 3 Themes x 2 Modes, Sky-Blue Toast, dvh & 4 Aspect R
       // Mobile (<1024px) must NOT show full-screen blocking sidebar overlay on initial load
       expect(screen.queryByTestId('mobile-sidebar-overlay')).toBeNull();
 
-      // Appearance settings modal exposes v1.5.4 release badge, Studio Dock visibility control & Auto-Wrap Titles switch
+      // Appearance settings modal exposes v1.5.5 release badge, Studio Dock visibility control & Auto-Wrap Titles switch
       expect(document.documentElement.getAttribute('data-title-wrap')).toBe('wrap');
       fireEvent.click(screen.getByTestId('open-appearance-modal-btn'));
-      expect(await screen.findByTestId('app-version-badge')).toHaveTextContent('v1.5.4');
+      expect(await screen.findByTestId('app-version-badge')).toHaveTextContent('v1.5.5');
       expect(screen.getByTestId('dock-visibility-control')).toBeInTheDocument();
       const autoWrapSwitch = screen.getByTestId('toggle-auto-wrap-titles');
       expect(autoWrapSwitch).toHaveAttribute('aria-checked', 'true');

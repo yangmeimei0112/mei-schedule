@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mei-schedule-cache-v1.5.4';
+const CACHE_NAME = 'mei-schedule-cache-v1.5.5';
 const APP_SHELL_URLS = [
   '/',
   '/index.html',

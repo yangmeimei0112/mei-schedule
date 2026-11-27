@@ -1,6 +1,9 @@
 import React, { useMemo } from 'react';
 import { LucideIcon } from './BrandMark';
+import RecurringDeleteModal from './RecurringDeleteModal';
+import SwipeableEventCard, { SwipeRevealGroup } from './SwipeableEventCard';
 import { COLOR_TOKEN_PALETTE, formatLocalDate } from '../data/seedData';
+import { useEventQuickDelete } from '../hooks/useEventQuickDelete';
 import { parseLocalDateKey, toLocalDateKey } from '../services/recurrenceEngine';
 import { useScheduleStore } from '../store/useScheduleStore';
 import type { ExpandedEventInstance } from '../types/schedule';
@@ -29,6 +32,14 @@ function MonthView({ instances }: MonthViewProps) {
     setViewMode,
     createEvent
   } = useScheduleStore();
+
+  const {
+    pendingRecurringEvent,
+    canDeleteEvent,
+    requestDeleteEvent,
+    confirmRecurringDelete,
+    cancelRecurringDelete
+  } = useEventQuickDelete();
 
   const todayKey = formatLocalDate(new Date(), 0);
   const selectedObj = useMemo(() => parseLocalDateKey(selectedDate), [selectedDate]);
@@ -213,32 +224,70 @@ function MonthView({ instances }: MonthViewProps) {
         {selectedDayEvents.length === 0 ? (
           <p className="text-xs text-[var(--text-muted)] py-3">這一天尚無排程行程。</p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            {selectedDayEvents.map((evt) => {
-              const palette = COLOR_TOKEN_PALETTE[evt.colorToken] || COLOR_TOKEN_PALETTE.sky;
-              return (
-                <button
-                  key={evt.instanceId}
-                  type="button"
-                  onClick={() => selectEvent(evt.masterEventId, evt.occurrenceDate)}
-                  className={`p-3 rounded-2xl border text-left flex items-start gap-3 transition-transform hover:-translate-y-0.5 ${palette.surfaceClass} ${palette.borderClass}`}
-                >
-                  <div className={`w-1 self-stretch rounded-full shrink-0 ${palette.accentBarClass}`} />
-                  <div className="min-w-0 flex-1">
-                    <div className="text-xs font-extrabold schedule-title-wrap">{evt.title}</div>
-                    <div className="text-[11px] font-mono opacity-80 mt-0.5">
-                      {evt.allDay ? '全天行程' : `${formatHM(evt.startAt)} – ${formatHM(evt.endAt)}`}
+          <SwipeRevealGroup>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {selectedDayEvents.map((evt) => {
+                const palette = COLOR_TOKEN_PALETTE[evt.colorToken] || COLOR_TOKEN_PALETTE.sky;
+                const deletable = canDeleteEvent(evt);
+                return (
+                  <SwipeableEventCard
+                    key={evt.instanceId}
+                    swipeId={evt.instanceId}
+                    testIdKey={`month-${evt.masterEventId}-${evt.occurrenceDate}`}
+                    disabled={!deletable}
+                    radiusClass="rounded-2xl"
+                    onDeleteRequest={() => requestDeleteEvent(evt)}
+                  >
+                    <div
+                      className={`group p-3 rounded-2xl border flex items-start gap-2.5 transition-transform hover:-translate-y-0.5 ${palette.surfaceClass} ${palette.borderClass}`}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => selectEvent(evt.masterEventId, evt.occurrenceDate)}
+                        className="min-w-0 flex-1 text-left flex items-start gap-3"
+                      >
+                        <div className={`w-1 self-stretch rounded-full shrink-0 ${palette.accentBarClass}`} />
+                        <div className="min-w-0 flex-1">
+                          <div className="text-xs font-extrabold schedule-title-wrap">{evt.title}</div>
+                          <div className="text-[11px] font-mono opacity-80 mt-0.5">
+                            {evt.allDay ? '全天行程' : `${formatHM(evt.startAt)} – ${formatHM(evt.endAt)}`}
+                          </div>
+                        </div>
+                      </button>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${palette.badgeClass}`}>
+                          {evt.categoryTag}
+                        </span>
+                        {deletable && (
+                          <button
+                            type="button"
+                            data-testid={`desktop-delete-month-${evt.masterEventId}-${evt.occurrenceDate}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              requestDeleteEvent(evt);
+                            }}
+                            title="移除行程"
+                            aria-label={`移除「${evt.title}」`}
+                            className="desktop-hover-delete-btn p-1.5 rounded-lg bg-white/60 dark:bg-slate-900/50 text-rose-600 dark:text-rose-400 hover:bg-rose-500 hover:text-white transition-colors shrink-0"
+                          >
+                            <LucideIcon name="trash-2" size={12} />
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${palette.badgeClass}`}>
-                    {evt.categoryTag}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+                  </SwipeableEventCard>
+                );
+              })}
+            </div>
+          </SwipeRevealGroup>
         )}
       </section>
+
+      <RecurringDeleteModal
+        event={pendingRecurringEvent}
+        onCancel={cancelRecurringDelete}
+        onConfirmScope={confirmRecurringDelete}
+      />
     </div>
   );
 }

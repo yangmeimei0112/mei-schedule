@@ -993,13 +993,50 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
 
   const replaceEventsAtomic = useCallback(
     (nextEvents: ScheduleEvent[], historyLabel: string): string => {
+      const prevEvents = stateRef.current.present.events;
       const { entryId } = commitUndoable(historyLabel, (prev) => ({
         ...prev,
         events: nextEvents
       }));
+
+      const nowIso = new Date().toISOString();
+      const prevById = new Map(prevEvents.map((e) => [e.id, e]));
+      const nextById = new Map(nextEvents.map((e) => [e.id, e]));
+      const ops: SyncQueueItem[] = [];
+
+      for (const evt of nextEvents) {
+        const old = prevById.get(evt.id);
+        if (!old || old !== evt) {
+          ops.push({
+            id: generateUuidV4(),
+            entity: 'events',
+            operation: 'upsert',
+            recordId: evt.id,
+            payload: eventToRow(evt),
+            queuedAt: nowIso,
+            retryCount: 0
+          });
+        }
+      }
+      for (const old of prevEvents) {
+        if (!nextById.has(old.id)) {
+          ops.push({
+            id: generateUuidV4(),
+            entity: 'events',
+            operation: 'delete',
+            recordId: old.id,
+            queuedAt: nowIso,
+            retryCount: 0
+          });
+        }
+      }
+      if (ops.length > 0) {
+        enqueueCloudOps(ops);
+      }
+
       return entryId;
     },
-    [commitUndoable]
+    [commitUndoable, enqueueCloudOps]
   );
 
   const toggleEventSubtask = useCallback(

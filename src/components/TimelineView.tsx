@@ -1,6 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { LucideIcon } from './BrandMark';
+import RecurringDeleteModal from './RecurringDeleteModal';
+import SwipeableEventCard, { SwipeRevealGroup } from './SwipeableEventCard';
 import { COLOR_TOKEN_PALETTE, formatLocalDate } from '../data/seedData';
+import { useEventQuickDelete } from '../hooks/useEventQuickDelete';
 import { parseLocalDateKey } from '../services/recurrenceEngine';
 import { detectScheduleConflicts } from '../services/smartScheduler';
 import { triggerLightHaptic } from '../services/notificationBridge';
@@ -39,6 +42,14 @@ function TimelineView({ instances }: TimelineViewProps) {
     setInboxDrawerOpen,
     openModal
   } = useScheduleStore();
+
+  const {
+    pendingRecurringEvent,
+    canDeleteEvent,
+    requestDeleteEvent,
+    confirmRecurringDelete,
+    cancelRecurringDelete
+  } = useEventQuickDelete();
 
   const [dragOverHour, setDragOverHour] = useState<number | null>(null);
 
@@ -300,211 +311,236 @@ function TimelineView({ instances }: TimelineViewProps) {
               </button>
             </div>
           ) : (
-            <div className="space-y-2.5">
-              {timedEvents.map((evt) => {
-                const palette = COLOR_TOKEN_PALETTE[evt.colorToken] || COLOR_TOKEN_PALETTE.sky;
-                const durationMin = Math.max(
-                  15,
-                  Math.round((Date.parse(evt.endAt) - Date.parse(evt.startAt)) / 60_000)
-                );
-                const hasConflict = conflictEventIds.has(evt.instanceId);
-                const commentCount = commentCountByEvent.get(evt.masterEventId) || 0;
-                const doneSubtasks = evt.subtasks.filter((s) => s.done).length;
-                const isCompleted = evt.status === 'completed';
+            <SwipeRevealGroup>
+              <div className="space-y-2.5">
+                {timedEvents.map((evt) => {
+                  const palette = COLOR_TOKEN_PALETTE[evt.colorToken] || COLOR_TOKEN_PALETTE.sky;
+                  const durationMin = Math.max(
+                    15,
+                    Math.round((Date.parse(evt.endAt) - Date.parse(evt.startAt)) / 60_000)
+                  );
+                  const hasConflict = conflictEventIds.has(evt.instanceId);
+                  const commentCount = commentCountByEvent.get(evt.masterEventId) || 0;
+                  const doneSubtasks = evt.subtasks.filter((s) => s.done).length;
+                  const isCompleted = evt.status === 'completed';
+                  const deletable = canDeleteEvent(evt);
 
-                return (
-                  <article
-                    key={evt.instanceId}
-                    data-testid={`timeline-event-${evt.masterEventId}`}
-                    draggable
-                    onDragStart={(e) => {
-                      e.dataTransfer.setData(
-                        'application/x-mei-event',
-                        JSON.stringify({
-                          eventId: evt.masterEventId,
-                          durationMs: Date.parse(evt.endAt) - Date.parse(evt.startAt)
-                        })
-                      );
-                      e.dataTransfer.effectAllowed = 'move';
-                    }}
-                    className={`schedule-time-block relative border p-3.5 ${palette.surfaceClass} ${palette.borderClass} ${
-                      isCompleted ? 'opacity-70' : ''
-                    } ${hasConflict ? 'ring-2 ring-rose-500/70' : ''}`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={`w-1 self-stretch rounded-full shrink-0 ${palette.accentBarClass}`} />
+                  return (
+                    <SwipeableEventCard
+                      key={evt.instanceId}
+                      swipeId={evt.instanceId}
+                      testIdKey={`timeline-${evt.masterEventId}-${evt.occurrenceDate}`}
+                      disabled={!deletable}
+                      radiusClass="rounded-[var(--block-radius)]"
+                      onDeleteRequest={() => requestDeleteEvent(evt)}
+                    >
+                      <article
+                        data-testid={`timeline-event-${evt.masterEventId}`}
+                        draggable
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData(
+                            'application/x-mei-event',
+                            JSON.stringify({
+                              eventId: evt.masterEventId,
+                              durationMs: Date.parse(evt.endAt) - Date.parse(evt.startAt)
+                            })
+                          );
+                          e.dataTransfer.effectAllowed = 'move';
+                        }}
+                        className={`group schedule-time-block relative border p-3.5 ${palette.surfaceClass} ${palette.borderClass} ${
+                          isCompleted ? 'opacity-70' : ''
+                        } ${hasConflict ? 'ring-2 ring-rose-500/70' : ''}`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className={`w-1 self-stretch rounded-full shrink-0 ${palette.accentBarClass}`} />
 
-                      <div className="min-w-0 flex-1 space-y-2">
-                        {/* Tier 1: Time + Title + Completion Check */}
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2 flex-wrap text-[11px] font-mono font-bold opacity-80">
-                              <span>
-                                {formatTimeHM(evt.startAt)} – {formatTimeHM(evt.endAt)}
-                              </span>
-                              <span>({durationMin}m)</span>
-                              {evt.recurrenceRule && (
-                                <span className="inline-flex items-center gap-0.5 font-sans">
-                                  <LucideIcon name="repeat" size={11} />
-                                  重複
-                                </span>
-                              )}
-                              {evt.isFlexible && (
-                                <span className="px-1.5 py-0.2 rounded theme-accent-soft font-sans">
-                                  彈性
-                                </span>
-                              )}
-                              {hasConflict && (
-                                <span className="px-1.5 py-0.2 rounded bg-rose-500 text-white font-sans inline-flex items-center gap-0.5">
-                                  <LucideIcon name="triangle-alert" size={10} />
-                                  衝突
-                                </span>
-                              )}
-                            </div>
+                          <div className="min-w-0 flex-1 space-y-2">
+                            {/* Tier 1: Time + Title + Completion Check */}
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 flex-wrap text-[11px] font-mono font-bold opacity-80">
+                                  <span>
+                                    {formatTimeHM(evt.startAt)} – {formatTimeHM(evt.endAt)}
+                                  </span>
+                                  <span>({durationMin}m)</span>
+                                  {evt.recurrenceRule && (
+                                    <span className="inline-flex items-center gap-0.5 font-sans">
+                                      <LucideIcon name="repeat" size={11} />
+                                      重複
+                                    </span>
+                                  )}
+                                  {evt.isFlexible && (
+                                    <span className="px-1.5 py-0.2 rounded theme-accent-soft font-sans">
+                                      彈性
+                                    </span>
+                                  )}
+                                  {hasConflict && (
+                                    <span className="px-1.5 py-0.2 rounded bg-rose-500 text-white font-sans inline-flex items-center gap-0.5">
+                                      <LucideIcon name="triangle-alert" size={10} />
+                                      衝突
+                                    </span>
+                                  )}
+                                </div>
 
-                            <button
-                              type="button"
-                              onClick={() => selectEvent(evt.masterEventId, evt.occurrenceDate)}
-                              className={`mt-0.5 text-left text-sm sm:text-[15px] font-extrabold leading-snug hover:underline block w-full ${
-                                isCompleted ? 'line-through' : ''
-                              }`}
-                            >
-                              {evt.title}
-                            </button>
-                          </div>
+                                <button
+                                  type="button"
+                                  onClick={() => selectEvent(evt.masterEventId, evt.occurrenceDate)}
+                                  className={`mt-0.5 text-left text-sm sm:text-[15px] font-extrabold leading-snug hover:underline block w-full ${
+                                    isCompleted ? 'line-through' : ''
+                                  }`}
+                                >
+                                  {evt.title}
+                                </button>
+                              </div>
 
-                          <button
-                            type="button"
-                            data-testid={`timeline-complete-btn-${evt.masterEventId}`}
-                            onClick={() => toggleEventComplete(evt.masterEventId)}
-                            aria-label={isCompleted ? '標記為未完成' : '標記為已完成'}
-                            className="p-1.5 rounded-xl bg-white/55 dark:bg-slate-900/45 hover:scale-105 transition-transform shrink-0"
-                          >
-                            <LucideIcon
-                              name={isCompleted ? 'circle-check' : 'circle'}
-                              size={18}
-                              className={isCompleted ? 'text-emerald-500' : 'opacity-65'}
-                            />
-                          </button>
-                        </div>
-
-                        {/* Tier 2: Calm Metadata Row */}
-                        <div className="flex items-center gap-2 flex-wrap text-[11px]">
-                          <span className={`px-2 py-0.5 rounded-full font-bold ${palette.badgeClass}`}>
-                            {evt.categoryTag}
-                          </span>
-                          {evt.location && (
-                            <span className="inline-flex items-center gap-1 opacity-75">
-                              <LucideIcon name="map-pin" size={11} />
-                              {evt.location}
-                            </span>
-                          )}
-                          {(evt.bufferBeforeMin > 0 || evt.bufferAfterMin > 0) && (
-                            <span className="inline-flex items-center gap-1 opacity-70">
-                              <LucideIcon name="shield-check" size={11} />
-                              緩衝 {evt.bufferBeforeMin}/{evt.bufferAfterMin}m
-                            </span>
-                          )}
-                          {commentCount > 0 && (
-                            <button
-                              type="button"
-                              onClick={() => selectEvent(evt.masterEventId, evt.occurrenceDate)}
-                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full theme-accent-soft font-bold"
-                            >
-                              <LucideIcon name="message-square" size={11} />
-                              <span>{commentCount} 則留言</span>
-                            </button>
-                          )}
-                          {evt.releasedMinutes && evt.releasedMinutes > 0 && (
-                            <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-200 font-bold">
-                              已釋放 {evt.releasedMinutes}m
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Inline Subtasks Checklist */}
-                        {evt.subtasks.length > 0 && (
-                          <div className="pt-1.5 border-t border-current/10 space-y-1">
-                            <div className="text-[10px] font-bold opacity-70">
-                              子任務 ({doneSubtasks}/{evt.subtasks.length})
-                            </div>
-                            {evt.subtasks.map((sub) => (
-                              <label
-                                key={sub.id}
-                                className="flex items-center gap-2 text-xs cursor-pointer select-none"
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={sub.done}
-                                  onChange={() => toggleEventSubtask(evt.masterEventId, sub.id)}
-                                  className="rounded border-slate-400 theme-checkbox"
-                                />
-                                <span className={sub.done ? 'line-through opacity-60' : ''}>
-                                  {sub.title}
-                                </span>
-                              </label>
-                            ))}
-                          </div>
-                        )}
-
-                        {/* Tier 3: Tidy Action Footer (Segmented -15m/+15m + Clear Primary/Secondary Actions) */}
-                        <div className="pt-2 border-t border-current/10 flex items-center justify-between gap-2 flex-wrap">
-                          <div className="inline-flex items-center rounded-lg overflow-hidden border border-current/15 bg-white/55 dark:bg-slate-900/45 divide-x divide-current/15">
-                            <button
-                              type="button"
-                              data-testid={`resize-minus-15-${evt.masterEventId}`}
-                              onClick={() => handleAdjustDuration(evt, -15)}
-                              title="縮短 15 分鐘"
-                              className="px-2 py-1 text-[11px] font-mono font-bold hover:bg-white dark:hover:bg-slate-800 transition-colors"
-                            >
-                              -15m
-                            </button>
-                            <button
-                              type="button"
-                              data-testid={`resize-plus-15-${evt.masterEventId}`}
-                              onClick={() => handleAdjustDuration(evt, 15)}
-                              title="延長 15 分鐘"
-                              className="px-2 py-1 text-[11px] font-mono font-bold hover:bg-white dark:hover:bg-slate-800 transition-colors"
-                            >
-                              +15m
-                            </button>
-                          </div>
-
-                          <div className="inline-flex items-center gap-1.5">
-                            {!isCompleted && (
                               <button
                                 type="button"
-                                data-testid={`early-complete-btn-${evt.masterEventId}`}
-                                onClick={() => completeEventEarly(evt.masterEventId)}
-                                className="px-2 py-1 rounded-lg text-[11px] font-bold bg-white/60 dark:bg-slate-900/45 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/15 inline-flex items-center gap-1 transition-colors"
+                                data-testid={`timeline-complete-btn-${evt.masterEventId}`}
+                                onClick={() => toggleEventComplete(evt.masterEventId)}
+                                aria-label={isCompleted ? '標記為未完成' : '標記為已完成'}
+                                className="p-1.5 rounded-xl bg-white/55 dark:bg-slate-900/45 hover:scale-105 transition-transform shrink-0"
                               >
-                                <LucideIcon name="zap" size={11} />
-                                <span>提早完成</span>
+                                <LucideIcon
+                                  name={isCompleted ? 'circle-check' : 'circle'}
+                                  size={18}
+                                  className={isCompleted ? 'text-emerald-500' : 'opacity-65'}
+                                />
                               </button>
+                            </div>
+
+                            {/* Tier 2: Calm Metadata Row */}
+                            <div className="flex items-center gap-2 flex-wrap text-[11px]">
+                              <span className={`px-2 py-0.5 rounded-full font-bold ${palette.badgeClass}`}>
+                                {evt.categoryTag}
+                              </span>
+                              {evt.location && (
+                                <span className="inline-flex items-center gap-1 opacity-75">
+                                  <LucideIcon name="map-pin" size={11} />
+                                  {evt.location}
+                                </span>
+                              )}
+                              {(evt.bufferBeforeMin > 0 || evt.bufferAfterMin > 0) && (
+                                <span className="inline-flex items-center gap-1 opacity-70">
+                                  <LucideIcon name="shield-check" size={11} />
+                                  緩衝 {evt.bufferBeforeMin}/{evt.bufferAfterMin}m
+                                </span>
+                              )}
+                              {commentCount > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() => selectEvent(evt.masterEventId, evt.occurrenceDate)}
+                                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full theme-accent-soft font-bold"
+                                >
+                                  <LucideIcon name="message-square" size={11} />
+                                  <span>{commentCount} 則留言</span>
+                                </button>
+                              )}
+                              {evt.releasedMinutes && evt.releasedMinutes > 0 && (
+                                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-200 font-bold">
+                                  已釋放 {evt.releasedMinutes}m
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Inline Subtasks Checklist */}
+                            {evt.subtasks.length > 0 && (
+                              <div className="pt-1.5 border-t border-current/10 space-y-1">
+                                <div className="text-[10px] font-bold opacity-70">
+                                  子任務 ({doneSubtasks}/{evt.subtasks.length})
+                                </div>
+                                {evt.subtasks.map((sub) => (
+                                  <label
+                                    key={sub.id}
+                                    className="flex items-center gap-2 text-xs cursor-pointer select-none"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={sub.done}
+                                      onChange={() => toggleEventSubtask(evt.masterEventId, sub.id)}
+                                      className="rounded border-slate-400 theme-checkbox"
+                                    />
+                                    <span className={sub.done ? 'line-through opacity-60' : ''}>
+                                      {sub.title}
+                                    </span>
+                                  </label>
+                                ))}
+                              </div>
                             )}
-                            <button
-                              type="button"
-                              data-testid={`start-focus-btn-${evt.masterEventId}`}
-                              onClick={() => openModal('focus', { focusTargetEventId: evt.masterEventId })}
-                              className="px-2.5 py-1 rounded-lg text-[11px] font-bold theme-accent-solid inline-flex items-center gap-1 transition-colors"
-                            >
-                              <LucideIcon name="play" size={11} />
-                              <span>專注</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => selectEvent(evt.masterEventId, evt.occurrenceDate)}
-                              className="px-2 py-1 rounded-lg text-[11px] font-semibold opacity-80 hover:opacity-100 hover:bg-white/60 dark:hover:bg-slate-800/60 transition-colors"
-                            >
-                              詳情
-                            </button>
+
+                            {/* Tier 3: Tidy Action Footer (Segmented -15m/+15m + Clear Primary/Secondary Actions) */}
+                            <div className="pt-2 border-t border-current/10 flex items-center justify-between gap-2 flex-wrap">
+                              <div className="inline-flex items-center rounded-lg overflow-hidden border border-current/15 bg-white/55 dark:bg-slate-900/45 divide-x divide-current/15">
+                                <button
+                                  type="button"
+                                  data-testid={`resize-minus-15-${evt.masterEventId}`}
+                                  onClick={() => handleAdjustDuration(evt, -15)}
+                                  title="縮短 15 分鐘"
+                                  className="px-2 py-1 text-[11px] font-mono font-bold hover:bg-white dark:hover:bg-slate-800 transition-colors"
+                                >
+                                  -15m
+                                </button>
+                                <button
+                                  type="button"
+                                  data-testid={`resize-plus-15-${evt.masterEventId}`}
+                                  onClick={() => handleAdjustDuration(evt, 15)}
+                                  title="延長 15 分鐘"
+                                  className="px-2 py-1 text-[11px] font-mono font-bold hover:bg-white dark:hover:bg-slate-800 transition-colors"
+                                >
+                                  +15m
+                                </button>
+                              </div>
+
+                              <div className="inline-flex items-center gap-1.5">
+                                {!isCompleted && (
+                                  <button
+                                    type="button"
+                                    data-testid={`early-complete-btn-${evt.masterEventId}`}
+                                    onClick={() => completeEventEarly(evt.masterEventId)}
+                                    className="px-2 py-1 rounded-lg text-[11px] font-bold bg-white/60 dark:bg-slate-900/45 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/15 inline-flex items-center gap-1 transition-colors"
+                                  >
+                                    <LucideIcon name="zap" size={11} />
+                                    <span>提早完成</span>
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  data-testid={`start-focus-btn-${evt.masterEventId}`}
+                                  onClick={() => openModal('focus', { focusTargetEventId: evt.masterEventId })}
+                                  className="px-2.5 py-1 rounded-lg text-[11px] font-bold theme-accent-solid inline-flex items-center gap-1 transition-colors"
+                                >
+                                  <LucideIcon name="play" size={11} />
+                                  <span>專注</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => selectEvent(evt.masterEventId, evt.occurrenceDate)}
+                                  className="px-2 py-1 rounded-lg text-[11px] font-semibold opacity-80 hover:opacity-100 hover:bg-white/60 dark:hover:bg-slate-800/60 transition-colors"
+                                >
+                                  詳情
+                                </button>
+                                {deletable && (
+                                  <button
+                                    type="button"
+                                    data-testid={`desktop-delete-timeline-${evt.masterEventId}-${evt.occurrenceDate}`}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      requestDeleteEvent(evt);
+                                    }}
+                                    title="移除行程"
+                                    aria-label={`移除「${evt.title}」`}
+                                    className="desktop-hover-delete-btn p-1.5 rounded-lg bg-white/60 dark:bg-slate-900/45 text-rose-600 dark:text-rose-400 hover:bg-rose-500 hover:text-white transition-colors"
+                                  >
+                                    <LucideIcon name="trash-2" size={12} />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
-                  </article>
-                );
-              })}
+                      </article>
+                    </SwipeableEventCard>
+                  );
+                })}
 
               {/* Available Free Gap Suggestions */}
               {freeGaps.length > 0 && (
@@ -536,7 +572,8 @@ function TimelineView({ instances }: TimelineViewProps) {
                   </div>
                 </div>
               )}
-            </div>
+              </div>
+            </SwipeRevealGroup>
           )}
         </section>
 
@@ -646,6 +683,12 @@ function TimelineView({ instances }: TimelineViewProps) {
           </div>
         </section>
       </div>
+
+      <RecurringDeleteModal
+        event={pendingRecurringEvent}
+        onCancel={cancelRecurringDelete}
+        onConfirmScope={confirmRecurringDelete}
+      />
     </div>
   );
 }

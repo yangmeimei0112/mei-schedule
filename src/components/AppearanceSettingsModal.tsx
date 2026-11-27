@@ -366,7 +366,7 @@ export default function AppearanceSettingsModal() {
             data-testid="app-version-badge"
             className="font-mono font-bold px-2 py-0.5 rounded-full theme-accent-soft border"
           >
-            v1.5.4
+            v1.5.5
           </span>
         </div>
       </div>

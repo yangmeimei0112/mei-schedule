@@ -1,6 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { LucideIcon } from './BrandMark';
+import RecurringDeleteModal from './RecurringDeleteModal';
+import SwipeableEventCard, { SwipeRevealGroup } from './SwipeableEventCard';
 import { COLOR_TOKEN_PALETTE } from '../data/seedData';
+import { useEventQuickDelete } from '../hooks/useEventQuickDelete';
 import { describeRecurrenceRule } from '../services/recurrenceEngine';
 import { useScheduleStore } from '../store/useScheduleStore';
 import type { ExpandedEventInstance } from '../types/schedule';
@@ -24,6 +27,14 @@ function AgendaListView({ instances }: AgendaListViewProps) {
     toggleEventComplete,
     openModal
   } = useScheduleStore();
+
+  const {
+    pendingRecurringEvent,
+    canDeleteEvent,
+    requestDeleteEvent,
+    confirmRecurringDelete,
+    cancelRecurringDelete
+  } = useEventQuickDelete();
 
   const [filter, setFilter] = useState<AgendaFilter>('all');
 
@@ -109,90 +120,124 @@ function AgendaListView({ instances }: AgendaListViewProps) {
           <p className="text-xs text-[var(--text-muted)]">可調整篩選條件或使用上方自然語言快速新增</p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {groupedByDate.map(([dateKey, items]) => (
-            <section key={dateKey} className="bento-glass-card p-4 space-y-2.5">
-              <div className="flex items-center justify-between pb-2 border-b border-[var(--border-subtle)]">
-                <h3 className="text-xs sm:text-sm font-extrabold font-mono theme-accent-deep">
-                  {dateKey}
-                </h3>
-                <span className="text-[11px] font-semibold text-[var(--text-muted)]">
-                  {items.length} 項排程
-                </span>
-              </div>
+        <SwipeRevealGroup>
+          <div className="space-y-4">
+            {groupedByDate.map(([dateKey, items]) => (
+              <section key={dateKey} className="bento-glass-card p-4 space-y-2.5">
+                <div className="flex items-center justify-between pb-2 border-b border-[var(--border-subtle)]">
+                  <h3 className="text-xs sm:text-sm font-extrabold font-mono theme-accent-deep">
+                    {dateKey}
+                  </h3>
+                  <span className="text-[11px] font-semibold text-[var(--text-muted)]">
+                    {items.length} 項排程
+                  </span>
+                </div>
 
-              <div className="space-y-2">
-                {items.map((evt) => {
-                  const palette = COLOR_TOKEN_PALETTE[evt.colorToken] || COLOR_TOKEN_PALETTE.sky;
-                  const isDone = evt.status === 'completed';
-                  return (
-                    <div
-                      key={evt.instanceId}
-                      className={`p-3 rounded-2xl border flex items-center gap-3 ${palette.surfaceClass} ${palette.borderClass} ${
-                        isDone ? 'opacity-65' : ''
-                      }`}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => toggleEventComplete(evt.masterEventId)}
-                        aria-label={isDone ? '標記為未完成' : '標記為已完成'}
-                        className="shrink-0"
+                <div className="space-y-2">
+                  {items.map((evt) => {
+                    const palette = COLOR_TOKEN_PALETTE[evt.colorToken] || COLOR_TOKEN_PALETTE.sky;
+                    const isDone = evt.status === 'completed';
+                    const deletable = canDeleteEvent(evt);
+                    return (
+                      <SwipeableEventCard
+                        key={evt.instanceId}
+                        swipeId={evt.instanceId}
+                        testIdKey={`agenda-${evt.masterEventId}-${evt.occurrenceDate}`}
+                        disabled={!deletable}
+                        radiusClass="rounded-2xl"
+                        onDeleteRequest={() => requestDeleteEvent(evt)}
                       >
-                        <LucideIcon
-                          name={isDone ? 'circle-check' : 'circle'}
-                          size={18}
-                          className={isDone ? 'text-emerald-500' : 'opacity-65'}
-                        />
-                      </button>
+                        <div
+                          className={`group p-3 rounded-2xl border flex items-center gap-3 ${palette.surfaceClass} ${palette.borderClass} ${
+                            isDone ? 'opacity-65' : ''
+                          }`}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => toggleEventComplete(evt.masterEventId)}
+                            aria-label={isDone ? '標記為未完成' : '標記為已完成'}
+                            className="shrink-0"
+                          >
+                            <LucideIcon
+                              name={isDone ? 'circle-check' : 'circle'}
+                              size={18}
+                              className={isDone ? 'text-emerald-500' : 'opacity-65'}
+                            />
+                          </button>
 
-                      <button
-                        type="button"
-                        onClick={() => selectEvent(evt.masterEventId, evt.occurrenceDate)}
-                        className="min-w-0 flex-1 text-left"
-                      >
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className={`text-sm font-extrabold ${isDone ? 'line-through' : ''}`}>
-                            {evt.title}
-                          </span>
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${palette.badgeClass}`}>
-                            {evt.categoryTag}
-                          </span>
-                          {evt.recurrenceRule && (
-                            <span className="text-[10px] font-semibold opacity-75 inline-flex items-center gap-0.5">
-                              <LucideIcon name="repeat" size={10} />
-                              {describeRecurrenceRule(evt.recurrenceRule)}
-                            </span>
-                          )}
+                          <button
+                            type="button"
+                            onClick={() => selectEvent(evt.masterEventId, evt.occurrenceDate)}
+                            className="min-w-0 flex-1 text-left"
+                          >
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className={`text-sm font-extrabold schedule-title-wrap ${isDone ? 'line-through' : ''}`}>
+                                {evt.title}
+                              </span>
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${palette.badgeClass}`}>
+                                {evt.categoryTag}
+                              </span>
+                              {evt.recurrenceRule && (
+                                <span className="text-[10px] font-semibold opacity-75 inline-flex items-center gap-0.5">
+                                  <LucideIcon name="repeat" size={10} />
+                                  {describeRecurrenceRule(evt.recurrenceRule)}
+                                </span>
+                              )}
+                            </div>
+                            <div className="mt-0.5 flex items-center gap-3 text-[11px] opacity-80 flex-wrap">
+                              <span className="font-mono">
+                                {evt.allDay ? '全天' : `${formatHM(evt.startAt)} – ${formatHM(evt.endAt)}`}
+                              </span>
+                              {evt.location && (
+                                <span className="inline-flex items-center gap-1">
+                                  <LucideIcon name="map-pin" size={11} />
+                                  {evt.location}
+                                </span>
+                              )}
+                            </div>
+                          </button>
+
+                          <div className="flex items-center gap-1 shrink-0">
+                            {deletable && (
+                              <button
+                                type="button"
+                                data-testid={`desktop-delete-agenda-${evt.masterEventId}-${evt.occurrenceDate}`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  requestDeleteEvent(evt);
+                                }}
+                                title="移除行程"
+                                aria-label={`移除「${evt.title}」`}
+                                className="desktop-hover-delete-btn p-2 rounded-xl bg-white/60 dark:bg-slate-900/50 text-rose-600 dark:text-rose-400 hover:bg-rose-500 hover:text-white transition-colors shrink-0"
+                              >
+                                <LucideIcon name="trash-2" size={13} />
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => openModal('focus', { focusTargetEventId: evt.masterEventId })}
+                              aria-label="啟動專注番茄鐘"
+                              className="p-2 rounded-xl bg-white/60 dark:bg-slate-900/50 hover:bg-[var(--accent-solid-bg)] hover:text-white transition-colors shrink-0"
+                            >
+                              <LucideIcon name="play" size={13} />
+                            </button>
+                          </div>
                         </div>
-                        <div className="mt-0.5 flex items-center gap-3 text-[11px] opacity-80 flex-wrap">
-                          <span className="font-mono">
-                            {evt.allDay ? '全天' : `${formatHM(evt.startAt)} – ${formatHM(evt.endAt)}`}
-                          </span>
-                          {evt.location && (
-                            <span className="inline-flex items-center gap-1">
-                              <LucideIcon name="map-pin" size={11} />
-                              {evt.location}
-                            </span>
-                          )}
-                        </div>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => openModal('focus', { focusTargetEventId: evt.masterEventId })}
-                        aria-label="啟動專注番茄鐘"
-                        className="p-2 rounded-xl bg-white/60 dark:bg-slate-900/50 hover:bg-[var(--accent-solid-bg)] hover:text-white transition-colors shrink-0"
-                      >
-                        <LucideIcon name="play" size={13} />
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-          ))}
-        </div>
+                      </SwipeableEventCard>
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
+          </div>
+        </SwipeRevealGroup>
       )}
+
+      <RecurringDeleteModal
+        event={pendingRecurringEvent}
+        onCancel={cancelRecurringDelete}
+        onConfirmScope={confirmRecurringDelete}
+      />
     </div>
   );
 }

@@ -52,6 +52,7 @@ mei-schedule/
     ├── data/seedData.ts                   # 8 種語意色票、日曆組、主題資訊與動態今日示範排程
     ├── store/useScheduleStore.tsx         # 全域狀態管理、50 層原子 Undo/Redo 與離線同步佇列整合
     ├── services/                          # 核心業務與純前端演算法層
+    ├── hooks/                             # 共用互動 Hook（例如行程快速移除與重複範圍決策 useEventQuickDelete.ts）
     ├── components/                        # UI 元件層（五大視角、五大旗艦模組、認證與桌面迷你窗）
     └── __tests__/                         # 自動化單元、整合與跨平台規格測試套件
 ```
@@ -67,6 +68,7 @@ mei-schedule/
 | **智慧排程、衝突偵測與預覽重排 (Diff)** | `src/services/smartScheduler.ts`<br>`src/components/SmartRescheduleDrawer.tsx` | `src/__tests__/smartScheduler.test.ts` |
 | **RFC 5545 `.ics` 互通與 Google 日曆連動** | `src/services/icsService.ts`<br>`src/components/CalendarSyncModal.tsx` | `src/__tests__/icsService.test.ts` |
 | **五大排程視角、統一左側側欄與右側待辦翼板** | `src/components/AppSidebar.tsx`<br>`src/components/TopNavBar.tsx`<br>`src/components/TaskInboxDrawer.tsx`<br>`src/components/TimelineView.tsx`<br>`src/components/WeekGridView.tsx`<br>`src/components/MonthView.tsx`<br>`src/components/AgendaListView.tsx` | `src/__tests__/timelineAndViews.test.tsx` |
+| **行程圖塊兩段式左滑移除、重複刪除選單與桌面懸停刪除** | `src/components/SwipeableEventCard.tsx`<br>`src/components/RecurringDeleteModal.tsx`<br>`src/hooks/useEventQuickDelete.ts`<br>`src/components/AgendaListView.tsx`<br>`src/components/TimelineView.tsx`<br>`src/components/MonthView.tsx` | `src/__tests__/swipeDelete.test.tsx` |
 | **專注番茄鐘、無版權輕音樂、統計與共享成員管理** | `src/services/focusAudioEngine.ts`<br>`src/store/FocusSessionContext.tsx`<br>`src/components/FocusTimerModal.tsx`<br>`src/components/FocusMiniPill.tsx`<br>`src/components/AnalyticsDashboard.tsx`<br>`src/components/SharedCalendarModal.tsx`<br>`src/components/EventDetailDrawer.tsx` | `src/__tests__/focusAudioEngine.test.ts`<br>`src/__tests__/sharedAndFocus.test.tsx` |
 | **三套設計風格、亮深雙模式、轉場動畫、Toast 與 `dvh`** | `src/styles/index.css`<br>`src/components/AppearanceSettingsModal.tsx`<br>`src/components/StudioToast.tsx`<br>`src/components/BrandMark.tsx`<br>`src/components/AppPreloaderOverlay.tsx`<br>`src/services/preloadEngine.ts` | `src/__tests__/themeAndResponsive.test.tsx`<br>`scripts/verify-schedule.mjs` |
 | **Supabase Cloud SSO v3.0、離線儲存與同步** | `src/services/supabaseClient.ts`<br>`src/services/memberAuthService.ts`<br>`src/services/localStore.ts`<br>`src/services/scheduleSyncService.ts`<br>`supabase/mei_schedule_migrations.sql` | `src/__tests__/authAndCrossPlatform.test.tsx` |

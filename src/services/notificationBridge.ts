@@ -153,8 +153,16 @@ export async function triggerLightHaptic(): Promise<void> {
     try {
       const { Haptics, ImpactStyle } = await import('@capacitor/haptics');
       await Haptics.impact({ style: ImpactStyle.Light });
+      return;
     } catch {
-      // Ignore haptics errors
+      // Fall through to web vibrate
+    }
+  }
+  if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+    try {
+      navigator.vibrate(12);
+    } catch {
+      // Ignore restricted vibration environments
     }
   }
 }
