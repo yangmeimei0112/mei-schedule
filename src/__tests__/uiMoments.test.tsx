@@ -199,6 +199,13 @@ describe('v1.6.0 UI Moments Integration & Clean Offline Header', () => {
     expect(screen.getByTestId('mobile-view-tab-indicator')).toBeInTheDocument();
     expect(screen.getByTestId('sidebar-theme-indicator')).toBeInTheDocument();
 
+    // Desktop 5-view switcher stays pinned in a 3-column CSS Grid regardless of date string width
+    const switcher = screen.getByTestId('desktop-view-switcher');
+    expect(switcher.className).toContain('lg:justify-self-center');
+    const headerRow = switcher.parentElement;
+    expect(headerRow?.className).toContain('lg:grid');
+    expect(headerRow?.className).toContain('minmax(0,1fr)_auto_minmax(0,1fr)');
+
     // F4: QuickCapture NLP token chips animate in on live input
     const quickInput = screen.getByTestId('quick-capture-input');
     fireEvent.change(quickInput, { target: { value: '明天下午3點開會 60分鐘 #工作' } });

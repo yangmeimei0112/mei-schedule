@@ -99,9 +99,9 @@ function TopNavBar() {
       className="sticky top-0 z-20 pt-safe border-b border-[var(--border-subtle)] theme-nav-top backdrop-blur-[14px]"
     >
       {/* Primary Single-Row Header (56px on Desktop) */}
-      <div className="mobile-header-bar narrow-compact-px h-14 px-2.5 sm:px-5 flex items-center justify-between gap-2">
+      <div className="mobile-header-bar narrow-compact-px h-14 px-2.5 sm:px-5 flex items-center justify-between gap-2 lg:grid lg:grid-cols-[minmax(0,1.45fr)_auto_minmax(0,1fr)] xl:grid-cols-[minmax(0,1.2fr)_auto_minmax(0,1fr)] min-[1360px]:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:gap-3">
         {/* Left: Sidebar Toggle (Mobile Drawer / Desktop Rail) + Date Navigation + Background Focus Pill */}
-        <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-1 lg:flex-initial">
+        <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-1 lg:flex-initial lg:w-full lg:justify-self-start">
           {/* Mobile Menu Trigger (opens slide-over AppSidebar) + Desktop Fallback Toggle */}
           <button
             type="button"
@@ -161,12 +161,13 @@ function TopNavBar() {
           <FocusMiniPill />
         </div>
 
-        {/* Center: Clean 5-View Segmented Switcher (Desktop >= lg) */}
+        {/* Center: Clean 5-View Segmented Switcher (Desktop >= lg, anchored in fixed center grid column) */}
         <div
           ref={desktopTabMarker.containerRef}
+          data-testid="desktop-view-switcher"
           role="tablist"
           aria-label="排程檢視模式"
-          className="relative hidden lg:inline-flex items-center gap-0.5 p-1 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-subtle)] shrink-0"
+          className="relative hidden lg:inline-flex lg:justify-self-center items-center gap-0.5 p-1 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-subtle)] shrink-0"
         >
           <span
             ref={desktopTabMarker.indicatorRef}
@@ -200,7 +201,7 @@ function TopNavBar() {
         </div>
 
         {/* Right: Minimal Utility Cluster (Undo/Redo + Right Task Inbox Wing Toggle) */}
-        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 lg:justify-self-end">
           <div className="hidden md:inline-flex items-center gap-0.5 shrink-0">
             <button
               type="button"
