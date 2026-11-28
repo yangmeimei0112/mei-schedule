@@ -335,11 +335,15 @@ describe('M1 Visual System: 3 Themes x 2 Modes, Sky-Blue Toast, dvh & 4 Aspect R
       expect(EMOJI_REGEX.test(text)).toBe(false);
     }
 
-    // Parent Studio return dock preserves Studio geometric integrity & zero emoji
+    // Parent Studio return dock syncs official Mei Flow (M + dot) logo on badge (16px) & edge tab (14px), zero emoji
     const dockSvgText = fs.readFileSync(path.join(ROOT_DIR, 'public/sdk/mei-dock.js'), 'utf8');
     expect(dockSvgText).toContain('stroke-width="1.75"');
-    expect(dockSvgText).toContain('M17.5 19H9');
-    expect(dockSvgText).toContain('M12 14.5c');
+    expect(dockSvgText).toContain(
+      'M4.8 18V8.8a2.1 2.1 0 0 1 3.58-1.48L12 10.95l3.62-3.63A2.1 2.1 0 0 1 19.2 8.8v3.7'
+    );
+    expect(dockSvgText).toContain('cx="19.2" cy="16.9" r="1.95"');
+    expect(dockSvgText).toContain('width="16" height="16"');
+    expect(dockSvgText).toContain('width="14" height="14"');
     expect(dockSvgText).not.toContain('m12 3-1.912');
     expect(EMOJI_REGEX.test(dockSvgText)).toBe(false);
   });
@@ -353,10 +357,10 @@ describe('M1 Visual System: 3 Themes x 2 Modes, Sky-Blue Toast, dvh & 4 Aspect R
       // Mobile (<1024px) must NOT show full-screen blocking sidebar overlay on initial load
       expect(screen.queryByTestId('mobile-sidebar-overlay')).toBeNull();
 
-      // Appearance settings modal exposes v1.5.5 release badge, Studio Dock visibility control & Auto-Wrap Titles switch
+      // Appearance settings modal exposes v1.6.0 release badge, Studio Dock visibility control & Auto-Wrap Titles switch
       expect(document.documentElement.getAttribute('data-title-wrap')).toBe('wrap');
       fireEvent.click(screen.getByTestId('open-appearance-modal-btn'));
-      expect(await screen.findByTestId('app-version-badge')).toHaveTextContent('v1.5.5');
+      expect(await screen.findByTestId('app-version-badge')).toHaveTextContent('v1.6.0');
       expect(screen.getByTestId('dock-visibility-control')).toBeInTheDocument();
       const autoWrapSwitch = screen.getByTestId('toggle-auto-wrap-titles');
       expect(autoWrapSwitch).toHaveAttribute('aria-checked', 'true');

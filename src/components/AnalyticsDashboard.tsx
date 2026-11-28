@@ -2,9 +2,30 @@ import React, { useMemo } from 'react';
 import { LucideIcon } from './BrandMark';
 import { computeAnalyticsSummary } from '../services/smartScheduler';
 import { useScheduleStore } from '../store/useScheduleStore';
+import { useBackdropDismissGuard, useCardSpotlight } from '../utils/uiMomentsMotion';
+
+function SpotlightKpiCard({
+  staggerIndex,
+  children
+}: {
+  staggerIndex: number;
+  children: React.ReactNode;
+}) {
+  const cardRef = useCardSpotlight<HTMLDivElement>();
+  return (
+    <div
+      ref={cardRef}
+      style={{ '--um-stagger-i': staggerIndex } as React.CSSProperties}
+      className="um-card-spotlight um-kpi-stagger p-4 rounded-2xl bg-[var(--surface-subtle)] border border-[var(--border-subtle)] space-y-1"
+    >
+      {children}
+    </div>
+  );
+}
 
 export default function AnalyticsDashboard() {
   const { activeModal, closeModal, events, tasks, focusSessions, openModal } = useScheduleStore();
+  const backdropGuard = useBackdropDismissGuard(closeModal);
 
   const summary = useMemo(
     () => computeAnalyticsSummary(events, tasks, focusSessions),
@@ -18,15 +39,15 @@ export default function AnalyticsDashboard() {
   return (
     <div
       data-testid="analytics-dashboard-modal"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/50 backdrop-blur-md"
-      onClick={closeModal}
+      className="um-backdrop-enter fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/50 backdrop-blur-md"
+      {...backdropGuard}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-label="時間統計與習慣儀表板"
         onClick={(e) => e.stopPropagation()}
-        className="landscape-compact-modal max-h-dvh-92 overflow-y-auto w-full max-w-3xl bento-glass-card p-5 sm:p-6 space-y-5"
+        className="um-modal-enter landscape-compact-modal max-h-dvh-92 overflow-y-auto w-full max-w-3xl bento-glass-card p-5 sm:p-6 space-y-5"
       >
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
@@ -52,7 +73,7 @@ export default function AnalyticsDashboard() {
 
         {/* 4 KPI Summary Cards */}
         <div className="foldable-inner-grid grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="p-4 rounded-2xl bg-[var(--surface-subtle)] border border-[var(--border-subtle)] space-y-1">
+          <SpotlightKpiCard staggerIndex={0}>
             <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
               <span>累計專注時長</span>
               <LucideIcon name="timer" size={15} className="theme-accent-text" />
@@ -63,9 +84,9 @@ export default function AnalyticsDashboard() {
             <div className="text-[11px] text-[var(--text-muted)]">
               今日 {summary.todayFocusMinutes}m · 共 {summary.totalSessions} 次
             </div>
-          </div>
+          </SpotlightKpiCard>
 
-          <div className="p-4 rounded-2xl bg-[var(--surface-subtle)] border border-[var(--border-subtle)] space-y-1">
+          <SpotlightKpiCard staggerIndex={1}>
             <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
               <span>連續專注天數</span>
               <LucideIcon name="flame" size={15} className="text-amber-500" />
@@ -74,9 +95,9 @@ export default function AnalyticsDashboard() {
               {summary.streakDays} 天
             </div>
             <div className="text-[11px] text-[var(--text-muted)]">持續累積心流節奏</div>
-          </div>
+          </SpotlightKpiCard>
 
-          <div className="p-4 rounded-2xl bg-[var(--surface-subtle)] border border-[var(--border-subtle)] space-y-1">
+          <SpotlightKpiCard staggerIndex={2}>
             <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
               <span>行程／待辦達成</span>
               <LucideIcon name="target" size={15} className="text-emerald-500" />
@@ -87,9 +108,9 @@ export default function AnalyticsDashboard() {
             <div className="text-[11px] text-[var(--text-muted)]">
               待辦完成率 {summary.taskCompletionRate}% ({summary.completedTasksCount}/{summary.totalTasksCount})
             </div>
-          </div>
+          </SpotlightKpiCard>
 
-          <div className="p-4 rounded-2xl bg-[var(--surface-subtle)] border border-[var(--border-subtle)] space-y-1">
+          <SpotlightKpiCard staggerIndex={3}>
             <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
               <span>提早釋放空檔</span>
               <LucideIcon name="zap" size={15} className="text-violet-500" />
@@ -98,10 +119,10 @@ export default function AnalyticsDashboard() {
               {summary.releasedMinutesTotal}m
             </div>
             <div className="text-[11px] text-[var(--text-muted)]">提前完成行程所賺回時間</div>
-          </div>
+          </SpotlightKpiCard>
         </div>
 
-        {/* 7-Day Focus Trend Bar Chart */}
+        {/* 7-Day Focus Trend Bar Chart (Pure GPU scaleY staggered growth) */}
         <section className="p-4 rounded-2xl bg-[var(--surface-subtle)] border border-[var(--border-subtle)] space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-extrabold text-[var(--text-main)] inline-flex items-center gap-1.5">
@@ -119,7 +140,7 @@ export default function AnalyticsDashboard() {
           </div>
 
           <div className="grid grid-cols-7 gap-2 items-end h-36 pt-4">
-            {summary.last7DaysFocus.map((day) => {
+            {summary.last7DaysFocus.map((day, idx) => {
               const heightPct = Math.max(8, Math.round((day.minutes / maxDayMinutes) * 100));
               return (
                 <div key={day.dateKey} className="flex flex-col items-center gap-1.5 h-full justify-end">
@@ -128,8 +149,14 @@ export default function AnalyticsDashboard() {
                   </span>
                   <div className="w-full max-w-[36px] flex-1 flex items-end">
                     <div
-                      style={{ height: `${day.minutes > 0 ? heightPct : 6}%` }}
-                      className={`w-full rounded-t-xl transition-all ${
+                      data-testid={`analytics-bar-${day.dateKey}`}
+                      style={
+                        {
+                          height: `${day.minutes > 0 ? heightPct : 6}%`,
+                          '--um-stagger-i': idx
+                        } as React.CSSProperties
+                      }
+                      className={`um-bar-grow w-full rounded-t-xl transition-[transform,opacity] ${
                         day.minutes > 0
                           ? 'theme-chart-bar'
                           : 'bg-slate-300/40 dark:bg-slate-700/50'

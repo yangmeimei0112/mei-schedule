@@ -10,6 +10,7 @@ import { parseLocalDateKey, toLocalDateKey } from '../services/recurrenceEngine'
 import { useFocusSession } from '../store/FocusSessionContext';
 import { useScheduleStore, useVisualTheme } from '../store/useScheduleStore';
 import type { CalendarSetId, DesignTheme } from '../types/schedule';
+import { useCardSpotlight, useElasticTabMarker } from '../utils/uiMomentsMotion';
 
 export interface AppSidebarProps {
   conflictCount: number;
@@ -54,6 +55,7 @@ const SidebarVisualControls = React.memo(function SidebarVisualControls({
 }) {
   const { designTheme, resolvedColorMode } = useVisualTheme();
   const { updatePreferences, showToast } = useScheduleStore();
+  const themeMarker = useElasticTabMarker(designTheme, [isRailDesktop]);
 
   const handleSelectTheme = (theme: DesignTheme) => {
     updatePreferences({ designTheme: theme });
@@ -73,20 +75,28 @@ const SidebarVisualControls = React.memo(function SidebarVisualControls({
     <>
       {/* 3-Design-Theme Quick Switcher (Expanded & Mobile Drawer) */}
       <div
+        ref={themeMarker.containerRef}
         role="group"
         aria-label="外觀主題快速切換"
-        className={`grid grid-cols-3 gap-1 p-1 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-subtle)] ${hideOnRail}`}
+        className={`relative grid grid-cols-3 gap-1 p-1 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-subtle)] ${hideOnRail}`}
       >
+        <span
+          ref={themeMarker.indicatorRef}
+          aria-hidden="true"
+          data-testid="sidebar-theme-indicator"
+          className="um-elastic-indicator theme-accent-solid rounded-lg shadow-sm"
+        />
         {DESIGN_THEME_OPTIONS.map((opt) => {
           const active = designTheme === opt.id;
           return (
             <button
               key={opt.id}
               type="button"
+              data-um-tab-active={active ? 'true' : 'false'}
               data-testid={`theme-switch-${opt.id}`}
               aria-pressed={active}
               onClick={() => handleSelectTheme(opt.id)}
-              className={`py-1 px-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition-colors inline-flex items-center justify-center gap-1 ${
+              className={`relative z-10 py-1 px-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition-colors inline-flex items-center justify-center gap-1 ${
                 active
                   ? 'theme-accent-solid shadow-sm'
                   : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
@@ -160,6 +170,7 @@ function AppSidebar({ conflictCount, onFocusQuickCapture }: AppSidebarProps) {
   const [miniMonthOffset, setMiniMonthOffset] = useState(0);
   const [miniMonthExpanded, setMiniMonthExpanded] = useState(true);
   const [calendarsExpanded, setCalendarsExpanded] = useState(true);
+  const memberCardRef = useCardSpotlight<HTMLButtonElement>();
 
   // On desktop (>=1024px), sidebarOpen=false collapses into an iconic 64px Mini Rail.
   // On mobile (<1024px), sidebarOpen=false slides the full 280px drawer cleanly offscreen.
@@ -349,7 +360,7 @@ function AppSidebar({ conflictCount, onFocusQuickCapture }: AppSidebarProps) {
             } gap-2`}
           >
             <div className="flex items-center gap-2.5 min-w-0">
-              <span className="shrink-0">
+              <span className="um-brand-tilt shrink-0" data-testid="sidebar-brand-mark">
                 <MeiScheduleLogo size="sm" />
               </span>
               <div className={`leading-tight min-w-0 ${hideOnRail}`}>
@@ -361,10 +372,12 @@ function AppSidebar({ conflictCount, onFocusQuickCapture }: AppSidebarProps) {
                     MeiSchedule
                   </span>
                 </div>
-                <div className="flex items-center gap-1.5 text-[10px] text-[var(--text-muted)] mt-0.5">
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${syncDotClass}`} />
-                  <span className="truncate">{syncStatusMessage}</span>
-                </div>
+                {syncStatusMessage.trim().length > 0 && (
+                  <div className="flex items-center gap-1.5 text-[10px] text-[var(--text-muted)] mt-0.5">
+                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${syncDotClass}`} />
+                    <span className="truncate">{syncStatusMessage}</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -720,11 +733,12 @@ function AppSidebar({ conflictCount, onFocusQuickCapture }: AppSidebarProps) {
 
           {/* Member Account Card */}
           <button
+            ref={memberCardRef}
             type="button"
             data-testid="header-member-portal-btn"
             onClick={() => handleOpenTool('member')}
             title={currentMember ? `會員帳號：${currentMember.displayName}` : '登入或註冊咩創意雲端會員'}
-            className={`sidebar-nav-item rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-glass)] hover:border-[var(--border-hover)] flex items-center gap-2.5 text-left ${
+            className={`um-card-spotlight sidebar-nav-item rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-glass)] hover:border-[var(--border-hover)] flex items-center gap-2.5 text-left ${
               isRailDesktop
                 ? 'w-full p-2 lg:w-10 lg:h-10 lg:p-0 lg:mx-auto lg:justify-center'
                 : 'w-full p-2'

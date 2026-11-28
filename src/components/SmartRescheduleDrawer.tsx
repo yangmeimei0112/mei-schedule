@@ -4,6 +4,7 @@ import { parseLocalDateKey } from '../services/recurrenceEngine';
 import { proposeAutoFill, proposeSmartPush } from '../services/smartScheduler';
 import { useScheduleStore } from '../store/useScheduleStore';
 import type { ScheduleProposal, SmartProposalResult } from '../types/schedule';
+import { useBackdropDismissGuard, useElasticTabMarker } from '../utils/uiMomentsMotion';
 
 function formatShortTime(iso: string | null): string {
   if (!iso) return '未排程';
@@ -30,6 +31,8 @@ export default function SmartRescheduleDrawer() {
   const [proposals, setProposals] = useState<ScheduleProposal[]>([]);
   const [lockedIds, setLockedIds] = useState<string[]>([]);
   const [unscheduledNotes, setUnscheduledNotes] = useState<SmartProposalResult['unscheduledItems']>([]);
+  const backdropGuard = useBackdropDismissGuard(closeModal);
+  const modeTabMarker = useElasticTabMarker(mode, [activeModal]);
 
   const timedScheduledEvents = useMemo(
     () =>
@@ -83,15 +86,15 @@ export default function SmartRescheduleDrawer() {
   return (
     <div
       data-testid="smart-reschedule-drawer"
-      className="fixed inset-0 z-50 flex items-end sm:items-stretch sm:justify-end bg-slate-950/45 backdrop-blur-sm"
-      onClick={closeModal}
+      className="um-backdrop-enter fixed inset-0 z-50 flex items-end sm:items-stretch sm:justify-end bg-slate-950/45 backdrop-blur-sm"
+      {...backdropGuard}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-label="智慧排程與預覽重排差異面板"
         onClick={(e) => e.stopPropagation()}
-        className="landscape-compact-modal max-h-dvh-92 sm:max-h-none sm:h-full w-full sm:max-w-lg bg-[var(--surface-glass-strong)] border-t sm:border-t-0 sm:border-l border-[var(--border-subtle)] rounded-t-3xl sm:rounded-none shadow-2xl flex flex-col overflow-hidden"
+        className="um-drawer-right-enter landscape-compact-modal max-h-dvh-92 sm:max-h-none sm:h-full w-full sm:max-w-lg bg-[var(--surface-glass-strong)] border-t sm:border-t-0 sm:border-l border-[var(--border-subtle)] rounded-t-3xl sm:rounded-none shadow-2xl flex flex-col overflow-hidden"
       >
         {/* Header */}
         <div className="landscape-compact-drawer-bar px-4 sm:px-5 py-3.5 sm:py-4 border-b border-[var(--border-subtle)] flex items-center justify-between gap-2">
@@ -118,12 +121,22 @@ export default function SmartRescheduleDrawer() {
 
         {/* Mode Switcher */}
         <div className="px-5 pt-4 space-y-3">
-          <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-[var(--surface-subtle)] border border-[var(--border-subtle)]">
+          <div
+            ref={modeTabMarker.containerRef}
+            className="relative grid grid-cols-2 gap-2 p-1 rounded-2xl bg-[var(--surface-subtle)] border border-[var(--border-subtle)]"
+          >
+            <span
+              ref={modeTabMarker.indicatorRef}
+              aria-hidden="true"
+              data-testid="smart-mode-tab-indicator"
+              className="um-elastic-indicator theme-accent-solid rounded-xl shadow-sm"
+            />
             <button
               type="button"
+              data-um-tab-active={mode === 'autofill' ? 'true' : 'false'}
               data-testid="smart-tab-autofill"
               onClick={() => setMode('autofill')}
-              className={`py-2 rounded-xl text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-colors ${
+              className={`relative z-10 py-2 rounded-xl text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-colors ${
                 mode === 'autofill'
                   ? 'theme-accent-solid'
                   : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
@@ -134,9 +147,10 @@ export default function SmartRescheduleDrawer() {
             </button>
             <button
               type="button"
+              data-um-tab-active={mode === 'push' ? 'true' : 'false'}
               data-testid="smart-tab-push"
               onClick={() => setMode('push')}
-              className={`py-2 rounded-xl text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-colors ${
+              className={`relative z-10 py-2 rounded-xl text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-colors ${
                 mode === 'push'
                   ? 'theme-accent-solid'
                   : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
@@ -211,7 +225,7 @@ export default function SmartRescheduleDrawer() {
               <label
                 key={prop.id}
                 data-testid={`smart-proposal-item-${prop.targetId}`}
-                className={`block p-3.5 rounded-2xl border transition-all cursor-pointer space-y-2 ${
+                className={`block p-3.5 rounded-2xl border transition-colors cursor-pointer space-y-2 ${
                   prop.selected
                     ? 'bg-[var(--accent-soft-bg)]/55 border-[var(--accent-soft-border)]'
                     : 'bg-[var(--surface-subtle)] border-[var(--border-subtle)] opacity-60'

@@ -1,5 +1,6 @@
 import React, { forwardRef, useMemo, useState } from 'react';
 import { LucideIcon } from './BrandMark';
+import { PaperPlaneSendButton } from './UiMomentsPrimitives';
 import { COLOR_TOKEN_PALETTE } from '../data/seedData';
 import { parseQuickCapture } from '../services/naturalLanguageParser';
 import { parseLocalDateKey } from '../services/recurrenceEngine';
@@ -132,15 +133,13 @@ const QuickCaptureBar = forwardRef<HTMLInputElement, QuickCaptureBarProps>(funct
           <span>{captureAsTask ? '收件匣' : '時間塊'}</span>
         </button>
 
-        <button
+        <PaperPlaneSendButton
           type="submit"
           data-testid="quick-capture-submit-btn"
           disabled={!inputValue.trim()}
-          className="btn-sky-primary px-3 sm:px-4 py-1.5 rounded-xl text-xs font-bold inline-flex items-center gap-1 shrink-0 disabled:opacity-45"
-        >
-          <LucideIcon name="corner-down-left" size={14} />
-          <span>{captureAsTask ? '記待辦' : '排入'}</span>
-        </button>
+          label={captureAsTask ? '記待辦' : '排入'}
+          className="btn-sky-primary px-3 sm:px-4 py-1.5 rounded-xl text-xs font-bold shrink-0 disabled:opacity-45"
+        />
       </form>
 
       {/* Subtle 1-Glance Quick Example Chips when input is empty (Desktop only) */}
@@ -172,9 +171,10 @@ const QuickCaptureBar = forwardRef<HTMLInputElement, QuickCaptureBarProps>(funct
           </span>
           {parsed.tokensDetected.map((tok, idx) => (
             <span
-              key={`${tok.kind}-${idx}`}
+              key={`${tok.kind}-${tok.label}`}
               data-testid={`nlp-token-${tok.kind}`}
-              className={`px-2 py-0.5 rounded-full font-semibold border ${
+              style={{ animationDelay: `${idx * 35}ms` }}
+              className={`um-chip-enter px-2 py-0.5 rounded-full font-semibold border ${
                 tok.kind === 'tag'
                   ? `${COLOR_TOKEN_PALETTE[parsed.colorToken].badgeClass} border-transparent`
                   : 'theme-accent-soft'

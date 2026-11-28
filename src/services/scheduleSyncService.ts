@@ -603,7 +603,7 @@ export async function mergeLocalAndCloudOnSignIn(
   if (!isValidUuid(userId) || !customClient || typeof customClient.from !== 'function') {
     return {
       status: 'local-only',
-      statusMessage: '本機離線優先模式',
+      statusMessage: '',
       tablesMigrated: false,
       mergedSnapshot: localSnapshot,
       mergedPreferences: localPrefs,

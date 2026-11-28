@@ -2,11 +2,13 @@ import React, { useMemo, useState } from 'react';
 import { LucideIcon } from './BrandMark';
 import RecurringDeleteModal from './RecurringDeleteModal';
 import SwipeableEventCard, { SwipeRevealGroup } from './SwipeableEventCard';
+import { LikeBurstLayer, StrokeCheckIndicator } from './UiMomentsPrimitives';
 import { COLOR_TOKEN_PALETTE } from '../data/seedData';
 import { useEventQuickDelete } from '../hooks/useEventQuickDelete';
 import { describeRecurrenceRule } from '../services/recurrenceEngine';
 import { useScheduleStore } from '../store/useScheduleStore';
 import type { ExpandedEventInstance } from '../types/schedule';
+import { useElasticTabMarker } from '../utils/uiMomentsMotion';
 
 type AgendaFilter = 'all' | 'scheduled' | 'completed' | 'recurring' | 'flexible';
 
@@ -37,6 +39,8 @@ function AgendaListView({ instances }: AgendaListViewProps) {
   } = useEventQuickDelete();
 
   const [filter, setFilter] = useState<AgendaFilter>('all');
+  const [burstByEvent, setBurstByEvent] = useState<Record<string, number>>({});
+  const filterTabMarker = useElasticTabMarker(filter);
 
   const filteredInstances = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -94,21 +98,34 @@ function AgendaListView({ instances }: AgendaListViewProps) {
           />
         </div>
 
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {filterOptions.map((opt) => (
-            <button
-              key={opt.id}
-              type="button"
-              onClick={() => setFilter(opt.id)}
-              className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-colors ${
-                filter === opt.id
-                  ? 'theme-accent-solid'
-                  : 'bg-[var(--surface-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)]'
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
+        <div
+          ref={filterTabMarker.containerRef}
+          className="relative flex items-center gap-1.5 flex-wrap"
+        >
+          <span
+            ref={filterTabMarker.indicatorRef}
+            aria-hidden="true"
+            data-testid="agenda-filter-indicator"
+            className="um-elastic-indicator theme-accent-solid rounded-xl shadow-sm"
+          />
+          {filterOptions.map((opt) => {
+            const active = filter === opt.id;
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                data-um-tab-active={active ? 'true' : 'false'}
+                onClick={() => setFilter(opt.id)}
+                className={`relative z-10 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-colors ${
+                  active
+                    ? 'theme-accent-solid'
+                    : 'bg-[var(--surface-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)]'
+                }`}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -154,15 +171,20 @@ function AgendaListView({ instances }: AgendaListViewProps) {
                         >
                           <button
                             type="button"
-                            onClick={() => toggleEventComplete(evt.masterEventId)}
+                            onClick={() => {
+                              if (!isDone) {
+                                setBurstByEvent((prev) => ({
+                                  ...prev,
+                                  [evt.instanceId]: (prev[evt.instanceId] || 0) + 1
+                                }));
+                              }
+                              toggleEventComplete(evt.masterEventId);
+                            }}
                             aria-label={isDone ? '標記為未完成' : '標記為已完成'}
-                            className="shrink-0"
+                            className="relative shrink-0"
                           >
-                            <LucideIcon
-                              name={isDone ? 'circle-check' : 'circle'}
-                              size={18}
-                              className={isDone ? 'text-emerald-500' : 'opacity-65'}
-                            />
+                            <StrokeCheckIndicator checked={isDone} size={18} />
+                            <LikeBurstLayer triggerKey={burstByEvent[evt.instanceId] || 0} />
                           </button>
 
                           <button
@@ -171,7 +193,7 @@ function AgendaListView({ instances }: AgendaListViewProps) {
                             className="min-w-0 flex-1 text-left"
                           >
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className={`text-sm font-extrabold schedule-title-wrap ${isDone ? 'line-through' : ''}`}>
+                              <span className={`text-sm font-extrabold schedule-title-wrap um-strike-sweep ${isDone ? 'is-done' : ''}`}>
                                 {evt.title}
                               </span>
                               <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${palette.badgeClass}`}>

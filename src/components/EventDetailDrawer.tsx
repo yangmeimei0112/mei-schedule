@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { LucideIcon } from './BrandMark';
+import { BellToggleButton, PaperPlaneSendButton } from './UiMomentsPrimitives';
 import { COLOR_TOKEN_LIST, COLOR_TOKEN_PALETTE } from '../data/seedData';
 import { buildGoogleCalendarUrl } from '../services/icsService';
 import {
@@ -11,6 +12,7 @@ import {
 } from '../services/recurrenceEngine';
 import { generateUuidV4 } from '../services/scheduleSyncService';
 import { useScheduleStore } from '../store/useScheduleStore';
+import { useBackdropDismissGuard } from '../utils/uiMomentsMotion';
 import type {
   ColorToken,
   PriorityLevel,
@@ -101,6 +103,7 @@ export default function EventDetailDrawer() {
   const [bufferBeforeMin, setBufferBeforeMin] = useState(0);
   const [bufferAfterMin, setBufferAfterMin] = useState(0);
   const [isFlexible, setIsFlexible] = useState(false);
+  const [reminderEnabled, setReminderEnabled] = useState(true);
   const [subtasks, setSubtasks] = useState<Subtask[]>([]);
   const [newSubtaskText, setNewSubtaskText] = useState('');
   const [validationError, setValidationError] = useState<{
@@ -118,6 +121,16 @@ export default function EventDetailDrawer() {
 
   // Comments state (Shared live thread)
   const [commentInput, setCommentInput] = useState('');
+
+  const handleClose = useCallback(() => {
+    if (isCreateMode) {
+      closeModal();
+    } else {
+      selectEvent(null);
+    }
+  }, [isCreateMode, closeModal, selectEvent]);
+
+  const backdropGuard = useBackdropDismissGuard(handleClose);
 
   useEffect(() => {
     setValidationError(null);
@@ -138,6 +151,7 @@ export default function EventDetailDrawer() {
       setBufferBeforeMin(0);
       setBufferAfterMin(0);
       setIsFlexible(false);
+      setReminderEnabled(true);
       setSubtasks([]);
       setNewSubtaskText('');
       setRecEnabled(false);
@@ -165,6 +179,7 @@ export default function EventDetailDrawer() {
     setBufferBeforeMin(event.bufferBeforeMin);
     setBufferAfterMin(event.bufferAfterMin);
     setIsFlexible(event.isFlexible);
+    setReminderEnabled((event.reminderMinutes?.length ?? 0) > 0);
     setSubtasks(event.subtasks || []);
     setNewSubtaskText('');
     if (event.recurrenceRule) {
@@ -189,14 +204,6 @@ export default function EventDetailDrawer() {
   const isViewerOnly = !isCreateMode && userRole === 'viewer';
   const eventComments = event ? comments.filter((c) => c.eventId === event.id) : [];
   const occurrenceDate = selectedInstanceDate || (event ? event.startAt.slice(0, 10) : selectedDate);
-
-  const handleClose = () => {
-    if (isCreateMode) {
-      closeModal();
-    } else {
-      selectEvent(null);
-    }
-  };
 
   const getReferenceDateForRule = (): Date => {
     if (allDay && allDayStartDate) return parseLocalDateKey(allDayStartDate);
@@ -316,6 +323,7 @@ export default function EventDetailDrawer() {
         bufferBeforeMin: Math.max(0, bufferBeforeMin),
         bufferAfterMin: Math.max(0, bufferAfterMin),
         isFlexible,
+        reminderMinutes: reminderEnabled ? [15] : [],
         subtasks,
         recurrenceRule: buildRulePayload()
       });
@@ -340,6 +348,11 @@ export default function EventDetailDrawer() {
       bufferBeforeMin: Math.max(0, bufferBeforeMin),
       bufferAfterMin: Math.max(0, bufferAfterMin),
       isFlexible,
+      reminderMinutes: reminderEnabled
+        ? event.reminderMinutes?.length
+          ? event.reminderMinutes
+          : [15]
+        : [],
       subtasks,
       recurrenceRule: buildRulePayload()
     };
@@ -409,15 +422,15 @@ export default function EventDetailDrawer() {
     <div
       data-testid="event-detail-drawer"
       data-drawer-mode={isCreateMode ? 'create' : 'edit'}
-      className="fixed inset-0 z-50 flex items-end sm:items-stretch sm:justify-end bg-slate-950/45 backdrop-blur-sm"
-      onClick={handleClose}
+      className="um-backdrop-enter fixed inset-0 z-50 flex items-end sm:items-stretch sm:justify-end bg-slate-950/45 backdrop-blur-sm"
+      {...backdropGuard}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-label={isCreateMode ? '新增行程' : '行程詳情與即時留言'}
         onClick={(e) => e.stopPropagation()}
-        className="landscape-compact-modal max-h-dvh-92 sm:max-h-none sm:h-full w-full sm:max-w-lg bg-[var(--surface-glass-strong)] border-t sm:border-t-0 sm:border-l border-[var(--border-subtle)] rounded-t-3xl sm:rounded-none shadow-2xl flex flex-col overflow-hidden"
+        className="um-drawer-right-enter landscape-compact-modal max-h-dvh-92 sm:max-h-none sm:h-full w-full sm:max-w-lg bg-[var(--surface-glass-strong)] border-t sm:border-t-0 sm:border-l border-[var(--border-subtle)] rounded-t-3xl sm:rounded-none shadow-2xl flex flex-col overflow-hidden"
       >
         {/* Header */}
         <div className="landscape-compact-drawer-bar px-4 sm:px-5 py-3.5 sm:py-4 border-b border-[var(--border-subtle)] flex items-center justify-between gap-2">
@@ -568,7 +581,7 @@ export default function EventDetailDrawer() {
             )}
 
             <div className="flex items-center justify-between gap-2 flex-wrap">
-              <div className="flex items-center gap-3 text-xs">
+              <div className="flex items-center gap-3 text-xs flex-wrap">
                 <label className="inline-flex items-center gap-1.5 cursor-pointer font-semibold">
                   <input
                     type="checkbox"
@@ -590,6 +603,15 @@ export default function EventDetailDrawer() {
                   />
                   <span>彈性可順延</span>
                 </label>
+                <BellToggleButton
+                  active={reminderEnabled}
+                  badge={reminderEnabled ? '15m' : undefined}
+                  label={reminderEnabled ? '會前 15 分提醒' : '不提醒'}
+                  data-testid="event-detail-reminder-bell"
+                  onToggle={() => {
+                    if (!isViewerOnly) setReminderEnabled((prev) => !prev);
+                  }}
+                />
               </div>
 
               {!isViewerOnly && !allDay && Boolean(startLocal || event) && (
@@ -977,15 +999,13 @@ export default function EventDetailDrawer() {
                   placeholder="輸入留言與共享成員同步討論..."
                   className="flex-1 px-3 py-2 rounded-xl text-xs bg-[var(--surface-subtle)] border border-[var(--border-subtle)] text-[var(--text-main)]"
                 />
-                <button
+                <PaperPlaneSendButton
                   type="submit"
                   data-testid="event-comment-submit-btn"
                   disabled={!commentInput.trim()}
-                  className="btn-sky-primary px-3 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1 disabled:opacity-45"
-                >
-                  <LucideIcon name="send" size={13} />
-                  <span>送出</span>
-                </button>
+                  label="送出"
+                  className="btn-sky-primary px-3 py-2 rounded-xl text-xs font-bold disabled:opacity-45"
+                />
               </form>
             </section>
           )}

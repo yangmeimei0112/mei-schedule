@@ -1138,6 +1138,29 @@ html.color-mode-transitioning .squircle-icon-badge {
 }
 
 /* 返回咩創意大廳懸浮膠囊與貼邊微露拉條：跟隨三套主題 x 亮深雙模式統一視覺色系 */
+:root[data-design-theme="minimal-linear"] #mei-studio-dock-root,
+:root[data-design-theme="warm-journal"] #mei-studio-dock-root {
+  --mei-dock-bg: var(--nav-bottom-glass);
+  --mei-dock-popover-bg: var(--surface-glass-strong);
+  --mei-dock-border: var(--nav-bottom-border);
+  --mei-dock-border-hover: var(--border-hover);
+  --mei-dock-shadow: var(--nav-bottom-shadow);
+  --mei-dock-text: var(--text-main);
+  --mei-dock-muted: var(--text-muted);
+  --mei-dock-accent: var(--accent-deep);
+  --mei-dock-collapse-color: var(--accent-deep);
+  --mei-dock-collapse-bg: var(--accent-soft-bg);
+  --mei-dock-icon-bg: var(--accent-soft-bg);
+  --mei-dock-hover-bg: var(--accent-soft-hover);
+  --mei-dock-badge-bg: linear-gradient(135deg, var(--badge-surface-from), var(--badge-surface-to));
+  --mei-dock-badge-border: var(--badge-border);
+  --mei-dock-badge-shadow: var(--badge-shadow);
+  --mei-dock-badge-color: var(--accent-primary);
+  --mei-dock-btn-bg: var(--accent-solid-bg);
+  --mei-dock-btn-color: var(--accent-solid-text);
+  --mei-dock-divider: var(--border-subtle);
+}
+
 :root[data-design-theme="minimal-linear"] .mei-dock-capsule,
 :root[data-design-theme="warm-journal"] .mei-dock-capsule {
   background: var(--nav-bottom-glass) !important;
@@ -1150,12 +1173,12 @@ html.color-mode-transitioning .squircle-icon-badge {
 :root[data-design-theme="warm-journal"] .mei-dock-badge {
   background: linear-gradient(135deg, var(--badge-surface-from), var(--badge-surface-to)) !important;
   border-color: var(--badge-border) !important;
-  color: var(--badge-text) !important;
+  color: var(--accent-primary) !important;
   box-shadow: var(--badge-shadow) !important;
 }
 
-:root[data-design-theme="minimal-linear"] .mei-dock-home-btn,
-:root[data-design-theme="warm-journal"] .mei-dock-home-btn {
+:root[data-design-theme="minimal-linear"] .mei-dock-btn,
+:root[data-design-theme="warm-journal"] .mei-dock-btn {
   background: var(--accent-solid-bg) !important;
   color: var(--accent-solid-text) !important;
 }
@@ -1201,15 +1224,21 @@ html.color-mode-transitioning .squircle-icon-badge {
 
 :root[data-design-theme="minimal-linear"] #mei-dock-edge-tab,
 :root[data-design-theme="warm-journal"] #mei-dock-edge-tab {
+  --mei-edge-bg: var(--nav-bottom-glass);
+  --mei-edge-bg-hover: var(--surface-glass-strong);
+  --mei-edge-border: var(--nav-bottom-border);
+  --mei-edge-border-hover: var(--border-hover);
+  --mei-edge-shadow: var(--nav-bottom-shadow);
+  --mei-edge-color: var(--accent-primary);
   background: var(--nav-bottom-glass) !important;
   border-color: var(--nav-bottom-border) !important;
   color: var(--accent-primary) !important;
   box-shadow: var(--nav-bottom-shadow) !important;
 }
 
-:root[data-design-theme="minimal-linear"] #mei-dock-edge-tab .mei-dock-edge-pill,
-:root[data-design-theme="warm-journal"] #mei-dock-edge-tab .mei-dock-edge-pill {
-  background: var(--accent-primary) !important;
+:root[data-design-theme="minimal-linear"] #mei-dock-edge-tab .mei-dock-edge-logo,
+:root[data-design-theme="warm-journal"] #mei-dock-edge-tab .mei-dock-edge-logo {
+  color: var(--accent-primary) !important;
 }
 
 /* 統一全高左側側欄與右側待辦翼板質感（三套主題 x 亮深雙模式自適應） */
@@ -1358,6 +1387,533 @@ body.tray-route #mei-dock-edge-tab {
   .swipe-delete-pill,
   .desktop-hover-delete-btn {
     transition: none !important;
+  }
+}
+
+/* ==========================================================================
+   v1.6.0 UI Moments 主題自適應 GPU 微互動系統 (Zero-Dependency Compositor Only)
+   ========================================================================== */
+:root,
+:root[data-design-theme='sky-glass'] {
+  --um-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --um-spring: cubic-bezier(0.26, 1.24, 0.44, 1);
+  --um-duration-fast: 180ms;
+  --um-duration-base: 260ms;
+  --um-duration-slow: 340ms;
+  --um-burst-scale: 1;
+}
+
+:root[data-design-theme='minimal-linear'] {
+  --um-ease: cubic-bezier(0.2, 0.9, 0.3, 1);
+  --um-spring: cubic-bezier(0.22, 1.04, 0.36, 1);
+  --um-duration-fast: 140ms;
+  --um-duration-base: 200ms;
+  --um-duration-slow: 260ms;
+  --um-burst-scale: 0.78;
+}
+
+:root[data-design-theme='warm-journal'] {
+  --um-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --um-spring: cubic-bezier(0.28, 1.16, 0.42, 1);
+  --um-duration-fast: 200ms;
+  --um-duration-base: 290ms;
+  --um-duration-slow: 380ms;
+  --um-burst-scale: 0.92;
+}
+
+/* F1: 主視角柔和進場 + 彈性滑動頁籤指示器 */
+@keyframes um-view-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 6px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.um-view-enter {
+  animation: um-view-enter var(--um-duration-fast) var(--um-ease) both;
+}
+
+.um-elastic-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  will-change: transform;
+  transform-origin: center center;
+}
+
+[data-um-indicator-ready='true'] [data-um-tab-active='true'] {
+  background-color: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* F2: 全站彈窗 / 抽屜 / 底部選單彈性進場（純 opacity + transform，不對 backdrop-filter 動畫） */
+@keyframes um-backdrop-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes um-modal-spring {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes um-drawer-right {
+  from {
+    opacity: 0;
+    transform: translate3d(24px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes um-sheet-bottom {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 24px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.um-backdrop-enter {
+  animation: um-backdrop-fade var(--um-duration-fast) var(--um-ease) both;
+}
+
+.um-modal-enter {
+  animation: um-modal-spring var(--um-duration-base) var(--um-spring) both;
+  will-change: transform, opacity;
+}
+
+.um-drawer-right-enter {
+  animation: um-drawer-right var(--um-duration-base) var(--um-ease) both;
+  will-change: transform, opacity;
+}
+
+.um-sheet-bottom-enter {
+  animation: um-sheet-bottom var(--um-duration-base) var(--um-spring) both;
+  will-change: transform, opacity;
+}
+
+/* F3: 劃線清單核取 (Stroke Checklist #25) */
+@keyframes um-check-pop {
+  0% { transform: scale(0.76); }
+  55% { transform: scale(1.16); }
+  100% { transform: scale(1); }
+}
+
+.um-check-indicator {
+  transition: color var(--um-duration-fast) var(--um-ease), opacity var(--um-duration-fast) var(--um-ease);
+}
+
+.um-check-indicator.is-checked {
+  animation: um-check-pop var(--um-duration-base) var(--um-spring);
+}
+
+.um-check-stroke {
+  stroke-dasharray: 18;
+  stroke-dashoffset: 18;
+  transition: stroke-dashoffset var(--um-duration-fast) var(--um-ease) 40ms;
+}
+
+.um-check-indicator.is-checked .um-check-stroke {
+  stroke-dashoffset: 0;
+}
+
+.um-strike-sweep {
+  position: relative;
+  display: inline;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: 0 56%;
+  background-size: 0% 1.5px;
+  transition: background-size var(--um-duration-base) var(--um-ease) 60ms, opacity var(--um-duration-fast) var(--um-ease);
+}
+
+.um-strike-sweep.is-done {
+  background-size: 100% 1.5px;
+  opacity: 0.68;
+}
+
+/* F4: 快輸解析膠囊彈入 (Chip Input #29) */
+@keyframes um-chip-in {
+  from {
+    opacity: 0;
+    transform: scale(0.72) translate3d(0, 3px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+}
+
+.um-chip-enter {
+  animation: um-chip-in var(--um-duration-base) var(--um-spring) both;
+}
+
+/* F5: 番茄鐘同心呼吸光環 (Breath Orb #24) + 迷你音律條 (Level Bars #48) */
+@keyframes um-orb-breathe {
+  0%, 100% {
+    transform: scale(0.84);
+    opacity: 0.16;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 0.34;
+  }
+}
+
+.um-breath-ring {
+  position: absolute;
+  border-radius: 9999px;
+  border: 1.5px solid var(--accent-primary);
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent-primary) 16%, transparent) 0%, transparent 72%);
+  will-change: transform, opacity;
+  animation: um-orb-breathe 6.4s ease-in-out infinite;
+}
+
+.um-breath-ring-1 { width: 100%; height: 100%; animation-delay: 0s; }
+.um-breath-ring-2 { width: 112%; height: 112%; animation-delay: -0.35s; }
+.um-breath-ring-3 { width: 124%; height: 124%; animation-delay: -0.7s; }
+
+.um-breath-orb.is-paused .um-breath-ring {
+  animation-play-state: paused;
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+
+@keyframes um-level-pulse {
+  0%, 100% { transform: scaleY(0.28); }
+  45% { transform: scaleY(1); }
+  75% { transform: scaleY(0.48); }
+}
+
+.um-level-bar {
+  display: block;
+  width: 2.5px;
+  height: 100%;
+  border-radius: 9999px;
+  background-color: currentColor;
+  transform-origin: bottom center;
+  will-change: transform;
+  animation: um-level-pulse 1.05s ease-in-out infinite;
+}
+
+.um-level-bar-1 { animation-delay: -0.32s; }
+.um-level-bar-2 { animation-delay: -0.14s; }
+.um-level-bar-3 { animation-delay: -0.52s; }
+
+.um-level-bars.is-paused .um-level-bar {
+  animation-play-state: paused;
+  transform: scaleY(0.32);
+  opacity: 0.5;
+}
+
+/* F6: 主題滑動選擇框 (Plan Picker #30) */
+.um-plan-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 20;
+  opacity: 0;
+  border: 2px solid var(--accent-primary);
+  box-shadow: 0 0 0 3px var(--accent-soft-bg);
+  will-change: transform;
+  transform-origin: center center;
+}
+
+/* F8: 複製變形按鈕 (Copy Button #31) */
+.um-copy-icon-stack > span,
+.um-copy-label-stack > span {
+  grid-area: 1 / 1;
+}
+
+.um-copy-icon-idle {
+  transition: transform var(--um-duration-fast) var(--um-spring), opacity var(--um-duration-fast) var(--um-ease);
+}
+
+.um-copy-icon-idle.is-copied {
+  transform: scale(0.45);
+  opacity: 0;
+}
+
+.um-copy-icon-done {
+  transform: scale(0.45);
+  opacity: 0;
+  transition: transform var(--um-duration-fast) var(--um-spring) 45ms, opacity var(--um-duration-fast) var(--um-ease) 45ms;
+}
+
+.um-copy-icon-done.is-copied {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.um-copy-label-idle {
+  transition: transform var(--um-duration-base) var(--um-spring), opacity var(--um-duration-fast) var(--um-ease);
+}
+
+.um-copy-label-idle.is-copied {
+  transform: translate3d(0, -110%, 0);
+  opacity: 0;
+}
+
+.um-copy-label-done {
+  transform: translate3d(0, 110%, 0);
+  opacity: 0;
+  transition: transform var(--um-duration-base) var(--um-spring), opacity var(--um-duration-fast) var(--um-ease);
+}
+
+.um-copy-label-done.is-copied {
+  transform: translate3d(0, 0, 0);
+  opacity: 1;
+}
+
+/* F9: 統計 KPI 與 7 日柱狀圖純 GPU scaleY 錯落生長 */
+@keyframes um-bar-grow {
+  from {
+    transform: scaleY(0.06);
+    opacity: 0.45;
+  }
+  to {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+.um-bar-grow {
+  transform-origin: bottom center;
+  animation: um-bar-grow var(--um-duration-slow) var(--um-spring) both;
+  animation-delay: calc(var(--um-stagger-i, 0) * 36ms);
+  will-change: transform, opacity;
+}
+
+@keyframes um-kpi-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+.um-kpi-stagger {
+  animation: um-kpi-enter var(--um-duration-base) var(--um-ease) both;
+  animation-delay: calc(var(--um-stagger-i, 0) * 45ms);
+}
+
+/* F10: 桌機滑鼠限定指標邊框微光 (ui-card-light #55) + 品牌標誌微傾 (#59) */
+.um-card-spotlight {
+  position: relative;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .um-card-spotlight::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.5px;
+    background: radial-gradient(
+      180px circle at var(--um-spot-x, -240px) var(--um-spot-y, -240px),
+      color-mix(in srgb, var(--accent-primary) 55%, transparent),
+      transparent 68%
+    );
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 180ms ease;
+  }
+
+  .um-card-spotlight[data-spotlight-active='true']::after {
+    opacity: 1;
+  }
+
+  .um-brand-tilt {
+    display: inline-flex;
+    transition: transform var(--um-duration-base) var(--um-spring);
+  }
+
+  .um-brand-tilt:hover {
+    transform: rotate(-4deg) scale(1.06);
+  }
+}
+
+/* F11: 提醒鐘擺鈴鐺靜音斜線與徽章彈出 (Bell Toggle #36) */
+.um-bell-slash {
+  stroke-dasharray: 26;
+  transition: stroke-dashoffset var(--um-duration-base) var(--um-ease);
+}
+
+.um-bell-slash.is-active {
+  stroke-dashoffset: 26;
+}
+
+.um-bell-slash.is-muted {
+  stroke-dashoffset: 0;
+}
+
+.um-bell-badge {
+  transition: transform var(--um-duration-base) var(--um-spring), opacity var(--um-duration-fast) var(--um-ease);
+}
+
+.um-bell-badge.is-visible {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.um-bell-badge.is-hidden {
+  transform: scale(0);
+  opacity: 0;
+}
+
+/* F12: 時針載入指示 (Clock Hands #46 — 純 CSS Compositor) */
+@keyframes um-clock-minute {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes um-clock-hour {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes um-clock-tick-ping {
+  0%, 100% { opacity: 0.35; }
+  25% { opacity: 1; }
+}
+
+.um-clock-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 1.75px solid currentColor;
+  opacity: 0.85;
+}
+
+.um-clock-tick {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 9999px;
+  background: currentColor;
+  animation: um-clock-tick-ping 2s steps(1) infinite;
+}
+
+.um-clock-tick-1 { top: 2px; left: 50%; transform: translateX(-50%); animation-delay: 0s; }
+.um-clock-tick-2 { right: 2px; top: 50%; transform: translateY(-50%); animation-delay: 0.5s; }
+.um-clock-tick-3 { bottom: 2px; left: 50%; transform: translateX(-50%); animation-delay: 1s; }
+.um-clock-tick-4 { left: 2px; top: 50%; transform: translateY(-50%); animation-delay: 1.5s; }
+
+.um-clock-hand-minute {
+  position: absolute;
+  left: 50%;
+  bottom: 50%;
+  width: 1.6px;
+  height: 36%;
+  margin-left: -0.8px;
+  border-radius: 9999px;
+  background: currentColor;
+  transform-origin: bottom center;
+  animation: um-clock-minute 2s linear infinite;
+}
+
+.um-clock-hand-hour {
+  position: absolute;
+  left: 50%;
+  bottom: 50%;
+  width: 1.8px;
+  height: 24%;
+  margin-left: -0.9px;
+  border-radius: 9999px;
+  background: currentColor;
+  transform-origin: bottom center;
+  animation: um-clock-hour 8s steps(4) infinite;
+}
+
+.um-clock-pivot {
+  position: absolute;
+  width: 2.5px;
+  height: 2.5px;
+  border-radius: 9999px;
+  background: currentColor;
+}
+
+/* F14: CommandPalette 焦點滑動高亮底板 */
+.um-cmd-active-pill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  border-radius: 0.75rem;
+  background: var(--accent-soft-bg);
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 26%, transparent);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  will-change: transform;
+  transition: transform var(--um-duration-fast) var(--um-spring),
+              height var(--um-duration-fast) var(--um-ease),
+              opacity 120ms ease;
+}
+
+/* 完整無障礙減少動態退場：涵蓋全部 14 項 UI Moments 並修補上游所有缺口 */
+@media (prefers-reduced-motion: reduce) {
+  .um-view-enter,
+  .um-backdrop-enter,
+  .um-modal-enter,
+  .um-drawer-right-enter,
+  .um-sheet-bottom-enter,
+  .um-check-indicator,
+  .um-check-indicator.is-checked,
+  .um-chip-enter,
+  .um-bar-grow,
+  .um-kpi-stagger,
+  .um-breath-ring,
+  .um-level-bar,
+  .um-clock-tick,
+  .um-clock-hand-minute,
+  .um-clock-hand-hour {
+    animation: none !important;
+  }
+
+  .um-check-indicator,
+  .um-check-stroke,
+  .um-strike-sweep,
+  .um-copy-icon-idle,
+  .um-copy-icon-done,
+  .um-copy-label-idle,
+  .um-copy-label-done,
+  .um-bell-slash,
+  .um-bell-badge,
+  .um-brand-tilt,
+  .um-cmd-active-pill,
+  .um-card-spotlight::after {
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }
+
+  .um-card-spotlight::after {
+    display: none !important;
   }
 }
 

@@ -1,11 +1,13 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { LucideIcon } from './BrandMark';
+import { AudioLevelBars, BreathAura, LikeBurstLayer, OdometerNumber } from './UiMomentsPrimitives';
 import {
   FOCUS_AMBIENT_OPTIONS,
   FOCUS_TRACK_OPTIONS
 } from '../services/focusAudioEngine';
 import { useFocusSession } from '../store/FocusSessionContext';
 import { useScheduleStore } from '../store/useScheduleStore';
+import { useBackdropDismissGuard } from '../utils/uiMomentsMotion';
 
 const PRESET_DURATIONS = [
   { label: '經典番茄 25m', minutes: 25 },
@@ -41,6 +43,8 @@ export default function FocusTimerModal() {
   } = useFocusSession();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [completeBurst, setCompleteBurst] = useState(0);
+  const backdropGuard = useBackdropDismissGuard(closeModal);
 
   if (activeModal !== 'focus') return null;
 
@@ -64,15 +68,15 @@ export default function FocusTimerModal() {
   return (
     <div
       data-testid="focus-timer-modal"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/55 backdrop-blur-md"
-      onClick={closeModal}
+      className="um-backdrop-enter fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/55 backdrop-blur-md"
+      {...backdropGuard}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-label="專注番茄鐘計時器"
         onClick={(e) => e.stopPropagation()}
-        className="landscape-compact-modal max-h-dvh-90 overflow-y-auto w-full max-w-lg bento-glass-card p-5 sm:p-6 space-y-4 text-center"
+        className="um-modal-enter landscape-compact-modal max-h-dvh-90 overflow-y-auto w-full max-w-lg bento-glass-card p-5 sm:p-6 space-y-4 text-center"
       >
         {/* Header */}
         <div className="flex items-center justify-between gap-2">
@@ -105,9 +109,10 @@ export default function FocusTimerModal() {
           </p>
         </div>
 
-        {/* Circular SVG Progress Ring */}
-        <div className="relative inline-flex items-center justify-center">
-          <svg width="184" height="184" viewBox="0 0 184 184" className="-rotate-90">
+        {/* Circular SVG Progress Ring + GPU Breath Aura */}
+        <div className="relative inline-flex items-center justify-center p-2">
+          <BreathAura active={isRunning} data-testid="focus-breath-aura" />
+          <svg width="184" height="184" viewBox="0 0 184 184" className="relative z-10 -rotate-90">
             <circle
               cx="92"
               cy="92"
@@ -126,7 +131,7 @@ export default function FocusTimerModal() {
               strokeLinecap="round"
               strokeDasharray={circumference}
               strokeDashoffset={dashOffset}
-              className="transition-all duration-500"
+              className="transition-[stroke-dashoffset] duration-500 ease-out"
             />
             <defs>
               <linearGradient id="focusGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -135,12 +140,12 @@ export default function FocusTimerModal() {
               </linearGradient>
             </defs>
           </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center">
             <span
               data-testid="focus-timer-display"
               className="font-mono text-4xl font-extrabold tracking-tight text-[var(--text-main)] tabular-nums"
             >
-              {minsDisplay}:{secsDisplay}
+              <OdometerNumber value={`${minsDisplay}:${secsDisplay}`} />
             </span>
             <span className="text-[11px] font-semibold text-[var(--text-muted)] mt-1">
               {isRunning ? '專注進行中' : '準備就緒'}
@@ -190,11 +195,15 @@ export default function FocusTimerModal() {
           <button
             type="button"
             data-testid="focus-complete-record-btn"
-            onClick={() => completeNow(true)}
-            className="px-3 py-2.5 rounded-xl text-xs font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-400/30 hover:bg-emerald-500/25 inline-flex items-center gap-1"
+            onClick={() => {
+              setCompleteBurst((n) => n + 1);
+              completeNow(true);
+            }}
+            className="relative px-3 py-2.5 rounded-xl text-xs font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-400/30 hover:bg-emerald-500/25 inline-flex items-center gap-1"
           >
             <LucideIcon name="circle-check" size={14} />
             <span>完成並紀錄</span>
+            <LikeBurstLayer triggerKey={completeBurst} />
           </button>
         </div>
 
@@ -217,9 +226,10 @@ export default function FocusTimerModal() {
                   {audio.isPlaying && !audio.isMuted && (
                     <span
                       data-testid="focus-audio-live-badge"
-                      className="inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full theme-accent-soft"
+                      className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full theme-accent-soft"
                     >
-                      播放中
+                      <AudioLevelBars active compact data-testid="focus-modal-level-bars" />
+                      <span>播放中</span>
                     </span>
                   )}
                 </div>

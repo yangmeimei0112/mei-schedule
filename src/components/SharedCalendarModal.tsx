@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { LucideIcon } from './BrandMark';
+import { ClockHandsLoader, CopyMorphButton } from './UiMomentsPrimitives';
 import { COLOR_TOKEN_LIST, COLOR_TOKEN_PALETTE } from '../data/seedData';
 import { useScheduleStore } from '../store/useScheduleStore';
+import { useBackdropDismissGuard } from '../utils/uiMomentsMotion';
 import type { CalendarRole, ColorToken } from '../types/schedule';
 
 export default function SharedCalendarModal() {
@@ -23,6 +25,17 @@ export default function SharedCalendarModal() {
   const [inviteInput, setInviteInput] = useState('');
   const [joinError, setJoinError] = useState<string | null>(null);
   const [joining, setJoining] = useState(false);
+  const [copiedCalId, setCopiedCalId] = useState<string | null>(null);
+  const copyTimerRef = useRef<number | null>(null);
+  const backdropGuard = useBackdropDismissGuard(closeModal);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current) {
+        window.clearTimeout(copyTimerRef.current);
+      }
+    };
+  }, []);
 
   if (activeModal !== 'shared') return null;
 
@@ -66,7 +79,7 @@ export default function SharedCalendarModal() {
     }
   };
 
-  const handleCopyCode = async (code: string) => {
+  const handleCopyCode = async (calId: string, code: string) => {
     try {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(code);
@@ -74,21 +87,24 @@ export default function SharedCalendarModal() {
     } catch {
       // Ignore clipboard fallback
     }
+    setCopiedCalId(calId);
+    if (copyTimerRef.current) window.clearTimeout(copyTimerRef.current);
+    copyTimerRef.current = window.setTimeout(() => setCopiedCalId(null), 1800);
     showToast(`已複製共享邀請碼：${code}`, { icon: 'copy' });
   };
 
   return (
     <div
       data-testid="shared-calendar-modal"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/50 backdrop-blur-md"
-      onClick={closeModal}
+      className="um-backdrop-enter fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/50 backdrop-blur-md"
+      {...backdropGuard}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-label="多人共享日曆與成員權限管理"
         onClick={(e) => e.stopPropagation()}
-        className="landscape-compact-modal max-h-dvh-92 overflow-y-auto w-full max-w-2xl bento-glass-card p-5 sm:p-6 space-y-5"
+        className="um-modal-enter landscape-compact-modal max-h-dvh-92 overflow-y-auto w-full max-w-2xl bento-glass-card p-5 sm:p-6 space-y-5"
       >
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
@@ -137,9 +153,13 @@ export default function SharedCalendarModal() {
               type="submit"
               data-testid="shared-join-submit-btn"
               disabled={!inviteInput.trim() || joining}
-              className="btn-sky-primary px-4 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1 disabled:opacity-45"
+              className="btn-sky-primary px-4 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 disabled:opacity-45"
             >
-              <LucideIcon name="user-plus" size={14} />
+              {joining ? (
+                <ClockHandsLoader size={14} label="正在加入共享日曆" data-testid="shared-join-clock-loader" />
+              ) : (
+                <LucideIcon name="user-plus" size={14} />
+              )}
               <span>{joining ? '加入中...' : '加入日曆'}</span>
             </button>
           </div>
@@ -184,15 +204,14 @@ export default function SharedCalendarModal() {
                     </div>
                   </div>
                   {cal.inviteCode && (
-                    <button
-                      type="button"
+                    <CopyMorphButton
+                      copied={copiedCalId === cal.id}
+                      idleLabel={`邀請碼：${cal.inviteCode}`}
+                      copiedLabel="已複製邀請碼"
                       data-testid={`copy-invite-code-${cal.id}`}
-                      onClick={() => void handleCopyCode(cal.inviteCode!)}
-                      className="btn-sky-secondary px-3 py-1.5 rounded-xl text-xs font-mono font-bold inline-flex items-center gap-1.5"
-                    >
-                      <span>邀請碼：{cal.inviteCode}</span>
-                      <LucideIcon name="copy" size={12} />
-                    </button>
+                      onClick={() => void handleCopyCode(cal.id, cal.inviteCode!)}
+                      className="btn-sky-secondary px-3 py-1.5 rounded-xl text-xs font-mono font-bold"
+                    />
                   )}
                 </div>
 

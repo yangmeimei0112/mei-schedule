@@ -7,7 +7,6 @@
  * 2. 展開快速專案切換清單
  * 3. 支援滑鼠與觸控自由拖曳、視窗邊界自動夾制與折疊收合
  * 4. 提供全域 window.MeiStudioSSO 跨專案漫遊認證與 Token 驗證 API
- * 5. 於 Electron 系統匣路由 (#/tray) 自動隱藏懸浮膠囊並維持 SSO Bridge 運作
  */
 (function initMeiStudioDock() {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
@@ -226,7 +225,7 @@
         : ['*'],
       iss: 'mei-creative-studio',
       iat: now,
-      exp: now + 7 * 86400
+      exp: now + 7 * 86400 // 7 days in seconds
     };
     const b64Header = base64UrlEncode(header);
     const b64Payload = base64UrlEncode(payload);
@@ -236,7 +235,7 @@
   }
 
   // =========================================================================
-  // Universal Member SSO Bridge API (Active on ALL routes including #/tray)
+  // Universal Member SSO Bridge API
   // =========================================================================
   const ssoListeners = new Set();
 
@@ -410,7 +409,7 @@
         profile: member,
         error: null
       };
-    } catch {
+    } catch (err) {
       return {
         valid: false,
         error: 'Failed to decode SSO Token payload',
@@ -675,30 +674,77 @@
     return DEFAULT_QUICK_PROJECTS;
   }
 
-  // Pure Lucide SVG Icons (24x24 grid, stroke-width="1.75", round caps/joins)
+  // Brand & Lucide SVG Icons (24x24 grid, stroke-width="1.75", round caps/joins)
   const LUCIDE_SVGS = {
-    cloud:
-      '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/><path d="M12 14.5c-1.2-1.2-2.4-1.8-3.6-1.8a1.8 1.8 0 1 0 0 3.6c1.2 0 2.4-.6 3.6-1.8Zm0 0c1.2 1.2 2.4 1.8 3.6 1.8a1.8 1.8 0 0 0 0-3.6c-1.2 0-2.4.6-3.6 1.8Z"/></svg>',
+    brandMark:
+      '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4.8 18V8.8a2.1 2.1 0 0 1 3.58-1.48L12 10.95l3.62-3.63A2.1 2.1 0 0 1 19.2 8.8v3.7"/><circle cx="19.2" cy="16.9" r="1.95" fill="currentColor" stroke="none"/></svg>',
+    brandMarkEdge:
+      '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4.8 18V8.8a2.1 2.1 0 0 1 3.58-1.48L12 10.95l3.62-3.63A2.1 2.1 0 0 1 19.2 8.8v3.7"/><circle cx="19.2" cy="16.9" r="1.95" fill="currentColor" stroke="none"/></svg>',
     arrowLeft:
-      '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>',
+      '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>',
     layoutGrid:
-      '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>',
+      '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>',
     arrowUpRight:
-      '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>',
+      '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>',
     minimize:
-      '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>',
+      '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m15 18-6-6 6-6"/></svg>',
     eyeOff:
-      '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></svg>',
+      '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></svg>',
     chevronRight:
-      '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>',
+      '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m9 18 6-6-6-6"/></svg>',
     chevronLeft:
-      '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>'
+      '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m15 18-6-6 6-6"/></svg>'
   };
 
-  const style = document.createElement('style');
-  style.id = 'mei-studio-dock-style';
-  style.textContent = `
+  function isNarrowViewport() {
+    try {
+      if (
+        typeof window.matchMedia === 'function' &&
+        window.matchMedia('(max-width: 640px)').matches
+      ) {
+        return true;
+      }
+    } catch {
+      // 略過 matchMedia 存取異常
+    }
+    return (
+      (typeof window.innerWidth === 'number' &&
+        window.innerWidth > 0 &&
+        window.innerWidth <= 640) ||
+      (typeof window.innerHeight === 'number' &&
+        window.innerHeight > 0 &&
+        window.innerHeight <= 500)
+    );
+  }
+
+  const DOCK_STYLE_TEXT = `
     #mei-studio-dock-root {
+      --mei-dock-bg: rgba(255, 255, 255, 0.90);
+      --mei-dock-popover-bg: rgba(255, 255, 255, 0.95);
+      --mei-dock-border: rgba(56, 189, 248, 0.38);
+      --mei-dock-border-hover: rgba(56, 189, 248, 0.72);
+      --mei-dock-shadow: 0 12px 32px -6px rgba(14, 165, 233, 0.24), 0 2px 6px rgba(15, 23, 42, 0.06);
+      --mei-dock-shadow-hover: 0 14px 36px -6px rgba(14, 165, 233, 0.34);
+      --mei-dock-popover-shadow: 0 18px 40px -10px rgba(14, 165, 233, 0.28);
+      --mei-dock-text: #0F172A;
+      --mei-dock-muted: #64748B;
+      --mei-dock-accent: #0284C7;
+      --mei-dock-collapse-color: #0369A1;
+      --mei-dock-collapse-bg: rgba(56, 189, 248, 0.12);
+      --mei-dock-icon-bg: rgba(240, 249, 255, 0.9);
+      --mei-dock-hover-bg: #E0F2FE;
+      --mei-dock-badge-bg: linear-gradient(135deg, rgba(56, 189, 248, 0.22), rgba(14, 165, 233, 0.08));
+      --mei-dock-badge-border: rgba(56, 189, 248, 0.36);
+      --mei-dock-badge-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.7), 0 2px 6px -1px rgba(14, 165, 233, 0.15);
+      --mei-dock-badge-color: #0EA5E9;
+      --mei-dock-btn-bg: linear-gradient(135deg, #38BDF8, #0284C7);
+      --mei-dock-btn-color: #FFFFFF;
+      --mei-dock-divider: rgba(56, 189, 248, 0.2);
+      --mei-dock-hide-bg: rgba(241, 245, 249, 0.85);
+      --mei-dock-hide-border: rgba(148, 163, 184, 0.28);
+      --mei-dock-hide-color: #475569;
+      --mei-dock-hide-hover-bg: #E2E8F0;
+      --mei-dock-hide-hover-color: #0F172A;
       position: fixed;
       z-index: 35;
       font-family: "Plus Jakarta Sans", "Noto Sans TC", -apple-system, BlinkMacSystemFont, sans-serif;
@@ -706,6 +752,71 @@
       -webkit-user-select: none;
       touch-action: none;
       transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s ease, visibility 0.22s ease;
+    }
+    @media (prefers-color-scheme: dark) {
+      html:not(.light):not([data-theme="light"]):not([data-design-theme]) body:not(.light) #mei-studio-dock-root:not(.mei-dock-light) {
+        --mei-dock-bg: rgba(15, 23, 42, 0.86);
+        --mei-dock-popover-bg: rgba(15, 23, 42, 0.94);
+        --mei-dock-border: rgba(56, 189, 248, 0.36);
+        --mei-dock-border-hover: rgba(56, 189, 248, 0.68);
+        --mei-dock-shadow: 0 12px 32px -6px rgba(2, 6, 23, 0.65), 0 2px 8px rgba(56, 189, 248, 0.14);
+        --mei-dock-shadow-hover: 0 14px 36px -6px rgba(2, 6, 23, 0.75), 0 0 0 1px rgba(56, 189, 248, 0.25);
+        --mei-dock-popover-shadow: 0 18px 40px -10px rgba(2, 6, 23, 0.78);
+        --mei-dock-text: #F8FAFC;
+        --mei-dock-muted: #94A3B8;
+        --mei-dock-accent: #38BDF8;
+        --mei-dock-collapse-color: #7DD3FC;
+        --mei-dock-collapse-bg: rgba(56, 189, 248, 0.18);
+        --mei-dock-icon-bg: rgba(30, 41, 59, 0.85);
+        --mei-dock-hover-bg: rgba(56, 189, 248, 0.18);
+        --mei-dock-badge-bg: linear-gradient(135deg, rgba(56, 189, 248, 0.24), rgba(14, 165, 233, 0.10));
+        --mei-dock-badge-border: rgba(56, 189, 248, 0.40);
+        --mei-dock-badge-shadow: inset 0 1px 1px rgba(56, 189, 248, 0.25), 0 2px 6px -1px rgba(14, 165, 233, 0.25);
+        --mei-dock-badge-color: #38BDF8;
+        --mei-dock-divider: rgba(56, 189, 248, 0.24);
+        --mei-dock-hide-bg: rgba(30, 41, 59, 0.85);
+        --mei-dock-hide-border: rgba(148, 163, 184, 0.25);
+        --mei-dock-hide-color: #CBD5E1;
+        --mei-dock-hide-hover-bg: rgba(51, 65, 85, 0.92);
+        --mei-dock-hide-hover-color: #F8FAFC;
+      }
+      html:not(.light):not([data-theme="light"]):not([data-design-theme]) body:not(.light) #mei-dock-edge-tab {
+        --mei-edge-bg: rgba(15, 23, 42, 0.82);
+        --mei-edge-bg-hover: rgba(15, 23, 42, 0.96);
+        --mei-edge-border: rgba(56, 189, 248, 0.38);
+        --mei-edge-border-hover: rgba(56, 189, 248, 0.72);
+        --mei-edge-shadow: 0 8px 24px -6px rgba(2, 8, 23, 0.72);
+        --mei-edge-color: #38BDF8;
+      }
+    }
+    html.dark #mei-studio-dock-root,
+    body.dark #mei-studio-dock-root,
+    [data-theme="dark"] #mei-studio-dock-root,
+    #mei-studio-dock-root.mei-dock-dark {
+      --mei-dock-bg: rgba(15, 23, 42, 0.86);
+      --mei-dock-popover-bg: rgba(15, 23, 42, 0.94);
+      --mei-dock-border: rgba(56, 189, 248, 0.36);
+      --mei-dock-border-hover: rgba(56, 189, 248, 0.68);
+      --mei-dock-shadow: 0 12px 32px -6px rgba(2, 6, 23, 0.65), 0 2px 8px rgba(56, 189, 248, 0.14);
+      --mei-dock-shadow-hover: 0 14px 36px -6px rgba(2, 6, 23, 0.75), 0 0 0 1px rgba(56, 189, 248, 0.25);
+      --mei-dock-popover-shadow: 0 18px 40px -10px rgba(2, 6, 23, 0.78);
+      --mei-dock-text: #F8FAFC;
+      --mei-dock-muted: #94A3B8;
+      --mei-dock-accent: #38BDF8;
+      --mei-dock-collapse-color: #7DD3FC;
+      --mei-dock-collapse-bg: rgba(56, 189, 248, 0.18);
+      --mei-dock-icon-bg: rgba(30, 41, 59, 0.85);
+      --mei-dock-hover-bg: rgba(56, 189, 248, 0.18);
+      --mei-dock-badge-bg: linear-gradient(135deg, rgba(56, 189, 248, 0.24), rgba(14, 165, 233, 0.10));
+      --mei-dock-badge-border: rgba(56, 189, 248, 0.40);
+      --mei-dock-badge-shadow: inset 0 1px 1px rgba(56, 189, 248, 0.25), 0 2px 6px -1px rgba(14, 165, 233, 0.25);
+      --mei-dock-badge-color: #38BDF8;
+      --mei-dock-divider: rgba(56, 189, 248, 0.24);
+      --mei-dock-hide-bg: rgba(30, 41, 59, 0.85);
+      --mei-dock-hide-border: rgba(148, 163, 184, 0.25);
+      --mei-dock-hide-color: #CBD5E1;
+      --mei-dock-hide-hover-bg: rgba(51, 65, 85, 0.92);
+      --mei-dock-hide-hover-color: #F8FAFC;
     }
     #mei-studio-dock-root.pos-bottom-right {
       right: 20px;
@@ -735,39 +846,84 @@
       gap: 8px;
       padding: 8px 12px 8px 10px;
       border-radius: 9999px;
-      background: rgba(255, 255, 255, 0.90);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border: 1px solid rgba(56, 189, 248, 0.38);
-      box-shadow: 0 12px 32px -6px rgba(14, 165, 233, 0.24), 0 2px 6px rgba(15, 23, 42, 0.06);
-      color: #0F172A;
+      background: var(--mei-dock-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--mei-dock-border);
+      box-shadow: var(--mei-dock-shadow);
+      color: var(--mei-dock-text);
       font-size: 13px;
       font-weight: 600;
       cursor: grab;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.25s ease;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;
+    }
+    html.dark .mei-dock-capsule {
+      background: var(--mei-dock-bg);
+      border-color: var(--mei-dock-border);
+      box-shadow: var(--mei-dock-shadow);
+      color: var(--mei-dock-text);
     }
     .mei-dock-collapsed .mei-dock-capsule {
       padding: 6px 8px;
       gap: 5px;
     }
     .mei-dock-capsule:hover {
-      border-color: rgba(56, 189, 248, 0.72);
-      box-shadow: 0 14px 36px -6px rgba(14, 165, 233, 0.34);
+      border-color: var(--mei-dock-border-hover);
+      box-shadow: var(--mei-dock-shadow-hover);
     }
     .mei-dock-badge {
+      box-sizing: border-box;
       width: 32px;
       height: 32px;
       border-radius: 10px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, rgba(56, 189, 248, 0.22), rgba(14, 165, 233, 0.08));
-      border: 1px solid rgba(56, 189, 248, 0.36);
-      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.7), 0 2px 6px -1px rgba(14, 165, 233, 0.15);
-      color: #0284C7;
+      background: var(--mei-dock-badge-bg);
+      border: 1px solid var(--mei-dock-badge-border);
+      box-shadow: var(--mei-dock-badge-shadow);
+      color: var(--mei-dock-badge-color);
       flex-shrink: 0;
       position: relative;
       cursor: pointer;
+      transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+                  background 0.2s ease,
+                  border-color 0.2s ease,
+                  box-shadow 0.2s ease,
+                  color 0.2s ease;
+    }
+    .mei-dock-badge:hover {
+      transform: scale(1.05);
+    }
+    .mei-dock-badge svg,
+    .mei-dock-edge-logo svg {
+      display: block;
+      flex-shrink: 0;
+    }
+    .mei-dock-details {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .mei-dock-label-group {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.2;
+      padding-right: 2px;
+    }
+    .mei-dock-eyebrow {
+      font-size: 10px;
+      color: var(--mei-dock-accent);
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+    .mei-dock-project-label {
+      font-size: 12px;
+      color: var(--mei-dock-text);
+      max-width: 136px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .mei-dock-btn {
       display: inline-flex;
@@ -775,14 +931,14 @@
       gap: 5px;
       padding: 6px 11px;
       border-radius: 9999px;
-      background: linear-gradient(135deg, #38BDF8, #0284C7);
-      color: #FFFFFF;
+      background: var(--mei-dock-btn-bg);
+      color: var(--mei-dock-btn-color);
       text-decoration: none;
       font-size: 12px;
       font-weight: 600;
       border: none;
       cursor: pointer;
-      transition: opacity 0.15s ease, transform 0.15s ease;
+      transition: opacity 0.15s ease, transform 0.15s ease, background 0.2s ease, color 0.2s ease;
     }
     .mei-dock-btn:hover {
       opacity: 0.94;
@@ -795,14 +951,14 @@
       width: 26px;
       height: 26px;
       border-radius: 9999px;
-      border: 1px solid rgba(56, 189, 248, 0.3);
-      background: rgba(240, 249, 255, 0.9);
-      color: #0284C7;
+      border: 1px solid var(--mei-dock-border);
+      background: var(--mei-dock-icon-bg);
+      color: var(--mei-dock-accent);
       cursor: pointer;
-      transition: background 0.15s ease;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
     }
     .mei-dock-icon-btn:hover {
-      background: #E0F2FE;
+      background: var(--mei-dock-hover-bg);
     }
     .mei-dock-collapse-btn,
     .mei-dock-hide-btn {
@@ -813,15 +969,15 @@
       height: 24px;
       border-radius: 9999px;
       border: none;
-      background: rgba(56, 189, 248, 0.12);
-      color: #0369A1;
+      background: var(--mei-dock-collapse-bg);
+      color: var(--mei-dock-collapse-color);
       cursor: pointer;
       transition: background 0.15s ease, color 0.15s ease;
     }
     .mei-dock-collapse-btn:hover,
     .mei-dock-hide-btn:hover {
-      background: rgba(56, 189, 248, 0.24);
-      color: #0284C7;
+      background: var(--mei-dock-hover-bg);
+      color: var(--mei-dock-accent);
     }
     .mei-dock-collapsed .mei-dock-details,
     .mei-dock-collapsed .mei-dock-popover {
@@ -837,11 +993,11 @@
       width: 260px;
       padding: 12px;
       border-radius: 20px;
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border: 1px solid rgba(56, 189, 248, 0.38);
-      box-shadow: 0 18px 40px -10px rgba(14, 165, 233, 0.28);
+      background: var(--mei-dock-popover-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--mei-dock-border);
+      box-shadow: var(--mei-dock-popover-shadow);
       display: none;
       flex-direction: column;
       gap: 6px;
@@ -856,12 +1012,16 @@
     .mei-dock-popover-title {
       font-size: 11px;
       font-weight: 700;
-      color: #0284C7;
+      color: var(--mei-dock-accent);
       padding: 2px 6px 4px;
-      border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+      border-bottom: 1px solid var(--mei-dock-divider);
       display: flex;
       align-items: center;
       justify-content: space-between;
+    }
+    .mei-dock-popover-meta {
+      font-weight: 500;
+      color: var(--mei-dock-muted);
     }
     .mei-dock-popover-item {
       display: flex;
@@ -871,19 +1031,23 @@
       padding: 7px 9px;
       border-radius: 12px;
       text-decoration: none;
-      color: #0F172A;
+      color: var(--mei-dock-text);
       font-size: 12px;
       font-weight: 600;
-      transition: background 0.15s ease;
+      transition: background 0.15s ease, color 0.15s ease;
     }
     .mei-dock-popover-item:hover {
-      background: #E0F2FE;
-      color: #0284C7;
+      background: var(--mei-dock-hover-bg);
+      color: var(--mei-dock-accent);
+    }
+    .mei-dock-arrow {
+      color: var(--mei-dock-accent);
+      flex-shrink: 0;
     }
     .mei-dock-popover-footer {
       margin-top: 2px;
       padding-top: 6px;
-      border-top: 1px solid rgba(56, 189, 248, 0.2);
+      border-top: 1px solid var(--mei-dock-divider);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -897,36 +1061,43 @@
       gap: 6px;
       padding: 6px 10px;
       border-radius: 10px;
-      border: 1px solid rgba(148, 163, 184, 0.28);
-      background: rgba(241, 245, 249, 0.85);
-      color: #475569;
+      border: 1px solid var(--mei-dock-hide-border);
+      background: var(--mei-dock-hide-bg);
+      color: var(--mei-dock-hide-color);
       font-size: 11px;
       font-weight: 600;
       cursor: pointer;
       transition: background 0.15s ease, color 0.15s ease;
     }
     .mei-dock-popover-hide-btn:hover {
-      background: #E2E8F0;
-      color: #0F172A;
+      background: var(--mei-dock-hide-hover-bg);
+      color: var(--mei-dock-hide-hover-color);
     }
-    /* Ultra-slim Translucent Edge Peek Handle (貼邊微露拉條) */
+    /* Translucent Edge Peek Handle with Mei Flow Mark (貼邊微露拉條) */
     #mei-dock-edge-tab {
+      --mei-edge-bg: rgba(255, 255, 255, 0.82);
+      --mei-edge-bg-hover: rgba(255, 255, 255, 0.96);
+      --mei-edge-border: rgba(56, 189, 248, 0.42);
+      --mei-edge-border-hover: rgba(56, 189, 248, 0.78);
+      --mei-edge-shadow: 0 8px 22px -6px rgba(14, 165, 233, 0.28);
+      --mei-edge-color: #0EA5E9;
+      box-sizing: border-box;
       position: fixed;
       z-index: 35;
       bottom: max(28px, env(safe-area-inset-bottom, 28px));
-      width: 18px;
+      width: 24px;
       height: 52px;
-      padding: 0;
+      padding: 0 4px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 2px;
-      background: rgba(255, 255, 255, 0.78);
+      background: var(--mei-edge-bg);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(56, 189, 248, 0.42);
-      box-shadow: 0 8px 22px -6px rgba(14, 165, 233, 0.28);
-      color: #0284C7;
+      border: 1px solid var(--mei-edge-border);
+      box-shadow: var(--mei-edge-shadow);
+      color: var(--mei-edge-color);
       cursor: pointer;
       opacity: 0;
       pointer-events: none;
@@ -936,7 +1107,18 @@
                   transform 0.26s cubic-bezier(0.22, 1, 0.36, 1),
                   background-color 0.2s ease,
                   border-color 0.2s ease,
-                  box-shadow 0.2s ease;
+                  box-shadow 0.2s ease,
+                  color 0.2s ease;
+    }
+    html.dark #mei-dock-edge-tab,
+    body.dark #mei-dock-edge-tab,
+    [data-theme="dark"] #mei-dock-edge-tab {
+      --mei-edge-bg: rgba(15, 23, 42, 0.82);
+      --mei-edge-bg-hover: rgba(15, 23, 42, 0.96);
+      --mei-edge-border: rgba(56, 189, 248, 0.38);
+      --mei-edge-border-hover: rgba(56, 189, 248, 0.72);
+      --mei-edge-shadow: 0 8px 24px -6px rgba(2, 8, 23, 0.72);
+      --mei-edge-color: #38BDF8;
     }
     #mei-dock-edge-tab.pos-bottom-left {
       left: 0;
@@ -951,7 +1133,7 @@
       transform: translate3d(100%, 0, 0);
     }
     #mei-dock-edge-tab.mei-dock-edge-tab-visible {
-      opacity: 0.64;
+      opacity: 0.78;
       pointer-events: auto;
       visibility: visible;
       transform: translate3d(0, 0, 0);
@@ -959,97 +1141,29 @@
     #mei-dock-edge-tab.mei-dock-edge-tab-visible:hover,
     #mei-dock-edge-tab.mei-dock-edge-tab-visible:focus-visible {
       opacity: 1;
-      width: 28px;
-      background: rgba(255, 255, 255, 0.95);
-      border-color: rgba(56, 189, 248, 0.78);
+      width: 34px;
+      background: var(--mei-edge-bg-hover);
+      border-color: var(--mei-edge-border-hover);
       box-shadow: 0 10px 26px -6px rgba(14, 165, 233, 0.42);
       outline: none;
     }
-    .mei-dock-edge-bar {
-      width: 2.5px;
-      height: 16px;
-      border-radius: 9999px;
-      background: linear-gradient(180deg, #38BDF8, #0284C7);
+    .mei-dock-edge-logo {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       flex-shrink: 0;
+      color: inherit;
     }
     .mei-dock-edge-chevron {
       display: none;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
+      opacity: 0.85;
     }
     #mei-dock-edge-tab:hover .mei-dock-edge-chevron,
     #mei-dock-edge-tab:focus-visible .mei-dock-edge-chevron {
       display: inline-flex;
-    }
-    /* Dark Mode Glass Adaptation */
-    html.dark .mei-dock-capsule {
-      background: rgba(15, 23, 42, 0.90);
-      border-color: rgba(56, 189, 248, 0.35);
-      box-shadow: 0 14px 36px -8px rgba(2, 8, 23, 0.72), 0 0 0 1px rgba(56, 189, 248, 0.15);
-      color: #F8FAFC;
-    }
-    html.dark #mei-dock-project-label {
-      color: #F8FAFC !important;
-    }
-    html.dark .mei-dock-badge {
-      background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(14, 165, 233, 0.10));
-      border-color: rgba(56, 189, 248, 0.40);
-      box-shadow: inset 0 1px 1px rgba(56, 189, 248, 0.22);
-      color: #38BDF8;
-    }
-    html.dark .mei-dock-icon-btn {
-      background: rgba(30, 41, 59, 0.90);
-      border-color: rgba(56, 189, 248, 0.30);
-      color: #7DD3FC;
-    }
-    html.dark .mei-dock-icon-btn:hover {
-      background: rgba(56, 189, 248, 0.22);
-    }
-    html.dark .mei-dock-collapse-btn,
-    html.dark .mei-dock-hide-btn {
-      background: rgba(56, 189, 248, 0.16);
-      color: #7DD3FC;
-    }
-    html.dark .mei-dock-collapse-btn:hover,
-    html.dark .mei-dock-hide-btn:hover {
-      background: rgba(56, 189, 248, 0.28);
-      color: #BAE6FD;
-    }
-    html.dark .mei-dock-popover {
-      background: rgba(15, 23, 42, 0.96);
-      border-color: rgba(56, 189, 248, 0.35);
-      box-shadow: 0 18px 42px -10px rgba(2, 8, 23, 0.8);
-    }
-    html.dark .mei-dock-popover-title {
-      color: #7DD3FC;
-    }
-    html.dark .mei-dock-popover-item {
-      color: #F1F5F9;
-    }
-    html.dark .mei-dock-popover-item:hover {
-      background: rgba(56, 189, 248, 0.18);
-      color: #7DD3FC;
-    }
-    html.dark .mei-dock-popover-hide-btn {
-      background: rgba(30, 41, 59, 0.85);
-      border-color: rgba(148, 163, 184, 0.25);
-      color: #CBD5E1;
-    }
-    html.dark .mei-dock-popover-hide-btn:hover {
-      background: rgba(51, 65, 85, 0.92);
-      color: #F8FAFC;
-    }
-    html.dark #mei-dock-edge-tab {
-      background: rgba(15, 23, 42, 0.78);
-      border-color: rgba(56, 189, 248, 0.36);
-      box-shadow: 0 8px 24px -6px rgba(2, 8, 23, 0.72);
-      color: #38BDF8;
-    }
-    html.dark #mei-dock-edge-tab.mei-dock-edge-tab-visible:hover,
-    html.dark #mei-dock-edge-tab.mei-dock-edge-tab-visible:focus-visible {
-      background: rgba(15, 23, 42, 0.95);
-      border-color: rgba(56, 189, 248, 0.72);
     }
     @media (max-width: 480px) {
       #mei-studio-dock-root.pos-bottom-right {
@@ -1094,8 +1208,14 @@
     }
     @media (prefers-reduced-motion: reduce) {
       #mei-studio-dock-root,
-      #mei-dock-edge-tab {
+      #mei-dock-edge-tab,
+      .mei-dock-badge,
+      .mei-dock-btn {
         transition: none !important;
+      }
+      .mei-dock-badge:hover,
+      .mei-dock-btn:hover {
+        transform: none !important;
       }
     }
   `;
@@ -1105,21 +1225,20 @@
     if (document.getElementById('mei-studio-dock-root')) return;
     window.__MEI_STUDIO_DOCK_MOUNTED__ = true;
 
-    const staleStyle = document.getElementById('mei-studio-dock-style');
-    if (staleStyle) staleStyle.remove();
-    document.head.appendChild(style);
+    let styleEl = document.getElementById('mei-studio-dock-style');
+    if (!styleEl) {
+      styleEl = document.createElement('style');
+      styleEl.id = 'mei-studio-dock-style';
+      document.head.appendChild(styleEl);
+    }
+    styleEl.textContent = DOCK_STYLE_TEXT;
 
     const staleEdgeTab = document.getElementById('mei-dock-edge-tab');
     if (staleEdgeTab) staleEdgeTab.remove();
 
     const container = document.createElement('div');
     container.id = 'mei-studio-dock-root';
-    const shouldAutoCollapse =
-      (typeof window.innerWidth === 'number' && window.innerWidth <= 767) ||
-      (typeof window.innerHeight === 'number' && window.innerHeight <= 500);
-    container.className =
-      (isLeftAnchored ? 'pos-bottom-left' : 'pos-bottom-right') +
-      (shouldAutoCollapse ? ' mei-dock-collapsed' : '');
+    container.className = isLeftAnchored ? 'pos-bottom-left' : 'pos-bottom-right';
 
     const quickProjects = getQuickProjects();
     const quickLinksHtml = quickProjects
@@ -1127,7 +1246,7 @@
         (item) => `
         <a href="${escapeHtml(sanitizeUrl(item.url, '/'))}" target="_top" class="mei-dock-popover-item">
           <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(item.title)}</span>
-          <span style="color:#0284C7;flex-shrink:0;">${LUCIDE_SVGS.arrowUpRight}</span>
+          <span class="mei-dock-arrow">${LUCIDE_SVGS.arrowUpRight}</span>
         </a>
       `
       )
@@ -1137,7 +1256,7 @@
       <div class="mei-dock-popover" id="mei-dock-popover" role="menu" aria-label="快速切換咩創意工作室專案">
         <div class="mei-dock-popover-title">
           <span>快速切換工作室專案</span>
-          <span style="font-weight:500;color:#64748B;">Mei Hub</span>
+          <span class="mei-dock-popover-meta">Mei Hub</span>
         </div>
         ${quickLinksHtml}
         <div class="mei-dock-popover-footer">
@@ -1148,11 +1267,11 @@
         </div>
       </div>
       <div class="mei-dock-capsule" title="可拖曳移動位置">
-        <span class="mei-dock-badge" id="mei-dock-badge-btn" title="咩創意工作室（點擊展開／收合）">${LUCIDE_SVGS.cloud}</span>
-        <div class="mei-dock-details" style="display:flex;align-items:center;gap:7px;">
-          <div style="display:flex;flex-direction:column;line-height:1.2;padding-right:2px;">
-            <span style="font-size:10px;color:#0284C7;font-weight:700;letter-spacing:0.03em;">MEI CREATIVE HUB</span>
-            <span id="mei-dock-project-label" style="font-size:12px;color:#0F172A;max-width:136px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(projectName)}</span>
+        <span class="mei-dock-badge" id="mei-dock-badge-btn" title="咩創意工作室（點擊展開／收合）">${LUCIDE_SVGS.brandMark}</span>
+        <div class="mei-dock-details">
+          <div class="mei-dock-label-group">
+            <span class="mei-dock-eyebrow">MEI CREATIVE HUB</span>
+            <span id="mei-dock-project-label" class="mei-dock-project-label">${escapeHtml(projectName)}</span>
           </div>
           <button type="button" class="mei-dock-icon-btn" id="mei-dock-switcher-btn" title="展開快速專案切換清單" aria-label="展開快速專案切換清單">
             ${LUCIDE_SVGS.layoutGrid}
@@ -1162,7 +1281,7 @@
             <span>返回咩創意大廳</span>
           </a>
         </div>
-        <button type="button" class="mei-dock-collapse-btn" id="mei-dock-toggle-btn" title="收合或展開導覽膠囊" aria-label="收合或展開導覽膠囊">
+        <button type="button" class="mei-dock-collapse-btn" id="mei-dock-toggle-btn" aria-label="收合或展開導覽膠囊" aria-expanded="true" title="收合導覽膠囊">
           ${LUCIDE_SVGS.minimize}
         </button>
         <button type="button" class="mei-dock-hide-btn" id="mei-dock-hide-btn" title="隱藏至螢幕邊緣（點擊邊緣小拉條可再展開）" aria-label="隱藏返回咩創意大廳按鈕">
@@ -1178,8 +1297,8 @@
     edgeTab.setAttribute('aria-label', '展開返回咩創意大廳按鈕');
     edgeTab.setAttribute('title', '點擊展開返回咩創意大廳');
     edgeTab.innerHTML = isLeftAnchored
-      ? `<span class="mei-dock-edge-bar"></span><span class="mei-dock-edge-chevron">${LUCIDE_SVGS.chevronRight}</span>`
-      : `<span class="mei-dock-edge-chevron">${LUCIDE_SVGS.chevronLeft}</span><span class="mei-dock-edge-bar"></span>`;
+      ? `<span class="mei-dock-edge-logo">${LUCIDE_SVGS.brandMarkEdge}</span><span class="mei-dock-edge-chevron">${LUCIDE_SVGS.chevronRight}</span>`
+      : `<span class="mei-dock-edge-chevron">${LUCIDE_SVGS.chevronLeft}</span><span class="mei-dock-edge-logo">${LUCIDE_SVGS.brandMarkEdge}</span>`;
 
     document.body.appendChild(container);
     document.body.appendChild(edgeTab);
@@ -1191,6 +1310,26 @@
     const switcherBtn = container.querySelector('#mei-dock-switcher-btn');
     const popover = container.querySelector('#mei-dock-popover');
 
+    let userToggledCollapse = false;
+
+    function applyCollapsedState(collapsed) {
+      const nextCollapsed = Boolean(collapsed);
+      container.classList.toggle('mei-dock-collapsed', nextCollapsed);
+      if (toggleBtn) {
+        toggleBtn.setAttribute('aria-expanded', String(!nextCollapsed));
+        toggleBtn.setAttribute(
+          'title',
+          nextCollapsed ? '展開導覽膠囊' : '收合導覽膠囊'
+        );
+      }
+      if (nextCollapsed && popover) {
+        popover.classList.remove('open');
+      }
+    }
+
+    // 手機端（窄視窗 <= 640px）掛載時預設自動收合
+    applyCollapsedState(isNarrowViewport());
+    // Drag support for desktop mouse and mobile touch with viewport boundary clamping
     let isDragging = false;
     let startX = 0;
     let startY = 0;
@@ -1213,6 +1352,7 @@
       const width = Math.min(rect.width || 240, vw - margin * 2);
       const height = Math.min(rect.height || 48, vh - margin * 2);
 
+      // Recompute base coordinates without transform offset
       baseLeft = rect.left - offsetX;
       baseTop = rect.top - offsetY;
 
@@ -1268,7 +1408,8 @@
       badgeBtn.addEventListener('click', (e) => {
         if (container.classList.contains('mei-dock-collapsed')) {
           e.stopPropagation();
-          container.classList.remove('mei-dock-collapsed');
+          userToggledCollapse = true;
+          applyCollapsedState(false);
           clampToViewport();
         }
       });
@@ -1277,8 +1418,8 @@
     if (toggleBtn) {
       toggleBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        container.classList.toggle('mei-dock-collapsed');
-        if (popover) popover.classList.remove('open');
+        userToggledCollapse = true;
+        applyCollapsedState(!container.classList.contains('mei-dock-collapsed'));
         clampToViewport();
       });
     }
@@ -1347,12 +1488,20 @@
       clampToViewport();
     };
 
+    function handleViewportChange() {
+      if (!userToggledCollapse) {
+        applyCollapsedState(isNarrowViewport());
+      }
+      clampToViewport();
+    }
+
     container.addEventListener('pointerdown', onPointerDown);
     window.addEventListener('pointermove', onPointerMove);
     window.addEventListener('pointerup', onPointerUp);
-    window.addEventListener('resize', clampToViewport);
-    window.addEventListener('orientationchange', clampToViewport);
+    window.addEventListener('resize', handleViewportChange);
+    window.addEventListener('orientationchange', handleViewportChange);
 
+    // Expose safe label updater for multi-scene subproject sandboxes
     window.__MEI_STUDIO_DOCK_SET_PROJECT__ = (newTitle) => {
       const labelEl = container.querySelector('#mei-dock-project-label');
       if (labelEl && newTitle) {

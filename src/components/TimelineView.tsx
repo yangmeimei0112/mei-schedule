@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { LucideIcon } from './BrandMark';
 import RecurringDeleteModal from './RecurringDeleteModal';
 import SwipeableEventCard, { SwipeRevealGroup } from './SwipeableEventCard';
+import { LikeBurstLayer, OdometerNumber, StrokeCheckIndicator } from './UiMomentsPrimitives';
 import { COLOR_TOKEN_PALETTE, formatLocalDate } from '../data/seedData';
 import { useEventQuickDelete } from '../hooks/useEventQuickDelete';
 import { parseLocalDateKey } from '../services/recurrenceEngine';
@@ -52,6 +53,7 @@ function TimelineView({ instances }: TimelineViewProps) {
   } = useEventQuickDelete();
 
   const [dragOverHour, setDragOverHour] = useState<number | null>(null);
+  const [burstByEvent, setBurstByEvent] = useState<Record<string, number>>({});
 
   const dayInstances = useMemo(
     () => instances.filter((inst) => inst.occurrenceDate === selectedDate),
@@ -362,7 +364,9 @@ function TimelineView({ instances }: TimelineViewProps) {
                                   <span>
                                     {formatTimeHM(evt.startAt)} – {formatTimeHM(evt.endAt)}
                                   </span>
-                                  <span>({durationMin}m)</span>
+                                  <span className="inline-flex items-baseline">
+                                    (<OdometerNumber value={durationMin} />m)
+                                  </span>
                                   {evt.recurrenceRule && (
                                     <span className="inline-flex items-center gap-0.5 font-sans">
                                       <LucideIcon name="repeat" size={11} />
@@ -385,26 +389,31 @@ function TimelineView({ instances }: TimelineViewProps) {
                                 <button
                                   type="button"
                                   onClick={() => selectEvent(evt.masterEventId, evt.occurrenceDate)}
-                                  className={`mt-0.5 text-left text-sm sm:text-[15px] font-extrabold leading-snug hover:underline block w-full ${
-                                    isCompleted ? 'line-through' : ''
-                                  }`}
+                                  className="mt-0.5 text-left text-sm sm:text-[15px] font-extrabold leading-snug hover:underline block w-full"
                                 >
-                                  {evt.title}
+                                  <span className={`um-strike-sweep ${isCompleted ? 'is-done' : ''}`}>
+                                    {evt.title}
+                                  </span>
                                 </button>
                               </div>
 
                               <button
                                 type="button"
                                 data-testid={`timeline-complete-btn-${evt.masterEventId}`}
-                                onClick={() => toggleEventComplete(evt.masterEventId)}
+                                onClick={() => {
+                                  if (!isCompleted) {
+                                    setBurstByEvent((prev) => ({
+                                      ...prev,
+                                      [evt.instanceId]: (prev[evt.instanceId] || 0) + 1
+                                    }));
+                                  }
+                                  toggleEventComplete(evt.masterEventId);
+                                }}
                                 aria-label={isCompleted ? '標記為未完成' : '標記為已完成'}
-                                className="p-1.5 rounded-xl bg-white/55 dark:bg-slate-900/45 hover:scale-105 transition-transform shrink-0"
+                                className="relative p-1.5 rounded-xl bg-white/55 dark:bg-slate-900/45 hover:scale-105 transition-transform shrink-0"
                               >
-                                <LucideIcon
-                                  name={isCompleted ? 'circle-check' : 'circle'}
-                                  size={18}
-                                  className={isCompleted ? 'text-emerald-500' : 'opacity-65'}
-                                />
+                                <StrokeCheckIndicator checked={isCompleted} size={18} />
+                                <LikeBurstLayer triggerKey={burstByEvent[evt.instanceId] || 0} />
                               </button>
                             </div>
 
@@ -459,7 +468,7 @@ function TimelineView({ instances }: TimelineViewProps) {
                                       onChange={() => toggleEventSubtask(evt.masterEventId, sub.id)}
                                       className="rounded border-slate-400 theme-checkbox"
                                     />
-                                    <span className={sub.done ? 'line-through opacity-60' : ''}>
+                                    <span className={`um-strike-sweep ${sub.done ? 'is-done' : ''}`}>
                                       {sub.title}
                                     </span>
                                   </label>

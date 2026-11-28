@@ -3,6 +3,7 @@ import { LucideIcon } from './BrandMark';
 import { COLOR_TOKEN_PALETTE } from '../data/seedData';
 import { toLocalDateKey } from '../services/recurrenceEngine';
 import { useScheduleStore, useVisualTheme } from '../store/useScheduleStore';
+import { useActiveRowPill, useBackdropDismissGuard } from '../utils/uiMomentsMotion';
 
 export default function CommandPalette() {
   const {
@@ -28,11 +29,14 @@ export default function CommandPalette() {
   const { resolvedColorMode } = useVisualTheme();
 
   const [query, setQuery] = useState('');
+  const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const backdropGuard = useBackdropDismissGuard(closeModal);
 
   useEffect(() => {
     if (activeModal === 'command') {
       setQuery('');
+      setActiveIndex(0);
       setTimeout(() => inputRef.current?.focus(), 20);
     }
   }, [activeModal]);
@@ -142,20 +146,77 @@ export default function CommandPalette() {
     return quickCommands.filter((c) => c.label.toLowerCase().includes(q));
   }, [quickCommands, q]);
 
+  const flatRunners = useMemo<Array<() => void>>(() => {
+    const list: Array<() => void> = [];
+    matchedEvents.forEach((evt) => {
+      const dKey = toLocalDateKey(new Date(evt.startAt));
+      list.push(() => {
+        setSelectedDate(dKey);
+        selectEvent(evt.id, dKey);
+        closeModal();
+      });
+    });
+    matchedTasks.forEach((task) => {
+      list.push(() => {
+        toggleTaskComplete(task.id);
+        closeModal();
+      });
+    });
+    matchedCommands.forEach((cmd) => {
+      list.push(() => {
+        closeModal();
+        cmd.run();
+      });
+    });
+    return list;
+  }, [matchedEvents, matchedTasks, matchedCommands, setSelectedDate, selectEvent, closeModal, toggleTaskComplete]);
+
+  const totalItems = flatRunners.length;
+  const clampedActiveIndex = totalItems > 0 ? Math.min(activeIndex, totalItems - 1) : -1;
+
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [q]);
+
+  const { listRef, pillRef } = useActiveRowPill(clampedActiveIndex, totalItems);
+
   if (activeModal !== 'command') return null;
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (totalItems === 0) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActiveIndex((prev) => (prev + 1) % totalItems);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActiveIndex((prev) => (prev - 1 + totalItems) % totalItems);
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      setActiveIndex(0);
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      setActiveIndex(totalItems - 1);
+    } else if (e.key === 'Enter' && clampedActiveIndex >= 0) {
+      e.preventDefault();
+      flatRunners[clampedActiveIndex]?.();
+    }
+  };
+
+  const tasksBaseIndex = matchedEvents.length;
+  const commandsBaseIndex = matchedEvents.length + matchedTasks.length;
 
   return (
     <div
       data-testid="command-palette-modal"
-      className="fixed inset-0 z-50 flex items-start justify-center pt-14 sm:pt-24 px-3 bg-slate-950/50 backdrop-blur-sm"
-      onClick={closeModal}
+      className="um-backdrop-enter fixed inset-0 z-50 flex items-start justify-center pt-14 sm:pt-24 px-3 bg-slate-950/50 backdrop-blur-sm"
+      {...backdropGuard}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-label="全域快捷指令與全文搜尋"
         onClick={(e) => e.stopPropagation()}
-        className="max-h-dvh-85 w-full max-w-xl bento-glass-card overflow-hidden flex flex-col shadow-2xl"
+        className="um-modal-enter max-h-dvh-85 w-full max-w-xl bento-glass-card overflow-hidden flex flex-col shadow-2xl"
       >
         <div className="px-4 py-3 border-b border-[var(--border-subtle)] flex items-center gap-2.5">
           <LucideIcon name="search" size={18} className="theme-accent-text shrink-0" />
@@ -165,6 +226,7 @@ export default function CommandPalette() {
             data-testid="command-palette-input"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={handleKeyDown}
             placeholder="搜尋任意行程、待辦事項或執行快捷指令..."
             className="flex-1 bg-transparent text-sm text-[var(--text-main)] placeholder:text-[var(--text-muted)] focus:outline-none"
           />
@@ -177,102 +239,119 @@ export default function CommandPalette() {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-3 space-y-4">
-          {/* Matched Events */}
-          {matchedEvents.length > 0 && (
-            <div className="space-y-1">
-              <div className="px-2 text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-muted)]">
-                排程行程 ({matchedEvents.length})
-              </div>
-              {matchedEvents.map((evt) => {
-                const palette = COLOR_TOKEN_PALETTE[evt.colorToken] || COLOR_TOKEN_PALETTE.sky;
-                const dKey = toLocalDateKey(new Date(evt.startAt));
-                return (
-                  <button
-                    key={evt.id}
-                    type="button"
-                    data-testid={`cmd-event-${evt.id}`}
-                    onClick={() => {
-                      setSelectedDate(dKey);
-                      selectEvent(evt.id, dKey);
-                      closeModal();
-                    }}
-                    className="w-full px-3 py-2 rounded-xl hover:bg-[var(--accent-soft-bg)] flex items-center justify-between gap-2 text-left text-xs transition-colors"
-                  >
-                    <div className="flex items-start gap-2 min-w-0">
-                      <span className={`w-2 h-2 mt-1.5 rounded-full shrink-0 ${palette.dotClass}`} />
-                      <span className="font-bold text-[var(--text-main)] schedule-title-wrap">{evt.title}</span>
-                    </div>
-                    <span className="font-mono text-[11px] text-[var(--text-muted)] shrink-0">
-                      {dKey}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
+        <div className="flex-1 overflow-y-auto p-3">
+          <div ref={listRef} className="relative space-y-4">
+            <div
+              ref={pillRef}
+              aria-hidden="true"
+              data-testid="command-palette-active-pill"
+              className="um-cmd-active-pill"
+            />
 
-          {/* Matched Tasks */}
-          {matchedTasks.length > 0 && (
-            <div className="space-y-1">
-              <div className="px-2 text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-muted)]">
-                待辦收件匣 ({matchedTasks.length})
+            {/* Matched Events */}
+            {matchedEvents.length > 0 && (
+              <div className="relative z-10 space-y-1">
+                <div className="px-2 text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-muted)]">
+                  排程行程 ({matchedEvents.length})
+                </div>
+                {matchedEvents.map((evt, idx) => {
+                  const palette = COLOR_TOKEN_PALETTE[evt.colorToken] || COLOR_TOKEN_PALETTE.sky;
+                  const dKey = toLocalDateKey(new Date(evt.startAt));
+                  const isActive = clampedActiveIndex === idx;
+                  return (
+                    <button
+                      key={evt.id}
+                      type="button"
+                      data-testid={`cmd-event-${evt.id}`}
+                      data-um-row-index={idx}
+                      data-active={isActive ? 'true' : 'false'}
+                      onMouseEnter={() => setActiveIndex(idx)}
+                      onClick={flatRunners[idx]}
+                      className="w-full px-3 py-2 rounded-xl flex items-center justify-between gap-2 text-left text-xs transition-colors"
+                    >
+                      <div className="flex items-start gap-2 min-w-0">
+                        <span className={`w-2 h-2 mt-1.5 rounded-full shrink-0 ${palette.dotClass}`} />
+                        <span className="font-bold text-[var(--text-main)] schedule-title-wrap">{evt.title}</span>
+                      </div>
+                      <span className="font-mono text-[11px] text-[var(--text-muted)] shrink-0">
+                        {dKey}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
-              {matchedTasks.map((task) => (
-                <button
-                  key={task.id}
-                  type="button"
-                  onClick={() => {
-                    toggleTaskComplete(task.id);
-                    closeModal();
-                  }}
-                  className="w-full px-3 py-2 rounded-xl hover:bg-[var(--accent-soft-bg)] flex items-start justify-between gap-2 text-left text-xs transition-colors"
-                >
-                  <div className="flex items-start gap-2 min-w-0">
-                    <LucideIcon
-                      name={task.completed ? 'check-square' : 'square'}
-                      size={14}
-                      className="theme-accent-text mt-0.5 shrink-0"
-                    />
-                    <span className="font-semibold text-[var(--text-main)] schedule-title-wrap">{task.title}</span>
-                  </div>
-                  <span className="text-[10px] font-mono text-[var(--text-muted)] shrink-0">
-                    {task.estimatedMinutes}m
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
+            )}
 
-          {/* Quick Commands */}
-          {matchedCommands.length > 0 && (
-            <div className="space-y-1">
-              <div className="px-2 text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-muted)]">
-                快捷操作
+            {/* Matched Tasks */}
+            {matchedTasks.length > 0 && (
+              <div className="relative z-10 space-y-1">
+                <div className="px-2 text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-muted)]">
+                  待辦收件匣 ({matchedTasks.length})
+                </div>
+                {matchedTasks.map((task, idx) => {
+                  const rowIdx = tasksBaseIndex + idx;
+                  const isActive = clampedActiveIndex === rowIdx;
+                  return (
+                    <button
+                      key={task.id}
+                      type="button"
+                      data-um-row-index={rowIdx}
+                      data-active={isActive ? 'true' : 'false'}
+                      onMouseEnter={() => setActiveIndex(rowIdx)}
+                      onClick={flatRunners[rowIdx]}
+                      className="w-full px-3 py-2 rounded-xl flex items-start justify-between gap-2 text-left text-xs transition-colors"
+                    >
+                      <div className="flex items-start gap-2 min-w-0">
+                        <LucideIcon
+                          name={task.completed ? 'check-square' : 'square'}
+                          size={14}
+                          className="theme-accent-text mt-0.5 shrink-0"
+                        />
+                        <span className="font-semibold text-[var(--text-main)] schedule-title-wrap">{task.title}</span>
+                      </div>
+                      <span className="text-[10px] font-mono text-[var(--text-muted)] shrink-0">
+                        {task.estimatedMinutes}m
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
-              {matchedCommands.map((cmd) => (
-                <button
-                  key={cmd.id}
-                  type="button"
-                  data-testid={cmd.id}
-                  onClick={() => {
-                    closeModal();
-                    cmd.run();
-                  }}
-                  className="w-full px-3 py-2 rounded-xl hover:bg-[var(--accent-soft-bg)] flex items-center gap-2.5 text-left text-xs font-bold text-[var(--text-main)] transition-colors"
-                >
-                  <LucideIcon name={cmd.icon} size={14} className="theme-accent-text" />
-                  <span>{cmd.label}</span>
-                </button>
-              ))}
-            </div>
-          )}
+            )}
 
-          {matchedEvents.length === 0 && matchedTasks.length === 0 && matchedCommands.length === 0 && (
-            <div className="py-8 text-center text-xs text-[var(--text-muted)]">
-              查無相符的排程或指令
-            </div>
-          )}
+            {/* Quick Commands */}
+            {matchedCommands.length > 0 && (
+              <div className="relative z-10 space-y-1">
+                <div className="px-2 text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-muted)]">
+                  快捷操作
+                </div>
+                {matchedCommands.map((cmd, idx) => {
+                  const rowIdx = commandsBaseIndex + idx;
+                  const isActive = clampedActiveIndex === rowIdx;
+                  return (
+                    <button
+                      key={cmd.id}
+                      type="button"
+                      data-testid={cmd.id}
+                      data-um-row-index={rowIdx}
+                      data-active={isActive ? 'true' : 'false'}
+                      onMouseEnter={() => setActiveIndex(rowIdx)}
+                      onClick={flatRunners[rowIdx]}
+                      className="w-full px-3 py-2 rounded-xl flex items-center gap-2.5 text-left text-xs font-bold text-[var(--text-main)] transition-colors"
+                    >
+                      <LucideIcon name={cmd.icon} size={14} className="theme-accent-text" />
+                      <span>{cmd.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {totalItems === 0 && (
+              <div className="py-8 text-center text-xs text-[var(--text-muted)]">
+                查無相符的排程或指令
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

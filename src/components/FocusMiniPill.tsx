@@ -1,12 +1,13 @@
 import React from 'react';
 import { LucideIcon } from './BrandMark';
+import { AudioLevelBars } from './UiMomentsPrimitives';
 import { useFocusSession } from '../store/FocusSessionContext';
 import { useScheduleStore } from '../store/useScheduleStore';
 
 /**
  * Compact header/bar background Focus & Light Music indicator pill:
  * Visible ONLY when FocusTimerModal is closed while timer or music is running.
- * Displays live countdown, 1-tap mute/unmute, and 1-tap restore modal.
+ * Displays live countdown, 3-bar GPU audio visualizer, 1-tap mute/unmute, and 1-tap restore modal.
  */
 export const FocusMiniPill = React.memo(function FocusMiniPill() {
   const { activeModal, openModal } = useScheduleStore();
@@ -17,11 +18,12 @@ export const FocusMiniPill = React.memo(function FocusMiniPill() {
 
   const mins = String(Math.floor(remainingSeconds / 60)).padStart(2, '0');
   const secs = String(remainingSeconds % 60).padStart(2, '0');
+  const audioLive = audio.isPlaying && !audio.isMuted;
 
   return (
     <div
       data-testid="focus-mini-pill"
-      className="inline-flex items-center gap-1 pl-2 pr-1 py-1 rounded-full theme-accent-soft border shadow-sm shrink-0"
+      className="um-chip-enter inline-flex items-center gap-1 pl-2 pr-1 py-1 rounded-full theme-accent-soft border shadow-sm shrink-0"
     >
       <button
         type="button"
@@ -31,11 +33,15 @@ export const FocusMiniPill = React.memo(function FocusMiniPill() {
         title="背景專注中，點擊回到專注番茄鐘"
         className="inline-flex items-center gap-1.5 text-[11px] font-bold hover:opacity-85 transition-opacity"
       >
-        <span
-          className={`w-2 h-2 rounded-full shrink-0 ${
-            isRunning ? 'theme-accent-dot animate-pulse' : 'bg-emerald-500'
-          }`}
-        />
+        {audio.isPlaying ? (
+          <AudioLevelBars active={audioLive} compact data-testid="focus-mini-level-bars" className="theme-accent-text" />
+        ) : (
+          <span
+            className={`w-2 h-2 rounded-full shrink-0 ${
+              isRunning ? 'theme-accent-dot animate-pulse' : 'bg-emerald-500'
+            }`}
+          />
+        )}
         {isRunning ? (
           <span data-testid="focus-mini-time" className="font-mono font-extrabold tabular-nums">
             {mins}:{secs}

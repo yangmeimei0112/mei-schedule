@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { LucideIcon, StudioLogo } from './BrandMark';
+import { ClockHandsLoader, CopyMorphButton } from './UiMomentsPrimitives';
 import AntiBotCaptcha, { generateMathCaptcha, type MathCaptchaChallenge } from './AntiBotCaptcha';
 import {
   addPasswordToCurrentMember,
@@ -15,6 +16,7 @@ import {
   signOutMember,
   type MemberProfile
 } from '../services/memberAuthService';
+import { useBackdropDismissGuard, useElasticTabMarker } from '../utils/uiMomentsMotion';
 import type { SyncStatus } from '../types/schedule';
 
 export interface MemberPortalModalProps {
@@ -39,7 +41,7 @@ function formatSyncBadge(syncStatus?: SyncStatus): { label: string; icon: string
     case 'error':
       return { label: '本機安全保護中', icon: 'shield-check' };
     default:
-      return { label: '本機離線優先', icon: 'hard-drive' };
+      return { label: '本機儲存中', icon: 'hard-drive' };
   }
 }
 
@@ -80,6 +82,8 @@ export default function MemberPortalModal({
   const [ssoToken, setSsoToken] = useState('');
   const [copiedToken, setCopiedToken] = useState(false);
 
+  const backdropGuard = useBackdropDismissGuard(onClose);
+  const authTabMarker = useElasticTabMarker(authTab, [isOpen, Boolean(currentMember)]);
   const bioCap = detectBiometricCapability();
 
   // Reset form state whenever modal opens
@@ -356,12 +360,10 @@ export default function MemberPortalModal({
       aria-modal="true"
       aria-label="全站聯通會員專區"
       data-testid="member-portal-modal"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-md"
+      {...backdropGuard}
+      className="um-backdrop-enter fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-md"
     >
-      <div className="bento-glass-card w-full max-w-xl max-h-[90vh] max-h-dvh-90 landscape-compact-modal overflow-y-auto p-4 sm:p-7 border border-[var(--border-subtle)] shadow-2xl relative">
+      <div className="um-modal-enter bento-glass-card w-full max-w-xl max-h-[90vh] max-h-dvh-90 landscape-compact-modal overflow-y-auto p-4 sm:p-7 border border-[var(--border-subtle)] shadow-2xl relative">
         {/* Header */}
         <div className="flex items-center justify-between gap-3 pb-4 mb-5 border-b border-[var(--border-subtle)]">
           <div className="flex items-center gap-3 min-w-0">
@@ -432,8 +434,12 @@ export default function MemberPortalModal({
                   <LucideIcon name="circle-check" size={12} />
                   <span>全站子專案已聯通</span>
                 </span>
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold theme-accent-soft border">
-                  <LucideIcon name={syncBadge.icon} size={12} />
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold theme-accent-soft border">
+                  {syncStatus === 'syncing' ? (
+                    <ClockHandsLoader size={12} label="正在合併同步" data-testid="member-sync-clock-loader" />
+                  ) : (
+                    <LucideIcon name={syncBadge.icon} size={12} />
+                  )}
                   <span>{syncBadge.label}</span>
                 </span>
               </div>
@@ -552,15 +558,14 @@ export default function MemberPortalModal({
                   <LucideIcon name="link-2" size={14} className="theme-accent-text" />
                   <span>跨專案 SSO 漫遊權杖 (mei_sso_v2)</span>
                 </span>
-                <button
-                  type="button"
+                <CopyMorphButton
+                  copied={copiedToken}
+                  idleLabel="複製權杖"
+                  copiedLabel="已複製"
                   data-testid="member-copy-sso-token-btn"
                   onClick={handleCopyToken}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold theme-accent-soft border transition-colors"
-                >
-                  <LucideIcon name={copiedToken ? 'check' : 'copy'} size={12} />
-                  <span>{copiedToken ? '已複製' : '複製權杖'}</span>
-                </button>
+                  className="px-2.5 py-1 rounded-lg text-[11px] font-semibold theme-accent-soft border transition-colors"
+                />
               </div>
               <div
                 data-testid="member-sso-token-display"
@@ -574,10 +579,17 @@ export default function MemberPortalModal({
           /* Unauthenticated 3-Tab Portal */
           <div className="space-y-5">
             <div
+              ref={authTabMarker.containerRef}
               role="tablist"
               aria-label="會員登入與註冊方式"
-              className="grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-[var(--surface-subtle)] border border-[var(--border-subtle)]"
+              className="relative grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-[var(--surface-subtle)] border border-[var(--border-subtle)]"
             >
+              <span
+                ref={authTabMarker.indicatorRef}
+                data-testid="member-auth-tab-indicator"
+                aria-hidden="true"
+                className="um-elastic-indicator rounded-xl theme-accent-solid shadow-sm"
+              />
               {(
                 [
                   { id: 'quick', label: '快速登入', icon: 'zap', testId: 'auth-tab-quick' },
@@ -592,6 +604,7 @@ export default function MemberPortalModal({
                     type="button"
                     role="tab"
                     aria-selected={active}
+                    data-um-tab-active={active ? 'true' : 'false'}
                     data-testid={tab.testId}
                     onClick={() => {
                       setAuthTab(tab.id);
@@ -599,7 +612,7 @@ export default function MemberPortalModal({
                       setLoginError('');
                       setRegError('');
                     }}
-                    className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition-colors ${
+                    className={`relative z-10 flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition-colors ${
                       active
                         ? 'theme-accent-solid shadow-sm'
                         : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
@@ -652,11 +665,11 @@ export default function MemberPortalModal({
                   onClick={handleGoogleOAuth}
                   className="btn-sky-primary w-full py-3 px-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-60"
                 >
-                  <LucideIcon
-                    name={isSubmitting ? 'loader-2' : 'globe'}
-                    size={16}
-                    className={isSubmitting ? 'animate-spin' : ''}
-                  />
+                  {isSubmitting ? (
+                    <ClockHandsLoader size={16} label="正在導向 Google 授權" data-testid="member-auth-clock-loader" />
+                  ) : (
+                    <LucideIcon name="globe" size={16} />
+                  )}
                   <span>
                     {isSubmitting ? '正在導向 Google 授權頁面...' : '使用 Google 帳號繼續'}
                   </span>

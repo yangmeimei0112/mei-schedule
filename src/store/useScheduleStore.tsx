@@ -190,7 +190,7 @@ function buildInitialState(): ScheduleStoreState {
     hydrated: false,
     currentMember: member,
     syncStatus: 'local-only',
-    syncStatusMessage: '本機離線優先模式',
+    syncStatusMessage: '',
     lastSyncedAt: null,
     syncQueue: [],
     present: seed.snapshot,
@@ -2033,7 +2033,7 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
       dispatch({
         type: 'SET_SYNC_STATE',
         syncStatus: 'local-only',
-        syncStatusMessage: '本機離線優先模式'
+        syncStatusMessage: ''
       });
       return;
     }

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { LucideIcon } from './BrandMark';
+import { BellToggleButton, ClockHandsLoader } from './UiMomentsPrimitives';
 import {
   buildGoogleCalendarUrl,
   exportEventsToIcs,
@@ -13,6 +14,7 @@ import {
   sendInstantNotification
 } from '../services/notificationBridge';
 import { useScheduleStore } from '../store/useScheduleStore';
+import { useBackdropDismissGuard } from '../utils/uiMomentsMotion';
 
 export default function CalendarSyncModal() {
   const {
@@ -29,6 +31,12 @@ export default function CalendarSyncModal() {
   const [icsPasteText, setIcsPasteText] = useState('');
   const [importReport, setImportReport] = useState<string | null>(null);
   const [notifyStatus, setNotifyStatus] = useState<string>('');
+  const [notifyEnabled, setNotifyEnabled] = useState<boolean>(
+    () => typeof Notification !== 'undefined' && Notification.permission === 'granted'
+  );
+  const [notifying, setNotifying] = useState(false);
+  const [importingFile, setImportingFile] = useState(false);
+  const backdropGuard = useBackdropDismissGuard(closeModal);
 
   if (activeModal !== 'sync') return null;
 
@@ -74,23 +82,42 @@ export default function CalendarSyncModal() {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const text = await file.text();
-    runIcsImport(text);
-    e.target.value = '';
+    setImportingFile(true);
+    try {
+      const text = await file.text();
+      runIcsImport(text);
+    } finally {
+      setImportingFile(false);
+      e.target.value = '';
+    }
   };
 
   const handleEnableNotifications = async () => {
-    const perm = await requestNotificationPermission();
-    if (perm === 'granted') {
-      const scheduled = await scheduleUpcomingEventReminders(events);
-      await sendInstantNotification({
-        title: '咩時光通知已啟用',
-        body: `已同步排入未來 24 小時內 ${scheduled} 筆行程提醒。`
-      });
-      setNotifyStatus(`已啟用提醒（執行環境：${runtimePlatform}，已排程 ${scheduled} 筆）`);
-      showToast('已啟用跨平台排程提醒通知', { icon: 'bell-ring' });
-    } else {
-      setNotifyStatus('瀏覽器或系統未授予通知權限，請於系統設定允許通知');
+    if (notifying) return;
+    if (notifyEnabled) {
+      setNotifyEnabled(false);
+      setNotifyStatus('已暫停本次工作階段排程通知提醒（點擊鈴鐺可隨時重新啟用）');
+      showToast('已靜音本次行程通知提醒', { icon: 'bell-off' });
+      return;
+    }
+    setNotifying(true);
+    try {
+      const perm = await requestNotificationPermission();
+      if (perm === 'granted') {
+        const scheduled = await scheduleUpcomingEventReminders(events);
+        await sendInstantNotification({
+          title: '咩時光通知已啟用',
+          body: `已同步排入未來 24 小時內 ${scheduled} 筆行程提醒。`
+        });
+        setNotifyEnabled(true);
+        setNotifyStatus(`已啟用提醒（執行環境：${runtimePlatform}，已排程 ${scheduled} 筆）`);
+        showToast('已啟用跨平台排程提醒通知', { icon: 'bell-ring' });
+      } else {
+        setNotifyEnabled(false);
+        setNotifyStatus('瀏覽器或系統未授予通知權限，請於系統設定允許通知');
+      }
+    } finally {
+      setNotifying(false);
     }
   };
 
@@ -101,15 +128,15 @@ export default function CalendarSyncModal() {
   return (
     <div
       data-testid="calendar-sync-modal"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/50 backdrop-blur-md"
-      onClick={closeModal}
+      className="um-backdrop-enter fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/50 backdrop-blur-md"
+      {...backdropGuard}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-label="標準日曆互通與跨平台提醒設定"
         onClick={(e) => e.stopPropagation()}
-        className="landscape-compact-modal max-h-dvh-92 overflow-y-auto w-full max-w-2xl bento-glass-card p-5 sm:p-6 space-y-5"
+        className="um-modal-enter landscape-compact-modal max-h-dvh-92 overflow-y-auto w-full max-w-2xl bento-glass-card p-5 sm:p-6 space-y-5"
       >
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
@@ -192,9 +219,15 @@ export default function CalendarSyncModal() {
               onChange={(e) => void handleFileChange(e)}
               className="hidden"
             />
-            <LucideIcon name="upload" size={20} className="mx-auto theme-accent-text mb-1" />
+            {importingFile ? (
+              <div className="mx-auto mb-1 flex justify-center">
+                <ClockHandsLoader size={20} label="正在解析 .ics 檔案" data-testid="sync-import-clock-loader" />
+              </div>
+            ) : (
+              <LucideIcon name="upload" size={20} className="mx-auto theme-accent-text mb-1" />
+            )}
             <span className="text-xs font-bold text-[var(--text-main)] block">
-              點擊選擇 .ics 檔案（來自 Google / Apple / Outlook）
+              {importingFile ? '正在匯入 .ics 行程...' : '點擊選擇 .ics 檔案（來自 Google / Apple / Outlook）'}
             </span>
           </label>
 
@@ -233,22 +266,24 @@ export default function CalendarSyncModal() {
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <div>
               <h3 className="text-xs font-extrabold text-[var(--text-main)] inline-flex items-center gap-1.5">
-                <LucideIcon name="bell-ring" size={14} className="theme-accent-text" />
+                {notifying ? (
+                  <ClockHandsLoader size={14} label="正在啟用通知" data-testid="sync-notify-clock-loader" />
+                ) : (
+                  <LucideIcon name="bell-ring" size={14} className="theme-accent-text" />
+                )}
                 <span>跨五端原生通知提醒（{runtimePlatform}）</span>
               </h3>
               <p className="text-[11px] text-[var(--text-muted)] mt-0.5">
                 桌面端支援 Electron 系統匣與原生通知、行動端支援 Capacitor 本地排程推播
               </p>
             </div>
-            <button
-              type="button"
+            <BellToggleButton
+              active={notifyEnabled}
+              badge={notifyEnabled ? events.filter((e) => e.status === 'scheduled').length : undefined}
+              label={notifying ? '排程提醒中...' : notifyEnabled ? '通知提醒已啟用' : '啟用並測試通知'}
               data-testid="sync-enable-notify-btn"
-              onClick={() => void handleEnableNotifications()}
-              className="btn-sky-secondary px-3.5 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5"
-            >
-              <LucideIcon name="bell" size={14} />
-              <span>啟用並測試通知</span>
-            </button>
+              onToggle={() => void handleEnableNotifications()}
+            />
           </div>
           {notifyStatus && (
             <p className="text-xs font-semibold theme-accent-deep">{notifyStatus}</p>

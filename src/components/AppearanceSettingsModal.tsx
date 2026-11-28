@@ -3,8 +3,43 @@ import { LucideIcon, MeiScheduleLogo } from './BrandMark';
 import { DESIGN_THEME_OPTIONS } from '../data/seedData';
 import { useScheduleStore, useVisualTheme } from '../store/useScheduleStore';
 import type { ColorMode, DesignTheme, StudioDockVisibilityMode } from '../types/schedule';
+import {
+  useBackdropDismissGuard,
+  useCardSpotlight,
+  usePlanPickerRing
+} from '../utils/uiMomentsMotion';
 
 const DOCK_VISIBILITY_KEY = 'mei_studio_dock_visibility_v1';
+
+function SpotlightThemeCard({
+  active,
+  testId,
+  onClick,
+  children
+}: {
+  active: boolean;
+  testId: string;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  const cardRef = useCardSpotlight<HTMLButtonElement>();
+  return (
+    <button
+      ref={cardRef}
+      type="button"
+      data-testid={testId}
+      data-um-plan-active={active ? 'true' : 'false'}
+      onClick={onClick}
+      className={`um-card-spotlight p-3.5 rounded-2xl border text-left space-y-2.5 transition-[border-color,background-color] ${
+        active
+          ? 'border-[var(--accent-primary)] bg-[var(--accent-soft-bg)]/55'
+          : 'border-[var(--border-subtle)] bg-[var(--surface-subtle)] hover:border-[var(--border-hover)]'
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
 
 function readCurrentDockMode(): StudioDockVisibilityMode {
   if (typeof window === 'undefined') return 'visible';
@@ -26,6 +61,8 @@ export default function AppearanceSettingsModal() {
   const { activeModal, closeModal, preferences, updatePreferences, showToast } = useScheduleStore();
   const { designTheme, colorMode } = useVisualTheme();
   const [dockMode, setDockMode] = useState<StudioDockVisibilityMode>(readCurrentDockMode);
+  const backdropGuard = useBackdropDismissGuard(closeModal);
+  const planPicker = usePlanPickerRing(activeModal === 'appearance' ? designTheme : '');
 
   useEffect(() => {
     if (activeModal !== 'appearance') return;
@@ -87,15 +124,15 @@ export default function AppearanceSettingsModal() {
   return (
     <div
       data-testid="appearance-settings-modal"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/50 backdrop-blur-[4px] sm:backdrop-blur-md"
-      onClick={closeModal}
+      className="um-backdrop-enter fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/50 backdrop-blur-[4px] sm:backdrop-blur-md"
+      {...backdropGuard}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-label="外觀風格與排程偏好設定"
         onClick={(e) => e.stopPropagation()}
-        className="landscape-compact-modal max-h-dvh-92 overflow-y-auto w-full max-w-2xl bento-glass-card p-5 sm:p-6 space-y-5"
+        className="um-modal-enter landscape-compact-modal max-h-dvh-92 overflow-y-auto w-full max-w-2xl bento-glass-card p-5 sm:p-6 space-y-5"
       >
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
@@ -119,25 +156,26 @@ export default function AppearanceSettingsModal() {
           </button>
         </div>
 
-        {/* 1. Three Design Themes */}
+        {/* 1. Three Design Themes (Plan Picker gliding outline + desktop spotlight) */}
         <section className="space-y-2.5">
           <h3 className="text-xs font-extrabold text-[var(--text-muted)] uppercase tracking-wider">
             視覺設計風格（共 3 套）
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div ref={planPicker.containerRef} className="relative grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div
+              ref={planPicker.ringRef}
+              aria-hidden="true"
+              data-testid="appearance-plan-picker-ring"
+              className="um-plan-ring rounded-2xl"
+            />
             {DESIGN_THEME_OPTIONS.map((opt) => {
               const active = designTheme === opt.id;
               return (
-                <button
+                <SpotlightThemeCard
                   key={opt.id}
-                  type="button"
-                  data-testid={`modal-theme-card-${opt.id}`}
+                  active={active}
+                  testId={`modal-theme-card-${opt.id}`}
                   onClick={() => handleSelectDesign(opt.id)}
-                  className={`p-3.5 rounded-2xl border text-left space-y-2.5 transition-[border-color,background-color,box-shadow] ${
-                    active
-                      ? 'border-[var(--accent-primary)] ring-2 ring-[var(--accent-ring)] bg-[var(--accent-soft-bg)]/55'
-                      : 'border-[var(--border-subtle)] bg-[var(--surface-subtle)] hover:border-[var(--border-hover)]'
-                  }`}
                 >
                   {/* Mini Visual Swatch */}
                   <div
@@ -167,7 +205,7 @@ export default function AppearanceSettingsModal() {
                       {opt.subtitle}
                     </p>
                   </div>
-                </button>
+                </SpotlightThemeCard>
               );
             })}
           </div>
@@ -366,7 +404,7 @@ export default function AppearanceSettingsModal() {
             data-testid="app-version-badge"
             className="font-mono font-bold px-2 py-0.5 rounded-full theme-accent-soft border"
           >
-            v1.5.5
+            v1.6.0
           </span>
         </div>
       </div>

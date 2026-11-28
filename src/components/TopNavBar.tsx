@@ -1,8 +1,10 @@
 import React, { useMemo } from 'react';
 import { LucideIcon, MeiScheduleLogo } from './BrandMark';
 import FocusMiniPill from './FocusMiniPill';
+import { OdometerNumber } from './UiMomentsPrimitives';
 import { useScheduleStore } from '../store/useScheduleStore';
 import type { ScheduleViewMode } from '../types/schedule';
+import { useElasticTabMarker } from '../utils/uiMomentsMotion';
 
 const VIEW_TABS: Array<{
   id: ScheduleViewMode;
@@ -83,6 +85,9 @@ function TopNavBar() {
   const stepDays =
     viewMode === 'month' ? 30 : viewMode === 'week' ? 7 : viewMode === '3day' ? 3 : 1;
 
+  const desktopTabMarker = useElasticTabMarker(viewMode);
+  const mobileTabMarker = useElasticTabMarker(viewMode);
+
   const unscheduledTaskCount = useMemo(
     () => tasks.filter((t) => !t.completed && !t.scheduledEventId).length,
     [tasks]
@@ -157,11 +162,18 @@ function TopNavBar() {
         </div>
 
         {/* Center: Clean 5-View Segmented Switcher (Desktop >= lg) */}
-        <nav
+        <div
+          ref={desktopTabMarker.containerRef}
           role="tablist"
           aria-label="排程檢視模式"
-          className="hidden lg:inline-flex items-center gap-0.5 p-1 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-subtle)] shrink-0"
+          className="relative hidden lg:inline-flex items-center gap-0.5 p-1 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-subtle)] shrink-0"
         >
+          <span
+            ref={desktopTabMarker.indicatorRef}
+            aria-hidden="true"
+            data-testid="desktop-view-tab-indicator"
+            className="um-elastic-indicator theme-accent-solid rounded-xl shadow-sm"
+          />
           {VIEW_TABS.map((tab) => {
             const active = viewMode === tab.id;
             return (
@@ -170,10 +182,11 @@ function TopNavBar() {
                 type="button"
                 role="tab"
                 aria-selected={active}
+                data-um-tab-active={active ? 'true' : 'false'}
                 data-testid={`view-tab-${tab.id}`}
                 onClick={() => setViewMode(tab.id)}
                 title={`${tab.label} (快捷鍵 ${tab.shortcut})`}
-                className={`px-2.5 xl:px-3 py-1.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 whitespace-nowrap transition-colors ${
+                className={`relative z-10 px-2.5 xl:px-3 py-1.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 whitespace-nowrap transition-colors ${
                   active
                     ? 'theme-accent-solid shadow-sm'
                     : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
@@ -184,7 +197,7 @@ function TopNavBar() {
               </button>
             );
           })}
-        </nav>
+        </div>
 
         {/* Right: Minimal Utility Cluster (Undo/Redo + Right Task Inbox Wing Toggle) */}
         <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
@@ -237,7 +250,7 @@ function TopNavBar() {
                     : 'theme-accent-soft'
                 }`}
               >
-                {unscheduledTaskCount}
+                <OdometerNumber value={unscheduledTaskCount} />
               </span>
             )}
           </button>
@@ -247,10 +260,17 @@ function TopNavBar() {
       {/* Mobile & Tablet (< lg) Compact 5-Mode View Switcher */}
       <div className="lg:hidden border-t border-[var(--border-subtle)] bg-[var(--surface-subtle)]/40 px-2.5 sm:px-5 py-1.5">
         <div
+          ref={mobileTabMarker.containerRef}
           role="tablist"
           aria-label="行動端檢視切換"
-          className="grid grid-cols-5 items-center gap-1"
+          className="relative grid grid-cols-5 items-center gap-1"
         >
+          <span
+            ref={mobileTabMarker.indicatorRef}
+            aria-hidden="true"
+            data-testid="mobile-view-tab-indicator"
+            className="um-elastic-indicator theme-accent-solid rounded-xl shadow-sm"
+          />
           {VIEW_TABS.map((tab) => {
             const active = viewMode === tab.id;
             return (
@@ -259,9 +279,10 @@ function TopNavBar() {
                 type="button"
                 role="tab"
                 aria-selected={active}
+                data-um-tab-active={active ? 'true' : 'false'}
                 data-testid={`mobile-view-tab-${tab.id}`}
                 onClick={() => setViewMode(tab.id)}
-                className={`px-1.5 py-1 rounded-xl text-[11px] font-bold inline-flex items-center justify-center gap-1 whitespace-nowrap transition-colors ${
+                className={`relative z-10 px-1.5 py-1 rounded-xl text-[11px] font-bold inline-flex items-center justify-center gap-1 whitespace-nowrap transition-colors ${
                   active
                     ? 'theme-accent-solid shadow-sm'
                     : 'text-[var(--text-muted)] hover:text-[var(--text-main)] bg-[var(--surface-glass)] border border-[var(--border-subtle)]'

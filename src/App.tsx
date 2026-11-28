@@ -347,11 +347,13 @@ function MeiScheduleShell() {
         <main className="narrow-compact-px flex-1 max-w-[1380px] w-full mx-auto px-3 sm:px-5 lg:px-6 py-4 sm:py-5 pb-28 sm:pb-20 space-y-4">
           <QuickCaptureBar ref={quickCaptureInputRef} />
 
-          {viewMode === 'day' && <TimelineView instances={viewInstances} />}
-          {viewMode === '3day' && <WeekGridView mode="3day" instances={viewInstances} />}
-          {viewMode === 'week' && <WeekGridView mode="week" instances={viewInstances} />}
-          {viewMode === 'month' && <MonthView instances={viewInstances} />}
-          {viewMode === 'agenda' && <AgendaListView instances={viewInstances} />}
+          <div key={viewMode} className="um-view-enter">
+            {viewMode === 'day' && <TimelineView instances={viewInstances} />}
+            {viewMode === '3day' && <WeekGridView mode="3day" instances={viewInstances} />}
+            {viewMode === 'week' && <WeekGridView mode="week" instances={viewInstances} />}
+            {viewMode === 'month' && <MonthView instances={viewInstances} />}
+            {viewMode === 'agenda' && <AgendaListView instances={viewInstances} />}
+          </div>
         </main>
       </div>
 

@@ -3,6 +3,7 @@ import { LucideIcon } from './BrandMark';
 import { COLOR_TOKEN_PALETTE } from '../data/seedData';
 import { describeRecurrenceRule } from '../services/recurrenceEngine';
 import type { ExpandedEventInstance, RecurrenceEditScope } from '../types/schedule';
+import { useBackdropDismissGuard } from '../utils/uiMomentsMotion';
 
 export interface RecurringDeleteModalProps {
   event: ExpandedEventInstance | null;
@@ -19,6 +20,8 @@ function RecurringDeleteModal({
   onCancel,
   onConfirmScope
 }: RecurringDeleteModalProps) {
+  const backdropGuard = useBackdropDismissGuard(onCancel);
+
   useEffect(() => {
     if (!event || typeof window === 'undefined') return;
     const onKeyDown = (e: KeyboardEvent) => {
@@ -39,15 +42,15 @@ function RecurringDeleteModal({
   return (
     <div
       data-testid="recurring-delete-modal"
-      className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/50 backdrop-blur-[4px] sm:backdrop-blur-md"
-      onClick={onCancel}
+      className="um-backdrop-enter fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/50 backdrop-blur-[4px] sm:backdrop-blur-md"
+      {...backdropGuard}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-label="選擇重複行程移除範圍"
         onClick={(e) => e.stopPropagation()}
-        className="landscape-compact-modal max-h-dvh-85 w-full sm:max-w-md bg-[var(--surface-glass-strong)] border-t sm:border border-[var(--border-subtle)] rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col pb-safe-bottom sm:pb-0"
+        className="um-sheet-bottom-enter landscape-compact-modal max-h-dvh-85 w-full sm:max-w-md bg-[var(--surface-glass-strong)] border-t sm:border border-[var(--border-subtle)] rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col pb-safe-bottom sm:pb-0"
       >
         {/* Header */}
         <div className="px-5 py-4 border-b border-[var(--border-subtle)] flex items-center justify-between gap-2">

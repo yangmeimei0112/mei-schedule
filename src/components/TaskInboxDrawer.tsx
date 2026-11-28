@@ -1,8 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { LucideIcon } from './BrandMark';
+import { LikeBurstLayer, OdometerNumber, StrokeCheckIndicator } from './UiMomentsPrimitives';
 import { parseLocalDateKey } from '../services/recurrenceEngine';
 import { useScheduleStore } from '../store/useScheduleStore';
 import type { PriorityLevel, ScheduleTask } from '../types/schedule';
+import { useBackdropDismissGuard } from '../utils/uiMomentsMotion';
 
 /**
  * Dedicated Right-Wing Collapsible Task Inbox Panel (Google Calendar Tasks x Sunsama workflow)
@@ -27,6 +29,8 @@ function TaskInboxDrawer() {
   const [newTaskMinutes, setNewTaskMinutes] = useState(30);
   const [newTaskPriority, setNewTaskPriority] = useState<PriorityLevel>(2);
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
+  const [burstByTask, setBurstByTask] = useState<Record<string, number>>({});
+  const backdropGuard = useBackdropDismissGuard(() => setInboxDrawerOpen(false));
 
   const visibleTasks = useMemo(() => {
     return tasks
@@ -93,8 +97,8 @@ function TaskInboxDrawer() {
       {/* Mobile / Tablet Backdrop */}
       <div
         data-testid="right-inbox-drawer-overlay"
-        onClick={() => setInboxDrawerOpen(false)}
-        className="lg:hidden fixed inset-0 z-40 bg-slate-950/45 backdrop-blur-sm"
+        {...backdropGuard}
+        className="um-backdrop-enter lg:hidden fixed inset-0 z-40 bg-slate-950/45 backdrop-blur-sm"
         aria-hidden="true"
       />
 
@@ -102,7 +106,7 @@ function TaskInboxDrawer() {
       <aside
         data-testid="task-inbox-drawer"
         aria-label="待辦收件匣面板"
-        className="app-right-wing-surface fixed inset-y-0 right-0 z-50 lg:sticky lg:top-0 lg:z-20 h-[100dvh] w-[88vw] max-w-[340px] lg:w-[316px] xl:w-[330px] shrink-0 border-l border-[var(--border-subtle)] shadow-2xl lg:shadow-none flex flex-col pt-safe"
+        className="um-drawer-right-enter app-right-wing-surface fixed inset-y-0 right-0 z-50 lg:sticky lg:top-0 lg:z-20 h-[100dvh] w-[88vw] max-w-[340px] lg:w-[316px] xl:w-[330px] shrink-0 border-l border-[var(--border-subtle)] shadow-2xl lg:shadow-none flex flex-col pt-safe"
       >
         {/* Header */}
         <div className="shrink-0 px-4 py-3.5 border-b border-[var(--border-subtle)] flex items-center justify-between gap-2">
@@ -117,9 +121,9 @@ function TaskInboxDrawer() {
                 </h2>
                 <span
                   data-testid="inbox-unscheduled-count"
-                  className="px-1.5 py-0.5 rounded-full text-[10px] font-bold theme-accent-soft"
+                  className="px-1.5 py-0.5 rounded-full text-[10px] font-bold theme-accent-soft inline-flex items-center"
                 >
-                  {unscheduledCount}
+                  <OdometerNumber value={unscheduledCount} />
                 </span>
               </div>
             </div>
@@ -250,26 +254,33 @@ function TaskInboxDrawer() {
                   <div className="flex items-start gap-2">
                     <button
                       type="button"
-                      onClick={() => toggleTaskComplete(task.id)}
+                      onClick={() => {
+                        if (!task.completed) {
+                          setBurstByTask((prev) => ({
+                            ...prev,
+                            [task.id]: (prev[task.id] || 0) + 1
+                          }));
+                        }
+                        toggleTaskComplete(task.id);
+                      }}
                       aria-label={task.completed ? '標記為未完成' : '標記為完成'}
-                      className="mt-0.5 text-[var(--text-muted)] hover:text-emerald-500 shrink-0"
+                      className="relative mt-0.5 text-[var(--text-muted)] hover:text-emerald-500 shrink-0"
                     >
-                      <LucideIcon
-                        name={task.completed ? 'check-square' : 'square'}
-                        size={15}
-                        className={task.completed ? 'text-emerald-500' : ''}
-                      />
+                      <StrokeCheckIndicator checked={task.completed} size={16} />
+                      <LikeBurstLayer triggerKey={burstByTask[task.id] || 0} />
                     </button>
 
                     <div className="min-w-0 flex-1">
                       <p
                         className={`text-xs font-bold leading-snug break-words ${
                           task.completed
-                            ? 'line-through text-[var(--text-muted)]'
+                            ? 'text-[var(--text-muted)]'
                             : 'text-[var(--text-main)]'
                         }`}
                       >
-                        {task.title}
+                        <span className={`um-strike-sweep ${task.completed ? 'is-done' : ''}`}>
+                          {task.title}
+                        </span>
                       </p>
                       <div className="mt-1 flex items-center gap-1.5 flex-wrap text-[10px] text-[var(--text-muted)]">
                         <span className={`font-bold inline-flex items-center gap-0.5 ${prioColor}`}>
